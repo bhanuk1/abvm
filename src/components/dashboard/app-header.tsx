@@ -34,7 +34,7 @@ export function AppHeader() {
             </div>
           </div>
           <div className="flex items-center gap-4">
-            <Badge variant="outline" className="text-sm">
+            <Badge variant="outline" className="text-sm bg-primary/10 text-primary">
               प्रधानाचार्य
             </Badge>
             <Button variant="destructive" asChild>
