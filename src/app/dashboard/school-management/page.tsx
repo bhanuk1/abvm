@@ -2,6 +2,7 @@
 import React from 'react';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -45,7 +46,6 @@ import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { type Notice } from '@/lib/placeholder-data';
 import {
-  initialStudents,
   initialNewUserState,
   type Result,
   homeworks as initialHomeworks,
@@ -56,21 +56,28 @@ import {
   attendance as initialAttendance,
   type Attendance,
 } from '@/lib/school-data';
-import { useCollection, useFirestore, useUser, useMemoFirebase } from '@/firebase';
-import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { useCollection, useFirestore, useUser, useMemoFirebase, useAuth } from '@/firebase';
+import { addDoc, collection, serverTimestamp, setDoc, doc } from 'firebase/firestore';
+import { useToast } from '@/hooks/use-toast';
 
 
 export default function SchoolManagementPage() {
   const firestore = useFirestore();
+  const auth = useAuth();
   const { user: currentUser } = useUser();
+  const { toast } = useToast();
+
   const usersQuery = useMemoFirebase(() => firestore ? collection(firestore, 'users') : null, [firestore]);
   const { data: users, isLoading: usersLoading } = useCollection<any>(usersQuery);
+
+  const studentsQuery = useMemoFirebase(() => firestore ? query(collection(firestore, 'users'), where('role', '==', 'student')) : null, [firestore]);
+  const { data: students, isLoading: studentsLoading } = useCollection<any>(studentsQuery);
 
   const noticesQuery = useMemoFirebase(() => firestore ? collection(firestore, 'notices') : null, [firestore]);
   const { data: notices, isLoading: noticesLoading } = useCollection<Notice>(noticesQuery);
 
 
-  const [students, setStudents] = React.useState(initialStudents);
+  // const [students, setStudents] = React.useState(initialStudents);
   const [results, setResults] = React.useState<Result[]>(initialResults);
   const [homeworks, setHomeworks] = React.useState<Homework[]>(initialHomeworks);
   const [attendance, setAttendance] = React.useState<Attendance[]>(initialAttendance);
@@ -139,6 +146,7 @@ export default function SchoolManagementPage() {
     const noticesCol = collection(firestore, 'notices');
     const noticeToAdd = {
       ...newNotice,
+      id: `NTC${Date.now()}`,
       authorId: currentUser.uid,
       author: 'प्रधानाचार्य', // Or get current user's name
       createdAt: serverTimestamp(),
@@ -151,9 +159,74 @@ export default function SchoolManagementPage() {
   };
 
 
-  const handleCreateUser = () => {
-    // This function will need to be adapted for Firebase
-    console.log("Create user functionality needs to be migrated to Firebase.");
+  const handleCreateUser = async () => {
+    if (!newUser.role || !newUser.userId || !newUser.password || !firestore) {
+      toast({ variant: 'destructive', title: 'त्रुटि', description: 'कृपया सभी आवश्यक फ़ील्ड भरें।' });
+      return;
+    }
+
+    try {
+      const email = `${newUser.userId}@vidyalaya.com`;
+      const userCredential = await createUserWithEmailAndPassword(auth, email, newUser.password);
+      const user = userCredential.user;
+
+      let userData: any = {
+        id: user.uid,
+        username: newUser.username,
+        role: newUser.role,
+      };
+
+      if (newUser.role === 'teacher') {
+        userData = {
+          ...userData,
+          mobile: newUser.teacherMobile,
+          classSubject: `${newUser.teacherClass} - ${newUser.teacherSubject}`,
+        };
+      } else if (newUser.role === 'parent' || newUser.role === 'student') {
+        userData = {
+          ...userData,
+          class: newUser.studentClass,
+          subjects: newUser.studentSubjects,
+          fatherName: newUser.parentName,
+          motherName: newUser.motherName,
+          address: newUser.address,
+          dob: newUser.dob ? format(newUser.dob, 'yyyy-MM-dd') : null,
+          admissionDate: newUser.admissionDate ? format(newUser.admissionDate, 'yyyy-MM-dd') : null,
+          aadhaar: newUser.aadhaar,
+          pen: newUser.pen,
+          mobile: newUser.studentMobile,
+          rollNo: newUser.rollNo,
+        };
+        if(newUser.role === 'parent') {
+             // also create student user if parent is created
+            const studentEmail = `${newUser.studentUserId}@vidyalaya.com`;
+            const studentPass = newUser.studentPassword;
+            const studentCredential = await createUserWithEmailAndPassword(auth, studentEmail, studentPass);
+            const studentUser = studentCredential.user;
+            const studentData = {
+                ...userData,
+                id: studentUser.uid,
+                username: newUser.studentName,
+                role: 'student',
+            }
+            await setDoc(doc(firestore, 'users', studentUser.uid), studentData);
+        }
+
+      }
+
+      await setDoc(doc(firestore, 'users', user.uid), userData);
+
+      toast({ title: 'सफलता!', description: 'नया उपयोगकर्ता सफलतापूर्वक बनाया गया।' });
+      setNewUser(initialNewUserState);
+      setIsUserDialogOpen(false);
+    } catch (error: any) {
+      console.error("Error creating user:", error);
+      if (error.code === 'auth/email-already-in-use') {
+        toast({ variant: 'destructive', title: 'त्रुटि', description: 'यह यूजर आईडी पहले से मौजूद है।' });
+      } else {
+        toast({ variant: 'destructive', title: 'त्रुटि', description: 'उपयोगकर्ता बनाने में विफल। कृपया पुन: प्रयास करें।' });
+      }
+    }
   };
   
   const togglePasswordVisibility = (id: string) => {
@@ -206,7 +279,7 @@ export default function SchoolManagementPage() {
     const newResult: Result = {
       id: `RES${Date.now()}`,
       studentId: student.id,
-      studentName: student.name,
+      studentName: student.username,
       class: student.class,
       examType: examTypes.find(e => e.value === selectedExamType)?.label || '',
       marks: resultMarks,
@@ -228,7 +301,7 @@ export default function SchoolManagementPage() {
   };
 
   const getSubjectsForStudent = () => {
-    if (!selectedResultStudent) return [];
+    if (!selectedResultStudent || !students) return [];
     const student = students.find(s => s.id === selectedResultStudent);
     if (!student) return [];
     
@@ -250,7 +323,7 @@ export default function SchoolManagementPage() {
         doc.text('छात्र प्रगति रिपोर्ट', doc.internal.pageSize.getWidth() / 2, 22, { align: 'center' });
         
         const studentDetails = [
-            ['नाम', student.name],
+            ['नाम', student.username],
             ['कक्षा', student.class],
             ['रोल नंबर', student.rollNo],
             ['पिता का नाम', student.fatherName],
@@ -303,7 +376,7 @@ export default function SchoolManagementPage() {
 };
 
 const handleDownloadClick = async () => {
-    if (!selectedReportClass || !selectedReportStudent) {
+    if (!selectedReportClass || !selectedReportStudent || !students) {
       alert('कृपया रिपोर्ट बनाने के लिए कक्षा और छात्र चुनें।');
       return;
     }
@@ -323,7 +396,7 @@ const handleDownloadClick = async () => {
     try {
         const doc = new jsPDF();
         handleGeneratePdf(doc, student, studentResults);
-        doc.save(`${student.name}_${student.class}_report.pdf`);
+        doc.save(`${student.username}_${student.class}_report.pdf`);
     } catch (e) {
         console.error(e);
         alert('PDF बनाने में त्रुटि हुई।');
@@ -331,7 +404,7 @@ const handleDownloadClick = async () => {
 };
 
 const handleClassReportDownloadClick = () => {
-  if (!selectedClassReportClass || !selectedClassReportExam) {
+  if (!selectedClassReportClass || !selectedClassReportExam || !students) {
     alert('कृपया कक्षा और परीक्षा का प्रकार चुनें।');
     return;
   }
@@ -383,7 +456,7 @@ const handleClassReportDownloadClick = () => {
   const studentSubjects = getSubjectsForStudent();
   
   const attendanceFilteredStudents = React.useMemo(() => {
-    if (!attendanceReportClass || !attendanceReportDate) return [];
+    if (!attendanceReportClass || !attendanceReportDate || !students) return [];
     
     const reportDateStr = format(attendanceReportDate, 'yyyy-MM-dd');
     const studentsInClass = students.filter(s => s.class === attendanceReportClass);
@@ -427,7 +500,7 @@ const handleClassReportDownloadClick = () => {
               <CardTitle>उपयोगकर्ता प्रबंधन</CardTitle>
               <Dialog open={isUserDialogOpen} onOpenChange={setIsUserDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button onClick={() => setIsUserDialogOpen(true)}>
+                  <Button onClick={() => { setNewUser(initialNewUserState); setIsUserDialogOpen(true); }}>
                     <UserPlus className="mr-2" />
                     नया उपयोगकर्ता बनाएं
                   </Button>
@@ -448,50 +521,83 @@ const handleClassReportDownloadClick = () => {
                         <SelectContent>
                           <SelectItem value="teacher">शिक्षक</SelectItem>
                           <SelectItem value="parent">अभिभावक</SelectItem>
+                          <SelectItem value="student">छात्र</SelectItem>
                         </SelectContent>
                       </Select>
+                    </div>
+
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="username" className="text-right">नाम</Label>
+                      <Input id="username" value={newUser.username || ''} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" />
+                    </div>
+                     <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="userId" className="text-right">यूजर आईडी</Label>
+                      <Input id="userId" value={newUser.userId || ''} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" placeholder="जैसे: teacher01, parent01" />
+                    </div>
+                     <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="password" className="text-right">पासवर्ड</Label>
+                      <Input id="password" type="password" value={newUser.password || ''} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" />
                     </div>
 
                     {newUser.role === 'teacher' && (
                       <>
                         <div className="grid grid-cols-4 items-center gap-4">
-                          <Label htmlFor="teacherName" className="text-right">नाम</Label>
-                          <Input id="teacherName" value={newUser.teacherName} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" />
-                        </div>
-                        <div className="grid grid-cols-4 items-center gap-4">
                           <Label htmlFor="teacherMobile" className="text-right">मोबाइल नंबर</Label>
-                          <Input id="teacherMobile" value={newUser.teacherMobile} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" />
+                          <Input id="teacherMobile" value={newUser.teacherMobile || ''} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" />
                         </div>
                         <div className="grid grid-cols-4 items-center gap-4">
                           <Label htmlFor="teacherSubject" className="text-right">विषय</Label>
-                          <Input id="teacherSubject" value={newUser.teacherSubject} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" placeholder="जैसे: हिंदी, अंग्रेजी"/>
+                          <Input id="teacherSubject" value={newUser.teacherSubject || ''} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" placeholder="जैसे: हिंदी, अंग्रेजी"/>
                         </div>
                          <div className="grid grid-cols-4 items-center gap-4">
                           <Label htmlFor="teacherClass" className="text-right">कक्षा</Label>
-                          <Input id="teacherClass" value={newUser.teacherClass} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" placeholder="जैसे: 5, 6, 7" />
+                          <Input id="teacherClass" value={newUser.teacherClass || ''} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" placeholder="जैसे: 5, 6, 7" />
                         </div>
                       </>
                     )}
                     
-                    {newUser.role === 'parent' && (
+                    {(newUser.role === 'parent' || newUser.role === 'student') && (
                       <>
-                        <h3 className="col-span-4 font-semibold text-lg border-b pb-2 mb-2">अभिभावक विवरण</h3>
-                         <div className="grid grid-cols-4 items-center gap-4">
-                          <Label htmlFor="parentName" className="text-right">पिता का नाम</Label>
-                          <Input id="parentName" value={newUser.parentName} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" />
-                        </div>
-                         <div className="grid grid-cols-4 items-center gap-4">
-                          <Label htmlFor="motherName" className="text-right">माता का नाम</Label>
-                          <Input id="motherName" value={newUser.motherName} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" />
-                        </div>
+                        <h3 className="col-span-4 font-semibold text-lg border-b pb-2 mb-2">{newUser.role === 'parent' ? 'अभिभावक और छात्र विवरण' : 'छात्र विवरण'}</h3>
+                        {newUser.role === 'parent' && (
+                        <>
+                            <div className="grid grid-cols-4 items-center gap-4">
+                                <Label htmlFor="parentName" className="text-right">पिता का नाम</Label>
+                                <Input id="parentName" value={newUser.parentName || ''} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" />
+                            </div>
+                            <div className="grid grid-cols-4 items-center gap-4">
+                                <Label htmlFor="motherName" className="text-right">माता का नाम</Label>
+                                <Input id="motherName" value={newUser.motherName || ''} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" />
+                            </div>
+                        </>
+                        )}
                         <div className="grid grid-cols-4 items-center gap-4">
                             <Label htmlFor="studentMobile" className="text-right">मोबाइल नंबर</Label>
-                            <Input id="studentMobile" value={newUser.studentMobile} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" />
+                            <Input id="studentMobile" value={newUser.studentMobile || ''} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" />
                         </div>
-                        <h3 className="col-span-4 font-semibold text-lg border-b pb-2 mt-4 mb-2">छात्र विवरण</h3>
+                        {newUser.role === 'parent' && (
+                        <h4 className="col-span-4 font-semibold text-md border-b pb-2 mt-4 mb-2">छात्र लॉगिन विवरण</h4>
+                        )}
                         <div className="grid grid-cols-4 items-center gap-4">
                           <Label htmlFor="studentName" className="text-right">छात्र का नाम</Label>
-                          <Input id="studentName" value={newUser.studentName} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" />
+                          <Input id="studentName" value={newUser.studentName || ''} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" />
+                        </div>
+                        {newUser.role === 'parent' && (
+                            <>
+                            <div className="grid grid-cols-4 items-center gap-4">
+                                <Label htmlFor="studentUserId" className="text-right">छात्र यूजर आईडी</Label>
+                                <Input id="studentUserId" value={newUser.studentUserId || ''} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" />
+                            </div>
+                            <div className="grid grid-cols-4 items-center gap-4">
+                                <Label htmlFor="studentPassword" className="text-right">छात्र पासवर्ड</Label>
+                                <Input id="studentPassword" type="password" value={newUser.studentPassword || ''} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" />
+                            </div>
+                            </>
+                        )}
+                        <h4 className="col-span-4 font-semibold text-md border-b pb-2 mt-4 mb-2">छात्र अकादमिक विवरण</h4>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                          <Label htmlFor="rollNo" className="text-right">रोल नंबर</Label>
+                          <Input id="rollNo" value={newUser.rollNo || ''} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" />
                         </div>
                         <div className="grid grid-cols-4 items-center gap-4">
                           <Label htmlFor="studentClass" className="text-right">कक्षा</Label>
@@ -506,11 +612,11 @@ const handleClassReportDownloadClick = () => {
                         </div>
                         <div className="grid grid-cols-4 items-center gap-4">
                           <Label htmlFor="studentSubjects" className="text-right">विषय</Label>
-                          <Input id="studentSubjects" value={newUser.studentSubjects} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" placeholder="कक्षा चुनने पर विषय स्वतः भर जाएंगे"/>
+                          <Input id="studentSubjects" value={newUser.studentSubjects || ''} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" placeholder="कक्षा चुनने पर विषय स्वतः भर जाएंगे"/>
                         </div>
                          <div className="grid grid-cols-4 items-center gap-4">
                           <Label htmlFor="address" className="text-right">पता</Label>
-                          <Input id="address" value={newUser.address} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" />
+                          <Input id="address" value={newUser.address || ''} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" />
                         </div>
                          <div className="grid grid-cols-4 items-center gap-4">
                             <Label htmlFor="dob" className="text-right">जन्म तिथि</Label>
@@ -564,11 +670,11 @@ const handleClassReportDownloadClick = () => {
                         </div>
                          <div className="grid grid-cols-4 items-center gap-4">
                           <Label htmlFor="aadhaar" className="text-right">आधार नंबर</Label>
-                          <Input id="aadhaar" value={newUser.aadhaar} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" />
+                          <Input id="aadhaar" value={newUser.aadhaar || ''} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" />
                         </div>
                          <div className="grid grid-cols-4 items-center gap-4">
                           <Label htmlFor="pen" className="text-right">PEN नंबर</Label>
-                          <Input id="pen" value={newUser.pen} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" />
+                          <Input id="pen" value={newUser.pen || ''} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" />
                         </div>
                       </>
                     )}
@@ -589,23 +695,24 @@ const handleClassReportDownloadClick = () => {
                     <TableHead>मोबाइल</TableHead>
                     <TableHead>कक्षा/विषय</TableHead>
                     <TableHead>यूज़र आईडी</TableHead>
-                    <TableHead>पासवर्ड</TableHead>
                     <TableHead>कार्य</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {usersLoading && <TableRow><TableCell colSpan={7} className="text-center">Loading...</TableCell></TableRow>}
-                  {users && users.map((user) => (
+                  {usersLoading && <TableRow><TableCell colSpan={6} className="text-center">Loading...</TableCell></TableRow>}
+                  {users && users.filter(u => u.role !== 'student').map((user) => (
                     <TableRow key={user.id}>
                       <TableCell className="font-medium">{user.username}</TableCell>
                       <TableCell>
                         <Badge
                           variant={
-                            user.role === 'teacher' ? 'secondary' : 'outline'
+                            user.role === 'teacher' ? 'secondary' : user.role === 'admin' ? 'default' : 'outline'
                           }
                           className={
                             user.role === 'teacher'
                               ? 'bg-blue-100 text-blue-800'
+                              : user.role === 'admin'
+                              ? 'bg-primary/10 text-primary'
                               : 'bg-amber-100 text-amber-800'
                           }
                         >
@@ -614,10 +721,7 @@ const handleClassReportDownloadClick = () => {
                       </TableCell>
                       <TableCell>{user.mobile || '-'}</TableCell>
                       <TableCell>{user.classSubject || '-'}</TableCell>
-                      <TableCell>{user.id}</TableCell>
-                      <TableCell className="flex items-center gap-2">
-                        <span>{'*'.repeat(8)}</span>
-                      </TableCell>
+                      <TableCell>{user.id.substring(0, 10)}...</TableCell>
                       <TableCell>
                         <Button variant="link" className="p-0 h-auto text-primary">
                           पासवर्ड रीसेट
@@ -648,27 +752,20 @@ const handleClassReportDownloadClick = () => {
                     <TableHead>कक्षा</TableHead>
                     <TableHead>पिता का नाम</TableHead>
                     <TableHead>मोबाइल</TableHead>
-                    <TableHead>लॉगिन विवरण</TableHead>
+                    <TableHead>लॉगिन आईडी</TableHead>
                     <TableHead>कार्य</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {students.map((student) => (
+                  {studentsLoading && <TableRow><TableCell colSpan={7} className="text-center">Loading...</TableCell></TableRow>}
+                  {students && students.map((student) => (
                     <TableRow key={student.id}>
                       <TableCell className="font-medium">{student.rollNo}</TableCell>
-                      <TableCell>{student.name}</TableCell>
+                      <TableCell>{student.username}</TableCell>
                       <TableCell>{student.class}</TableCell>
                       <TableCell>{student.fatherName}</TableCell>
                       <TableCell>{student.mobile}</TableCell>
-                      <TableCell>
-                        <div>ID: {student.id}</div>
-                        <div className="flex items-center gap-2">
-                            <span>पासवर्ड: {studentPasswordVisibility[student.id] ? student.password : '*'.repeat(student.password.length)}</span>
-                            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => toggleStudentPasswordVisibility(student.id)}>
-                               {studentPasswordVisibility[student.id] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                            </Button>
-                        </div>
-                      </TableCell>
+                      <TableCell>{student.id.substring(0,10)}...</TableCell>
                        <TableCell>
                         <Button variant="link" className="p-0 h-auto text-primary">
                           पासवर्ड रीसेट
@@ -780,7 +877,7 @@ const handleClassReportDownloadClick = () => {
                       <SelectValue placeholder="छात्र चुनें" />
                     </SelectTrigger>
                     <SelectContent>
-                      {students.filter(s => s.class === selectedResultClass).map(s => <SelectItem key={s.id} value={s.id}>{s.name} (रोल नं. {s.rollNo})</SelectItem>)}
+                      {students && students.filter(s => s.class === selectedResultClass).map(s => <SelectItem key={s.id} value={s.id}>{s.username} (रोल नं. {s.rollNo})</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
@@ -900,7 +997,7 @@ const handleClassReportDownloadClick = () => {
                           <SelectValue placeholder="छात्र चुनें" />
                         </SelectTrigger>
                         <SelectContent>
-                          {students.filter(s => s.class === selectedReportClass).map(s => <SelectItem key={s.id} value={s.id}>{s.name} (रोल नं. {s.rollNo})</SelectItem>)}
+                          {students && students.filter(s => s.class === selectedReportClass).map(s => <SelectItem key={s.id} value={s.id}>{s.username} (रोल नं. {s.rollNo})</SelectItem>)}
                         </SelectContent>
                       </Select>
                     </div>
@@ -1005,7 +1102,7 @@ const handleClassReportDownloadClick = () => {
                       attendanceFilteredStudents.map((student) => (
                         <TableRow key={student.id}>
                           <TableCell>{student.rollNo}</TableCell>
-                          <TableCell>{student.name}</TableCell>
+                          <TableCell>{student.username}</TableCell>
                           <TableCell className="text-right">
                              <Badge 
                                variant={student.status === 'उपस्थित' ? 'default' : 'destructive'}

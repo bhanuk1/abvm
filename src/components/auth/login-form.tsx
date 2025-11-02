@@ -1,67 +1,113 @@
 'use client';
 
-import { useActionState } from 'react';
+import { useState } from 'react';
 import { useFormStatus } from 'react-dom';
 import { LogIn } from 'lucide-react';
+import { useSearchParams } from 'next/navigation';
+import { signInWithEmailAndPassword } from 'firebase/auth';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { login } from '@/app/actions';
-
-const initialState = {
-  message: null,
-};
+import { handleLogin } from '@/app/actions';
+import { useAuth } from '@/firebase';
+import { useToast } from '@/hooks/use-toast';
 
 function LoginButton() {
   const { pending } = useFormStatus();
 
   return (
-     <Button type="submit" className="w-full" disabled={pending}>
-        {pending ? 'Logging in...' : <><LogIn className="mr-2 h-4 w-4" /> Login</>}
+    <Button type="submit" className="w-full" disabled={pending}>
+      {pending ? 'लॉग इन हो रहा है...' : <><LogIn className="mr-2 h-4 w-4" /> लॉग इन करें</>}
     </Button>
   );
 }
 
 export function LoginForm() {
-  const [state, formAction] = useActionState(login, initialState);
+  const auth = useAuth();
+  const { toast } = useToast();
+  const searchParams = useSearchParams();
+  const role = searchParams.get('role') || 'student';
+  
+  const [userId, setUserId] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
+
+  const getRoleDisplayName = () => {
+    switch (role) {
+      case 'student': return 'छात्र';
+      case 'parent': return 'अभिभावक';
+      case 'teacher': return 'शिक्षक';
+      case 'admin': return 'प्रधानाचार्य';
+      default: return '';
+    }
+  };
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setError(null);
+    if (!userId || !password) {
+      setError('यूजर आईडी और पासवर्ड आवश्यक हैं।');
+      return;
+    }
+
+    try {
+      // We construct an email from the user ID to use Firebase Auth
+      const email = `${userId}@vidyalaya.com`;
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      
+      // After successful login, redirect based on role
+      if (userCredential.user) {
+        toast({
+            title: "सफलता!",
+            description: "आप सफलतापूर्वक लॉग इन हो गए हैं।",
+            className: "bg-green-100 text-green-800",
+        });
+        await handleLogin(role);
+      }
+    } catch (error: any) {
+      console.error(error);
+      if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+        setError('अमान्य यूजर आईडी या पासवर्ड।');
+      } else {
+        setError('लॉगिन के दौरान एक त्रुटि हुई।');
+      }
+    }
+  };
 
   return (
-    <form action={formAction} className="grid gap-4">
+    <form onSubmit={handleSubmit} className="grid gap-4">
       <div className="grid gap-2">
-        <Label htmlFor="role">Your Role</Label>
-        <Select name="role" required defaultValue="student">
-          <SelectTrigger id="role">
-            <SelectValue placeholder="Select your role" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="student">Student</SelectItem>
-            <SelectItem value="parent">Parent</SelectItem>
-            <SelectItem value="teacher">Teacher</SelectItem>
-            <SelectItem value="admin">Administrator</SelectItem>
-          </SelectContent>
-        </Select>
+        <Label htmlFor="role">आपकी भूमिका</Label>
+        <Input id="role" name="role" value={getRoleDisplayName()} readOnly className="bg-gray-100" />
       </div>
       <div className="grid gap-2">
-        <Label htmlFor="user-id">User ID</Label>
-        <Input id="user-id" name="userId" placeholder="Your ID" required />
+        <Label htmlFor="user-id">यूजर आईडी</Label>
+        <Input 
+          id="user-id" 
+          name="userId" 
+          placeholder="आपकी आईडी" 
+          required 
+          value={userId}
+          onChange={(e) => setUserId(e.target.value)}
+        />
       </div>
       <div className="grid gap-2">
         <div className="flex items-center">
-          <Label htmlFor="password">Password</Label>
+          <Label htmlFor="password">पासवर्ड</Label>
         </div>
-        <Input id="password" name="password" type="password" required />
+        <Input 
+          id="password" 
+          name="password" 
+          type="password" 
+          required 
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
       </div>
       <LoginButton />
-      {state?.message && (
-        <p className="text-sm text-destructive mt-2">{state.message}</p>
+      {error && (
+        <p className="text-sm text-destructive mt-2">{error}</p>
       )}
     </form>
   );

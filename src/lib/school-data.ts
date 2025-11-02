@@ -1,24 +1,6 @@
 import type { Notice } from './placeholder-data';
 
-
-export const initialStudents = [
-  {
-    rollNo: '001',
-    name: 'राहुल शर्मा',
-    class: '5',
-    fatherName: 'विकास शर्मा',
-    motherName: 'कविता शर्मा',
-    dob: '2015-05-20',
-    address: '123, गांधी नगर, दिल्ली',
-    admissionDate: '2020-04-01',
-    aadhaar: '1234 5678 9012',
-    pen: 'PEN12345',
-    mobile: '9876543213',
-    id: 'STU001',
-    password: 'stu123',
-    subjects: 'हिंदी, अंग्रेजी, गणित, विज्ञान, सामाजिक विज्ञान, कंप्यूटर, नैतिक शिक्षा, Drawing, संस्कृत/उर्दू',
-  },
-];
+export const initialStudents = [];
 
 
 export interface Result {
@@ -34,6 +16,9 @@ export const results: Result[] = [];
 
 export const initialNewUserState = {
     role: '',
+    username: '',
+    userId: '',
+    password: '',
     // Teacher fields
     teacherName: '',
     teacherMobile: '',
@@ -43,6 +28,8 @@ export const initialNewUserState = {
     parentName: '',
     // Student fields
     studentName: '',
+    studentUserId: '',
+    studentPassword: '',
     studentClass: '',
     studentSubjects: '',
     motherName: '',
@@ -51,7 +38,8 @@ export const initialNewUserState = {
     admissionDate: undefined,
     aadhaar: '',
     pen: '',
-    studentMobile: ''
+    studentMobile: '',
+    rollNo: '',
 };
 
 // Mock data for the logged-in teacher

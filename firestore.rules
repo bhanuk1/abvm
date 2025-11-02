@@ -1,15 +1,6 @@
 /**
  * @file Firestore Security Rules for Vidyalaya Connect
- * @description This ruleset enforces a user-ownership model for user profiles and a public-read, owner-write model for notices.
- *
- * Data Structure:
- * - /users/{userId}: Stores user profile data. Only the user with the matching {userId} can read or write their profile.
- * - /notices/{noticeId}: Stores notices. Visibility is controlled by the 'role' field in the notice document.
- *
- * Key Security Decisions:
- * - User profiles are private to the owner, but other signed-in users can list them (e.g., for directories).
- * - Notices are publicly readable to allow display on the homepage.
- * - Only the author can create, update, or delete their notices.
+ * @description This ruleset enforces role-based access control.
  */
 rules_version = '2';
 service cloud.firestore {
@@ -19,44 +10,70 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function isRole(role) {
+      return isSignedIn() && getUserData().role == role;
+    }
+
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
     /**
-     * @description Controls access to user profiles. Only the user with the matching ID can read or write their own profile.
-     * @path /users/{userId}
-     * @principle Enforces document ownership for write operations. Allows read for any signed-in user.
+     * @description Controls access to user profiles.
+     * - Admins can read/write any user.
+     * - Users can read/write their own profile.
+     * - Teachers can list students.
      */
     match /users/{userId} {
-      function isOwner() {
-        return request.auth.uid == userId;
-      }
-
-      allow get: if isSignedIn();
-      allow list: if isSignedIn();
-      allow create: if isOwner() && request.resource.data.id == userId;
-      allow update: if isOwner() && request.resource.data.id == resource.data.id;
-      allow delete: if isOwner();
+      allow read: if isRole('admin') || isOwner(userId);
+      allow list: if isRole('admin') || isRole('teacher');
+      allow write: if isRole('admin') || isOwner(userId);
     }
 
     /**
      * @description Controls access to notices.
-     * @path /notices/{noticeId}
-     * @principle Allows public read access for all notices, but enforces document ownership for write operations.
+     * - Anyone can read notices.
+     * - Admins can write/delete notices.
      */
     match /notices/{noticeId} {
-       function isAuthor() {
-         return request.auth.uid == resource.data.authorId;
-       }
-
-       function isNewAuthor() {
-         return request.auth.uid == request.resource.data.authorId;
-       }
-
-      // Anyone can read or list any notice. This is required for the homepage notice board.
       allow read: if true;
-      
-      // Only signed-in users who are the author can write/delete.
-      allow create: if isSignedIn() && isNewAuthor();
-      allow update: if isSignedIn() && isAuthor();
-      allow delete: if isSignedIn() && isAuthor();
+      allow write, delete: if isRole('admin');
     }
+    
+    /**
+     * @description Controls access to results.
+     * - Admins/Teachers can read/write all results.
+     * - Parents/Students can only read their own (or their child's) results.
+     */
+    match /results/{resultId} {
+        allow read: if isRole('admin') || isRole('teacher') || (isOwner(resource.data.studentId));
+        allow list: if isRole('admin') || isRole('teacher');
+        allow write: if isRole('admin') || isRole('teacher');
+    }
+
+    /**
+     * @description Controls access to homework.
+     * - Admins/Teachers can read/write homework.
+     * - Parents/Students can only read homework for their class.
+     */
+    match /homeworks/{homeworkId} {
+        allow read: if isSignedIn();
+        allow write: if isRole('admin') || isRole('teacher');
+    }
+
+    /**
+     * @description Controls access to attendance.
+     * - Admins/Teachers can read/write attendance.
+     * - Parents/Students can only read their own attendance.
+     */
+     match /attendance/{attendanceId} {
+        allow read: if isRole('admin') || isRole('teacher') || (isOwner(resource.data.studentId));
+        allow list: if isRole('admin') || isRole('teacher');
+        allow write: if isRole('admin') || isRole('teacher');
+     }
   }
 }

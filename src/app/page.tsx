@@ -70,7 +70,7 @@ function LoginOptions() {
           size="lg"
           className="justify-start text-lg py-6 bg-yellow-500 hover:bg-yellow-600 text-black"
         >
-          <Link href="/login">
+          <Link href="/login?role=teacher">
             <User className="mr-4" /> शिक्षक लॉगिन
           </Link>
         </Button>
@@ -79,7 +79,7 @@ function LoginOptions() {
           size="lg"
           className="justify-start text-lg py-6 bg-blue-600 hover:bg-blue-700 text-white"
         >
-          <Link href="/login">
+          <Link href="/login?role=parent">
             <Users className="mr-4" /> अभिभावक लॉगिन
           </Link>
         </Button>
@@ -88,7 +88,7 @@ function LoginOptions() {
           size="lg"
           className="justify-start text-lg py-6 bg-pink-600 hover:bg-pink-700 text-white"
         >
-          <Link href="/login">
+          <Link href="/login?role=student">
             <School className="mr-4" /> छात्र लॉगिन
           </Link>
         </Button>
@@ -97,7 +97,7 @@ function LoginOptions() {
           size="lg"
           className="justify-start text-lg py-6 bg-green-600 hover:bg-green-700 text-white"
         >
-          <Link href="/login">
+          <Link href="/login?role=admin">
             <Building className="mr-4" /> प्रधानाचार्य लॉगिन
           </Link>
         </Button>
