@@ -18,7 +18,7 @@ import {
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { EyeOff, UserPlus } from 'lucide-react';
+import { Eye, EyeOff, UserPlus } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -58,6 +58,7 @@ const initialUsers = [
 export default function SchoolManagementPage() {
   const [users, setUsers] = React.useState(initialUsers);
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
+  const [passwordVisibility, setPasswordVisibility] = React.useState<{[key: number]: boolean}>({});
 
   const [newUser, setNewUser] = React.useState({
     role: '',
@@ -88,6 +89,13 @@ export default function SchoolManagementPage() {
     setUsers((prev) => [...prev, userToAdd]);
     setNewUser({ role: '', name: '', mobile: '', classSubject: '' });
     setIsDialogOpen(false);
+  };
+  
+  const togglePasswordVisibility = (index: number) => {
+    setPasswordVisibility(prev => ({
+        ...prev,
+        [index]: !prev[index]
+    }));
   };
 
   return (
@@ -193,9 +201,11 @@ export default function SchoolManagementPage() {
                       <TableCell>{user.mobile}</TableCell>
                       <TableCell>{user.classSubject}</TableCell>
                       <TableCell className="flex items-center gap-2">
-                        <span>{'*'.repeat(user.password.length)}</span>
-                        <Button variant="ghost" size="icon" className="h-6 w-6">
-                           <EyeOff className="h-4 w-4" />
+                        <span>
+                            {passwordVisibility[index] ? user.password : '*'.repeat(user.password.length)}
+                        </span>
+                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => togglePasswordVisibility(index)}>
+                           {passwordVisibility[index] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                         </Button>
                       </TableCell>
                       <TableCell>
