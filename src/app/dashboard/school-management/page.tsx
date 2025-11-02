@@ -1,5 +1,6 @@
 
 'use client';
+import React from 'react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -56,6 +57,8 @@ const users = [
 ];
 
 export default function SchoolManagementPage() {
+  const [isDialogOpen, setIsDialogOpen] = React.useState(false);
+
   return (
     <div className="flex flex-col gap-8">
       <h1 className="text-3xl font-bold">प्रधानाचार्य डैशबोर्ड</h1>
@@ -73,9 +76,9 @@ export default function SchoolManagementPage() {
           <TabsContent value="user-management">
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>उपयोगकर्ता प्रबंधन</CardTitle>
-              <Dialog>
+              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button>
+                  <Button onClick={() => setIsDialogOpen(true)}>
                     <UserPlus className="mr-2" />
                     नया उपयोगकर्ता बनाएं
                   </Button>
@@ -114,8 +117,8 @@ export default function SchoolManagementPage() {
                     </div>
                   </div>
                   <DialogFooter>
-                    <Button type="submit">बनाएं</Button>
-                    <Button variant="outline">रद्द करें</Button>
+                    <Button type="submit" onClick={() => setIsDialogOpen(false)}>बनाएं</Button>
+                    <Button variant="outline" onClick={() => setIsDialogOpen(false)}>रद्द करें</Button>
                   </DialogFooter>
                 </DialogContent>
               </Dialog>
