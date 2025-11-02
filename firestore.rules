@@ -8,7 +8,7 @@
  *
  * Key Security Decisions:
  * - User profiles are private to the owner, but other signed-in users can list them (e.g., for directories).
- * - Notices are publicly readable.
+ * - Notices are publicly readable to allow display on the homepage.
  * - Only the author can create, update, or delete their notices.
  */
 rules_version = '2';
@@ -50,6 +50,7 @@ service cloud.firestore {
          return request.auth.uid == request.resource.data.authorId;
        }
 
+      // Anyone can read notices (for the home page notice board)
       allow read: if true;
       allow create: if isSignedIn() && isNewAuthor();
       allow update: if isSignedIn() && isAuthor();
