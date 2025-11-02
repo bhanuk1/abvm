@@ -18,7 +18,7 @@ import {
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Eye, EyeOff, UserPlus, Calendar as CalendarIcon, PlusCircle } from 'lucide-react';
+import { Eye, EyeOff, UserPlus, Calendar as CalendarIcon, PlusCircle, FileDown } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -137,6 +137,10 @@ export default function SchoolManagementPage() {
   const [selectedResultStudent, setSelectedResultStudent] = React.useState('');
   const [selectedExamType, setSelectedExamType] = React.useState('');
   const [marks, setMarks] = React.useState<any>({});
+  
+  const [selectedReportClass, setSelectedReportClass] = React.useState('');
+  const [selectedReportStudent, setSelectedReportStudent] = React.useState('');
+
 
   const handleInputChange = (id: string, value: string) => {
     setNewUser((prev: any) => ({ ...prev, [id]: value }));
@@ -300,6 +304,14 @@ export default function SchoolManagementPage() {
     if (!selectedResultStudent) return [];
     const student = students.find(s => s.id === selectedResultStudent);
     return student?.subjects ? student.subjects.split(',').map(s => s.trim()) : [];
+  }
+  
+  const handleGeneratePdf = () => {
+    if (!selectedReportClass || !selectedReportStudent) {
+      alert('कृपया रिपोर्ट बनाने के लिए कक्षा और छात्र चुनें।');
+      return;
+    }
+    alert(`Generating PDF for ${selectedReportStudent} in class ${selectedReportClass}... (Functionality to be added)`);
   }
 
   const classes = ['Nursery', 'KG', ...Array.from({length: 12}, (_, i) => `${i + 1}`)];
@@ -774,8 +786,40 @@ export default function SchoolManagementPage() {
               <CardTitle>रिपोर्ट्स</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="h-40 flex items-center justify-center text-muted-foreground">
-                <p>कोई रिपोर्ट उपलब्ध नहीं है।</p>
+               <div className="max-w-md mx-auto space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base">मासिक प्रगति रिपोर्ट</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                     <div className="space-y-2">
+                      <Label htmlFor="report-class">कक्षा चुनें</Label>
+                      <Select value={selectedReportClass} onValueChange={setSelectedReportClass}>
+                        <SelectTrigger id="report-class">
+                          <SelectValue placeholder="कक्षा चुनें" />
+                        </SelectTrigger>
+                        <SelectContent>
+                           {classes.map(c => <SelectItem key={c} value={c}>कक्षा {c}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                     <div className="space-y-2">
+                      <Label htmlFor="report-student">छात्र चुनें</Label>
+                      <Select value={selectedReportStudent} onValueChange={setSelectedReportStudent} disabled={!selectedReportClass}>
+                        <SelectTrigger id="report-student">
+                          <SelectValue placeholder="छात्र चुनें" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {students.filter(s => s.class === selectedReportClass).map(s => <SelectItem key={s.id} value={s.id}>{s.name} (रोल नं. {s.rollNo})</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <Button className="w-full bg-pink-600 hover:bg-pink-700 text-white" onClick={handleGeneratePdf}>
+                      <FileDown className="mr-2"/>
+                      PDF रिपोर्ट बनाएं
+                    </Button>
+                  </CardContent>
+                </Card>
               </div>
             </CardContent>
           </TabsContent>
