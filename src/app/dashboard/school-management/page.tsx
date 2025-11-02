@@ -18,7 +18,7 @@ import {
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Eye, EyeOff, UserPlus } from 'lucide-react';
+import { Eye, EyeOff, UserPlus, PlusCircle } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -55,9 +55,22 @@ const initialUsers = [
   },
 ];
 
+const initialStudents = [
+  {
+    rollNo: '001',
+    name: 'राहुल शर्मा',
+    class: '5',
+    fatherName: 'विकास शर्मा',
+    mobile: '9876543213',
+    id: 'STU001',
+    password: 'stu123',
+  },
+]
+
 export default function SchoolManagementPage() {
   const [users, setUsers] = React.useState(initialUsers);
-  const [isDialogOpen, setIsDialogOpen] = React.useState(false);
+  const [students, setStudents] = React.useState(initialStudents);
+  const [isUserDialogOpen, setIsUserDialogOpen] = React.useState(false);
   const [passwordVisibility, setPasswordVisibility] = React.useState<{[key: number]: boolean}>({});
 
   const [newUser, setNewUser] = React.useState({
@@ -88,7 +101,7 @@ export default function SchoolManagementPage() {
     };
     setUsers((prev) => [...prev, userToAdd]);
     setNewUser({ role: '', name: '', mobile: '', classSubject: '' });
-    setIsDialogOpen(false);
+    setIsUserDialogOpen(false);
   };
   
   const togglePasswordVisibility = (index: number) => {
@@ -115,9 +128,9 @@ export default function SchoolManagementPage() {
           <TabsContent value="user-management">
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>उपयोगकर्ता प्रबंधन</CardTitle>
-              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <Dialog open={isUserDialogOpen} onOpenChange={setIsUserDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button onClick={() => setIsDialogOpen(true)}>
+                  <Button onClick={() => setIsUserDialogOpen(true)}>
                     <UserPlus className="mr-2" />
                     नया उपयोगकर्ता बनाएं
                   </Button>
@@ -163,7 +176,7 @@ export default function SchoolManagementPage() {
                   </div>
                   <DialogFooter>
                     <Button type="submit" onClick={handleCreateUser}>बनाएं</Button>
-                    <Button variant="outline" onClick={() => setIsDialogOpen(false)}>रद्द करें</Button>
+                    <Button variant="outline" onClick={() => setIsUserDialogOpen(false)}>रद्द करें</Button>
                   </DialogFooter>
                 </DialogContent>
               </Dialog>
@@ -209,6 +222,56 @@ export default function SchoolManagementPage() {
                         </Button>
                       </TableCell>
                       <TableCell>
+                        <Button variant="link" className="p-0 h-auto text-primary">
+                          पासवर्ड रीसेट
+                        </Button>
+                        <Button
+                          variant="link"
+                          className="p-0 h-auto text-destructive ml-4"
+                        >
+                          हटाएं
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </TabsContent>
+          <TabsContent value="student-management">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle>छात्र प्रबंधन</CardTitle>
+              <Button>
+                <PlusCircle className="mr-2" />
+                नया छात्र जोड़ें
+              </Button>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>रोल नं.</TableHead>
+                    <TableHead>नाम</TableHead>
+                    <TableHead>कक्षा</TableHead>
+                    <TableHead>पिता का नाम</TableHead>
+                    <TableHead>मोबाइल</TableHead>
+                    <TableHead>लॉगिन विवरण</TableHead>
+                    <TableHead>कार्य</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {students.map((student, index) => (
+                    <TableRow key={index}>
+                      <TableCell className="font-medium">{student.rollNo}</TableCell>
+                      <TableCell>{student.name}</TableCell>
+                      <TableCell>{student.class}</TableCell>
+                      <TableCell>{student.fatherName}</TableCell>
+                      <TableCell>{student.mobile}</TableCell>
+                      <TableCell>
+                        <div>ID: {student.id}</div>
+                        <div>पासवर्ड: {student.password}</div>
+                      </TableCell>
+                       <TableCell>
                         <Button variant="link" className="p-0 h-auto text-primary">
                           पासवर्ड रीसेट
                         </Button>
