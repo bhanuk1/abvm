@@ -93,3 +93,35 @@ export const teacherData = {
     { name: '6', subject: 'हिंदी', students: 2 },
   ],
 };
+
+export interface Homework {
+  id: string;
+  class: string;
+  subject: string;
+  content: string;
+  date: string; // YYYY-MM-DD
+  teacherId: string;
+  teacherName: string;
+}
+
+export const homeworks: Homework[] = [
+    {
+        id: 'HW001',
+        class: '5',
+        subject: 'हिंदी',
+        content: 'पाठ 3 के प्रश्न उत्तर याद करें।',
+        date: '2024-07-29',
+        teacherId: 'teacher01',
+        teacherName: 'श्रीमती सुनीता गुप्ता'
+    }
+];
+
+export const subjects = [
+    'हिंदी',
+    'अंग्रेजी',
+    'गणित',
+    'विज्ञान',
+    'सामाजिक विज्ञान',
+    'कला',
+    'संस्कृत'
+];

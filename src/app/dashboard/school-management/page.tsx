@@ -49,7 +49,10 @@ import {
   initialStudents,
   initialNewUserState,
   initialNewNoticeState,
-  type Result
+  type Result,
+  homeworks as initialHomeworks,
+  type Homework,
+  subjects as allSubjects,
 } from '@/lib/school-data';
 
 
@@ -58,6 +61,7 @@ export default function SchoolManagementPage() {
   const [students, setStudents] = React.useState(initialStudents);
   const [notices, setNotices] = React.useState<Notice[]>(initialNotices);
   const [results, setResults] = React.useState<Result[]>([]);
+  const [homeworks, setHomeworks] = React.useState<Homework[]>(initialHomeworks);
 
   const [isUserDialogOpen, setIsUserDialogOpen] = React.useState(false);
   const [isNoticeDialogOpen, setIsNoticeDialogOpen] = React.useState(false);
@@ -78,6 +82,13 @@ export default function SchoolManagementPage() {
 
   const [selectedClassReportClass, setSelectedClassReportClass] = React.useState('');
   const [selectedClassReportExam, setSelectedClassReportExam] = React.useState('');
+
+  const [attendanceReportClass, setAttendanceReportClass] = React.useState('');
+  const [attendanceReportDate, setAttendanceReportDate] = React.useState<Date | undefined>(new Date());
+  
+  const [homeworkReportClass, setHomeworkReportClass] = React.useState('');
+  const [homeworkReportSubject, setHomeworkReportSubject] = React.useState('');
+  const [homeworkReportDate, setHomeworkReportDate] = React.useState<Date | undefined>(new Date());
 
   const handleInputChange = (id: string, value: string) => {
     setNewUser((prev: any) => ({ ...prev, [id]: value }));
@@ -250,7 +261,7 @@ export default function SchoolManagementPage() {
   
   const handleGeneratePdf = (doc: jsPDF, student: any, results: Result[]) => {
     try {
-        const fontName = 'NotoSansDevanagari';
+        doc.setFont('sans-serif'); // Use a built-in font that supports Hindi
         
         doc.setFontSize(16);
         doc.text('आदर्श बाल विद्या मन्दिर', doc.internal.pageSize.getWidth() / 2, 15, { align: 'center' });
@@ -271,8 +282,8 @@ export default function SchoolManagementPage() {
           head: [['विवरण', 'जानकारी']],
           body: studentDetails,
           theme: 'grid',
-          styles: { font: fontName, fontStyle: 'normal' },
-          headStyles: { fillColor: [41, 128, 185], font: fontName, fontStyle: 'normal' },
+          styles: { font: 'sans-serif', fontStyle: 'normal' },
+          headStyles: { fillColor: [41, 128, 185], font: 'sans-serif', fontStyle: 'normal' },
         });
 
         results.forEach(result => {
@@ -299,8 +310,8 @@ export default function SchoolManagementPage() {
                 head: tableHead,
                 body: tableBody,
                 theme: 'grid',
-                styles: { font: fontName, fontStyle: 'normal' },
-                headStyles: { fillColor: [22, 160, 133], font: fontName, fontStyle: 'normal' },
+                styles: { font: 'sans-serif', fontStyle: 'normal' },
+                headStyles: { fillColor: [22, 160, 133], font: 'sans-serif', fontStyle: 'normal' },
             });
         });
         
@@ -389,6 +400,13 @@ const handleClassReportDownloadClick = () => {
     { value: 'final', label: 'वार्षिक परीक्षा' },
   ]
   const studentSubjects = getSubjectsForStudent();
+  
+  const attendanceFilteredStudents = students.filter(student => student.class === attendanceReportClass);
+  const filteredHomework = homeworks.find(h => 
+    h.class === homeworkReportClass &&
+    h.subject === homeworkReportSubject &&
+    homeworkReportDate && h.date === format(homeworkReportDate, 'yyyy-MM-dd')
+  );
 
 
   return (
@@ -397,12 +415,14 @@ const handleClassReportDownloadClick = () => {
       <Card>
         <Tabs defaultValue="user-management">
           <CardHeader className="p-2 md:p-4">
-            <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-5">
-              <TabsTrigger value="user-management">उपयोगकर्ता प्रबंधन</TabsTrigger>
-              <TabsTrigger value="student-management">छात्र प्रबंधन</TabsTrigger>
-              <TabsTrigger value="notice-management">सूचना प्रबंधन</TabsTrigger>
-              <TabsTrigger value="result-management">परिणाम प्रबंधन</TabsTrigger>
-              <TabsTrigger value="reports">रिपोर्ट्स</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7">
+              <TabsTrigger value="user-management">उपयोगकर्ता</TabsTrigger>
+              <TabsTrigger value="student-management">छात्र</TabsTrigger>
+              <TabsTrigger value="notice-management">सूचना</TabsTrigger>
+              <TabsTrigger value="result-management">परिणाम</TabsTrigger>
+              <TabsTrigger value="reports">छात्र रिपोर्ट</TabsTrigger>
+              <TabsTrigger value="attendance-report">उपस्थिति रिपोर्ट</TabsTrigger>
+              <TabsTrigger value="homework-report">होमवर्क रिपोर्ट</TabsTrigger>
             </TabsList>
           </CardHeader>
           <TabsContent value="user-management">
@@ -478,7 +498,14 @@ const handleClassReportDownloadClick = () => {
                         </div>
                         <div className="grid grid-cols-4 items-center gap-4">
                           <Label htmlFor="studentClass" className="text-right">कक्षा</Label>
-                          <Input id="studentClass" value={newUser.studentClass} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" />
+                          <Select onValueChange={(value) => handleInputChange('studentClass', value)}>
+                            <SelectTrigger className="col-span-3">
+                              <SelectValue placeholder="कक्षा चुनें" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {classes.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
                         </div>
                         <div className="grid grid-cols-4 items-center gap-4">
                           <Label htmlFor="studentSubjects" className="text-right">विषय</Label>
@@ -926,6 +953,160 @@ const handleClassReportDownloadClick = () => {
                 </Card>
               </div>
             </CardContent>
+          </TabsContent>
+          <TabsContent value="attendance-report">
+             <CardHeader>
+              <CardTitle>कक्षा-वार उपस्थिति रिपोर्ट</CardTitle>
+             </CardHeader>
+             <CardContent className="space-y-6">
+               <div className="flex items-center gap-4 p-4 border rounded-lg">
+                <div className="space-y-2">
+                  <Label htmlFor="att-report-class">कक्षा चुनें</Label>
+                  <Select value={attendanceReportClass} onValueChange={setAttendanceReportClass}>
+                    <SelectTrigger id="att-report-class" className="w-[180px]">
+                      <SelectValue placeholder="कक्षा चुनें" />
+                    </SelectTrigger>
+                    <SelectContent>
+                       {classes.map(c => <SelectItem key={c} value={c}>कक्षा {c}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                   <Label>तारीख चुनें</Label>
+                   <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant={"outline"}
+                          className={cn(
+                            "w-[240px] justify-start text-left font-normal",
+                            !attendanceReportDate && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {attendanceReportDate ? format(attendanceReportDate, "PPP") : <span>तारीख चुनें</span>}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0">
+                        <Calendar
+                          mode="single"
+                          selected={attendanceReportDate}
+                          onSelect={setAttendanceReportDate}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                </div>
+               </div>
+
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>रोल नंबर</TableHead>
+                      <TableHead>नाम</TableHead>
+                      <TableHead className="text-right">स्थिति</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {attendanceFilteredStudents.length > 0 ? (
+                      attendanceFilteredStudents.map((student) => (
+                        <TableRow key={student.id}>
+                          <TableCell>{student.rollNo}</TableCell>
+                          <TableCell>{student.name}</TableCell>
+                          <TableCell className="text-right">
+                             <Badge 
+                               variant={student.status === 'उपस्थित' ? 'default' : 'destructive'}
+                               className={cn(
+                                 student.status === 'उपस्थित' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800',
+                                 'w-20 justify-center'
+                               )}
+                              >
+                               {student.status}
+                             </Badge>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={3} className="text-center h-24">
+                          इस कक्षा के लिए कोई छात्र नहीं मिला या डेटा उपलब्ध नहीं है।
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+             </CardContent>
+          </TabsContent>
+          <TabsContent value="homework-report">
+             <CardHeader>
+              <CardTitle>कक्षा-वार होमवर्क रिपोर्ट</CardTitle>
+             </CardHeader>
+             <CardContent className="space-y-6">
+                <div className="flex items-center gap-4 p-4 border rounded-lg">
+                  <div className="space-y-2">
+                    <Label htmlFor="hw-report-class">कक्षा चुनें</Label>
+                    <Select value={homeworkReportClass} onValueChange={setHomeworkReportClass}>
+                      <SelectTrigger id="hw-report-class" className="w-[180px]">
+                        <SelectValue placeholder="कक्षा चुनें" />
+                      </SelectTrigger>
+                      <SelectContent>
+                         {classes.map(c => <SelectItem key={c} value={c}>कक्षा {c}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="hw-report-subject">विषय चुनें</Label>
+                    <Select value={homeworkReportSubject} onValueChange={setHomeworkReportSubject}>
+                      <SelectTrigger id="hw-report-subject" className="w-[180px]">
+                        <SelectValue placeholder="विषय चुनें" />
+                      </SelectTrigger>
+                      <SelectContent>
+                         {allSubjects.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                     <Label>तारीख चुनें</Label>
+                     <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "w-[240px] justify-start text-left font-normal",
+                              !homeworkReportDate && "text-muted-foreground"
+                            )}
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {homeworkReportDate ? format(homeworkReportDate, "PPP") : <span>तारीख चुनें</span>}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0">
+                          <Calendar
+                            mode="single"
+                            selected={homeworkReportDate}
+                            onSelect={setHomeworkReportDate}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                  </div>
+                </div>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>होमवर्क विवरण</CardTitle>
+                    <CardContent className="pt-4">
+                      {filteredHomework ? (
+                        <div>
+                          <p className="font-semibold">शिक्षक: {filteredHomework.teacherName}</p>
+                          <p className="mt-2 text-muted-foreground">{filteredHomework.content}</p>
+                        </div>
+                      ) : (
+                         <p className="text-muted-foreground">चुनी गई कक्षा, विषय और तारीख के लिए कोई होमवर्क नहीं मिला।</p>
+                      )}
+                    </CardContent>
+                  </CardHeader>
+                </Card>
+             </CardContent>
           </TabsContent>
         </Tabs>
       </Card>
