@@ -1,3 +1,6 @@
+
+'use client';
+
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -16,6 +19,24 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { EyeOff, UserPlus } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 const users = [
   {
@@ -52,10 +73,52 @@ export default function SchoolManagementPage() {
           <TabsContent value="user-management">
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>उपयोगकर्ता प्रबंधन</CardTitle>
-              <Button>
-                <UserPlus className="mr-2" />
-                नया उपयोगकर्ता बनाएं
-              </Button>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button>
+                    <UserPlus className="mr-2" />
+                    नया उपयोगकर्ता बनाएं
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[425px]">
+                  <DialogHeader>
+                    <DialogTitle>नया उपयोगकर्ता बनाएं</DialogTitle>
+                  </DialogHeader>
+                  <div className="grid gap-4 py-4">
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="role" className="text-right">
+                        भूमिका
+                      </Label>
+                      <Select>
+                        <SelectTrigger className="col-span-3">
+                          <SelectValue placeholder="भूमिका चुनें" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="teacher">शिक्षक</SelectItem>
+                          <SelectItem value="parent">अभिभावक</SelectItem>
+                          <SelectItem value="student">छात्र</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="name" className="text-right">
+                        नाम
+                      </Label>
+                      <Input id="name" className="col-span-3" />
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="mobile" className="text-right">
+                        मोबाइल नंबर
+                      </Label>
+                      <Input id="mobile" className="col-span-3" />
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button type="submit">बनाएं</Button>
+                    <Button variant="outline">रद्द करें</Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
             </CardHeader>
             <CardContent>
               <Table>
