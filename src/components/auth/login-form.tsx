@@ -23,7 +23,7 @@ function LoginButton() {
   const { pending } = useFormStatus();
 
   return (
-     <Button type="submit" className="w-full bg-accent text-accent-foreground hover:bg-accent/90" disabled={pending}>
+     <Button type="submit" className="w-full" disabled={pending}>
         {pending ? 'Logging in...' : <><LogIn className="mr-2 h-4 w-4" /> Login</>}
     </Button>
   );
@@ -37,7 +37,7 @@ export function LoginForm() {
       <div className="grid gap-2">
         <Label htmlFor="role">Your Role</Label>
         <Select name="role" required defaultValue="student">
-          <SelectTrigger id="role" className="bg-background">
+          <SelectTrigger id="role">
             <SelectValue placeholder="Select your role" />
           </SelectTrigger>
           <SelectContent>
@@ -50,13 +50,13 @@ export function LoginForm() {
       </div>
       <div className="grid gap-2">
         <Label htmlFor="user-id">User ID</Label>
-        <Input id="user-id" name="userId" placeholder="Your ID" required className="bg-background"/>
+        <Input id="user-id" name="userId" placeholder="Your ID" required />
       </div>
       <div className="grid gap-2">
         <div className="flex items-center">
           <Label htmlFor="password">Password</Label>
         </div>
-        <Input id="password" name="password" type="password" required className="bg-background"/>
+        <Input id="password" name="password" type="password" required />
       </div>
       <LoginButton />
       {state?.message && (

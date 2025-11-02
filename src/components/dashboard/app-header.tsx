@@ -17,7 +17,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 
 export function AppHeader() {
   return (
-    <header className="flex h-14 items-center gap-4 border-b bg-muted/40 px-4 lg:h-[60px] lg:px-6">
+    <header className="flex h-14 items-center gap-4 border-b bg-background px-4 lg:h-[60px] lg:px-6">
       <Sheet>
         <SheetTrigger asChild>
           <Button variant="outline" size="icon" className="shrink-0 md:hidden">
@@ -25,18 +25,18 @@ export function AppHeader() {
             <span className="sr-only">Toggle navigation menu</span>
           </Button>
         </SheetTrigger>
-        <SheetContent side="left" className="flex flex-col p-0 bg-muted/40">
+        <SheetContent side="left" className="flex flex-col p-0">
             <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
                 <Link href="/dashboard" className="flex items-center gap-2 font-semibold font-headline">
-                    <BookOpenCheck className="h-6 w-6 text-primary" />
-                    <span className="text-sm">Adarsh Bal Vidya Mandir Inter College</span>
+                    <BookOpenCheck className="h-6 w-6" />
+                    <span>Adarsh Bal Vidya Mandir</span>
                 </Link>
             </div>
             <div className="flex-1 py-2">
                 <nav className="grid items-start px-2 text-sm font-medium lg:px-4">
                     <Link
                     href="/dashboard"
-                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-primary bg-accent/20 transition-all hover:text-primary"
+                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
                     >
                     <LayoutGrid className="h-4 w-4" />
                     Notice Board

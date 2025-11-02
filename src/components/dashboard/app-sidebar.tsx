@@ -11,15 +11,15 @@ export function AppSidebar() {
       <div className="flex h-full max-h-screen flex-col gap-2">
         <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
           <Link href="/dashboard" className="flex items-center gap-2 font-semibold font-headline">
-            <BookOpenCheck className="h-6 w-6 text-primary" />
-            <span className="text-sm">Adarsh Bal Vidya Mandir Inter College</span>
+            <BookOpenCheck className="h-6 w-6" />
+            <span>Adarsh Bal Vidya Mandir</span>
           </Link>
         </div>
         <div className="flex-1">
           <nav className="grid items-start px-2 text-sm font-medium lg:px-4">
             <Link
               href="/dashboard"
-              className="flex items-center gap-3 rounded-lg bg-accent text-accent-foreground px-3 py-2 transition-all hover:bg-accent/90"
+              className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
             >
               <LayoutGrid className="h-4 w-4" />
               Notice Board
