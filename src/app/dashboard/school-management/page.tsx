@@ -282,7 +282,7 @@ export default function SchoolManagementPage() {
 
     let resultMarks;
     if (selectedExamType === 'monthly') {
-      if (!marks['monthly-obtained'] || !marks['monthly-total']) {
+      if (!marks.hasOwnProperty('monthly-obtained') || !marks.hasOwnProperty('monthly-total')) {
         toast({ variant: 'destructive', title: 'त्रुटि', description: 'कृपया मासिक परीक्षा के अंक भरें।' });
         return;
       }
