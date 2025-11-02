@@ -328,10 +328,10 @@ export default function SchoolManagementPage() {
 
     const doc = new jsPDF();
     
-    // Hindi font needs to be added to VFS. This is a placeholder.
-    // For this to work, you need to load a Hindi font that supports the characters.
-    // E.g., doc.addFont('NotoSansDevanagari-Regular.ttf', 'NotoSansDevanagari', 'normal');
-    // doc.setFont('NotoSansDevanagari');
+    // Add a Hindi font that supports the characters.
+    // The 'Amiri' font is a placeholder and might not render all characters perfectly.
+    // For full support, a specific Devanagari font would need to be embedded.
+    doc.setFont('Times', 'Roman');
 
     doc.text('छात्र प्रगति रिपोर्ट', 14, 16);
     
@@ -350,8 +350,8 @@ export default function SchoolManagementPage() {
       head: [['विवरण', 'जानकारी']],
       body: studentDetails,
       theme: 'grid',
-      styles: { font: 'helvetica' }, // Change to a Hindi font if available
-      headStyles: { fillColor: [41, 128, 185] },
+      styles: { font: 'Times', fontStyle: 'normal' },
+      headStyles: { fillColor: [41, 128, 185], font: 'Times', fontStyle: 'bold' },
     });
 
 
@@ -360,28 +360,27 @@ export default function SchoolManagementPage() {
         doc.text(`परीक्षा: ${result.examType}`, 14, lastTableY + 10);
 
         let tableBody: (string|number)[][] = [];
+        let tableHead;
+
         if (Array.isArray(result.marks)) {
-             (doc as any).autoTable({
-                startY: lastTableY + 16,
-                head: [['विषय', 'प्राप्तांक', 'पूर्णांक']],
-                body: result.marks.map(m => [m.subject, m.obtained, m.total]),
-                theme: 'grid',
-                styles: { font: 'helvetica' },
-                headStyles: { fillColor: [22, 160, 133] },
-            });
+            tableHead = [['विषय', 'प्राप्तांक', 'पूर्णांक']];
+            tableBody = result.marks.map(m => [m.subject, m.obtained, m.total]);
         } else {
-            (doc as any).autoTable({
-                startY: lastTableY + 16,
-                head: [['विवरण', 'अंक']],
-                body: [
-                    ['प्राप्तांक', result.marks.obtained],
-                    ['पूर्णांक', result.marks.total]
-                ],
-                theme: 'grid',
-                styles: { font: 'helvetica' },
-                headStyles: { fillColor: [22, 160, 133] },
-            });
+            tableHead = [['विवरण', 'अंक']];
+            tableBody = [
+                ['प्राप्तांक', result.marks.obtained],
+                ['पूर्णांक', result.marks.total]
+            ];
         }
+
+        (doc as any).autoTable({
+            startY: lastTableY + 16,
+            head: tableHead,
+            body: tableBody,
+            theme: 'grid',
+            styles: { font: 'Times', fontStyle: 'normal' },
+            headStyles: { fillColor: [22, 160, 133], font: 'Times', fontStyle: 'bold' },
+        });
     });
 
     doc.save(`${student.name}_${student.class}_report.pdf`);
