@@ -308,38 +308,17 @@ export default function SchoolManagementPage() {
     return student?.subjects ? student.subjects.split(',').map(s => s.trim()) : [];
   }
   
-  const handleGeneratePdf = async () => {
-    if (!selectedReportClass || !selectedReportStudent) {
-      alert('कृपया रिपोर्ट बनाने के लिए कक्षा और छात्र चुनें।');
-      return;
-    }
-
-    const student = students.find(s => s.id === selectedReportStudent);
-    if (!student) {
-        alert('छात्र नहीं मिला।');
-        return;
-    }
-
-    const studentResults = results.filter(r => r.studentId === student.id);
-    if (studentResults.length === 0) {
-        alert('इस छात्र के लिए कोई परिणाम नहीं मिला।');
-        return;
-    }
-
-    const doc = new jsPDF();
-    
+  const handleGeneratePdf = (doc: jsPDF, student: any, results: Result[]) => {
     try {
-        // This is a workaround to handle unicode characters in jsPDF.
-        // A proper solution would be to load a .ttf file that supports the characters.
-        doc.addFont('data:font/truetype;base64,AAEAAAARAQAABAAQR0RFRg... (base64 font data placeholder)', 'NotoSansDevanagari', 'normal');
-        doc.setFont('NotoSansDevanagari');
+        const fontName = 'NotoSansDevanagari';
+        doc.addFont('/fonts/NotoSansDevanagari-Regular.ttf', fontName, 'normal');
+        doc.setFont(fontName);
 
         doc.setFontSize(16);
         doc.text('आदर्श बाल विद्या मन्दिर', doc.internal.pageSize.getWidth() / 2, 15, { align: 'center' });
         doc.setFontSize(12);
         doc.text('छात्र प्रगति रिपोर्ट', doc.internal.pageSize.getWidth() / 2, 22, { align: 'center' });
         
-        // Student Details
         const studentDetails = [
             ['नाम', student.name],
             ['कक्षा', student.class],
@@ -354,11 +333,11 @@ export default function SchoolManagementPage() {
           head: [['विवरण', 'जानकारी']],
           body: studentDetails,
           theme: 'grid',
-          styles: { font: 'NotoSansDevanagari', fontStyle: 'normal' },
-          headStyles: { fillColor: [41, 128, 185], font: 'NotoSansDevanagari', fontStyle: 'normal' },
+          styles: { font: fontName, fontStyle: 'normal' },
+          headStyles: { fillColor: [41, 128, 185], font: fontName, fontStyle: 'normal' },
         });
 
-        studentResults.forEach(result => {
+        results.forEach(result => {
             const lastTableY = (doc as any).lastAutoTable.finalY;
             doc.setFontSize(12);
             doc.text(`परीक्षा: ${result.examType}`, 14, lastTableY + 10);
@@ -382,8 +361,8 @@ export default function SchoolManagementPage() {
                 head: tableHead,
                 body: tableBody,
                 theme: 'grid',
-                styles: { font: 'NotoSansDevanagari', fontStyle: 'normal' },
-                headStyles: { fillColor: [22, 160, 133], font: 'NotoSansDevanagari', fontStyle: 'normal' },
+                styles: { font: fontName, fontStyle: 'normal' },
+                headStyles: { fillColor: [22, 160, 133], font: fontName, fontStyle: 'normal' },
             });
         });
 
@@ -393,6 +372,29 @@ export default function SchoolManagementPage() {
         alert('PDF बनाने में त्रुटि हुई। कृपया कंसोल देखें।');
     }
 };
+
+const handleDownloadClick = async () => {
+    if (!selectedReportClass || !selectedReportStudent) {
+      alert('कृपया रिपोर्ट बनाने के लिए कक्षा और छात्र चुनें।');
+      return;
+    }
+
+    const student = students.find(s => s.id === selectedReportStudent);
+    if (!student) {
+        alert('छात्र नहीं मिला।');
+        return;
+    }
+
+    const studentResults = results.filter(r => r.studentId === student.id);
+    if (studentResults.length === 0) {
+        alert('इस छात्र के लिए कोई परिणाम नहीं मिला।');
+        return;
+    }
+    
+    const doc = new jsPDF();
+    handleGeneratePdf(doc, student, studentResults);
+};
+
 
   const classes = ['Nursery', 'KG', ...Array.from({length: 12}, (_, i) => `${i + 1}`)];
   const examTypes = [
@@ -894,7 +896,7 @@ export default function SchoolManagementPage() {
                         </SelectContent>
                       </Select>
                     </div>
-                    <Button className="w-full bg-pink-600 hover:bg-pink-700 text-white" onClick={handleGeneratePdf}>
+                    <Button className="w-full bg-pink-600 hover:bg-pink-700 text-white" onClick={handleDownloadClick}>
                       <FileDown className="mr-2"/>
                       PDF रिपोर्ट बनाएं
                     </Button>
@@ -908,5 +910,3 @@ export default function SchoolManagementPage() {
     </div>
   );
 }
-
-    
