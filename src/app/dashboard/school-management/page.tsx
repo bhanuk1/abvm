@@ -25,6 +25,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogFooter,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -106,10 +107,10 @@ export default function SchoolManagementPage() {
   const [passwordVisibility, setPasswordVisibility] = React.useState<{[key: number]: boolean}>({});
   const [studentPasswordVisibility, setStudentPasswordVisibility] = React.useState<{[key: number]: boolean}>({});
 
-  const [newUser, setNewUser] = React.useState(initialNewUserState);
+  const [newUser, setNewUser] = React.useState<any>(initialNewUserState);
 
   const handleInputChange = (id: string, value: string) => {
-    setNewUser((prev) => ({ ...prev, [id]: value }));
+    setNewUser((prev: any) => ({ ...prev, [id]: value }));
   };
   
   const handleSelectChange = (value: string) => {
@@ -117,7 +118,7 @@ export default function SchoolManagementPage() {
   };
   
   const handleDateChange = (field: 'dob' | 'admissionDate', date?: Date) => {
-    setNewUser((prev) => ({ ...prev, [field]: date }));
+    setNewUser((prev: any) => ({ ...prev, [field]: date }));
   };
 
 
@@ -464,5 +465,3 @@ export default function SchoolManagementPage() {
     </div>
   );
 }
-
-    
