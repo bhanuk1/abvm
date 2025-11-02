@@ -57,7 +57,7 @@ import {
   classSubjects,
   attendance as initialAttendance,
   type Attendance,
-  notices as allNotices
+  allNotices
 } from '@/lib/school-data';
 
 
@@ -137,7 +137,7 @@ export default function SchoolManagementPage() {
     };
     // Add to the beginning of the array to show newest first
     allNotices.unshift(noticeToAdd);
-    setNotices(allNotices);
+    setNotices([...allNotices]);
     setNewNotice(initialNewNoticeState);
     setIsNoticeDialogOpen(false);
   };
@@ -1153,3 +1153,5 @@ const handleClassReportDownloadClick = () => {
     </div>
   );
 }
+
+    

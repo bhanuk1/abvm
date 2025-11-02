@@ -17,7 +17,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { notices } from '@/lib/school-data';
+import { allNotices as notices } from '@/lib/school-data';
 import { format } from 'date-fns';
 
 function HomeHeader() {
@@ -61,7 +61,11 @@ function LoginOptions() {
         </CardTitle>
       </CardHeader>
       <CardContent className="grid gap-4">
-        <Button asChild size="lg" className="justify-start text-lg py-6">
+        <Button
+          asChild
+          size="lg"
+          className="justify-start text-lg py-6 bg-yellow-500 hover:bg-yellow-600 text-black"
+        >
           <Link href="/login">
             <User className="mr-4" /> शिक्षक लॉगिन
           </Link>
@@ -69,8 +73,7 @@ function LoginOptions() {
         <Button
           asChild
           size="lg"
-          variant="secondary"
-          className="justify-start text-lg py-6 hover:bg-amber-500"
+          className="justify-start text-lg py-6 bg-blue-600 hover:bg-blue-700 text-white"
         >
           <Link href="/login">
             <Users className="mr-4" /> अभिभावक लॉगिन
@@ -79,13 +82,17 @@ function LoginOptions() {
         <Button
           asChild
           size="lg"
-          className="justify-start text-lg py-6 bg-accent hover:bg-accent/90"
+          className="justify-start text-lg py-6 bg-pink-600 hover:bg-pink-700 text-white"
         >
           <Link href="/login">
             <School className="mr-4" /> छात्र लॉगिन
           </Link>
         </Button>
-        <Button asChild size="lg" className="justify-start text-lg py-6">
+        <Button
+          asChild
+          size="lg"
+          className="justify-start text-lg py-6 bg-green-600 hover:bg-green-700 text-white"
+        >
           <Link href="/login">
             <Building className="mr-4" /> प्रधानाचार्य लॉगिन
           </Link>

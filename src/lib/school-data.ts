@@ -1,7 +1,7 @@
 
 import type { Notice } from './placeholder-data';
 
-export const notices: Notice[] = [
+export const allNotices: Notice[] = [
   {
     id: '1',
     title: 'स्कूल में वार्षिक उत्सव',
