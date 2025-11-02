@@ -18,7 +18,7 @@ import {
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Eye, EyeOff, UserPlus, Calendar as CalendarIcon } from 'lucide-react';
+import { Eye, EyeOff, UserPlus, Calendar as CalendarIcon, PlusCircle } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -38,8 +38,11 @@ import {
 } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
+import { Textarea } from '@/components/ui/textarea';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { notices as initialNotices, type Notice } from '@/lib/placeholder-data';
+
 
 const initialUsers = [
   {
@@ -99,15 +102,26 @@ const initialNewUserState = {
     studentMobile: ''
 };
 
+const initialNewNoticeState = {
+  title: '',
+  content: '',
+  role: 'All' as Notice['role'],
+};
+
 
 export default function SchoolManagementPage() {
   const [users, setUsers] = React.useState(initialUsers);
   const [students, setStudents] = React.useState(initialStudents);
+  const [notices, setNotices] = React.useState<Notice[]>(initialNotices);
+
   const [isUserDialogOpen, setIsUserDialogOpen] = React.useState(false);
+  const [isNoticeDialogOpen, setIsNoticeDialogOpen] = React.useState(false);
+
   const [passwordVisibility, setPasswordVisibility] = React.useState<{[key: number]: boolean}>({});
   const [studentPasswordVisibility, setStudentPasswordVisibility] = React.useState<{[key: number]: boolean}>({});
 
   const [newUser, setNewUser] = React.useState<any>(initialNewUserState);
+  const [newNotice, setNewNotice] = React.useState(initialNewNoticeState);
 
   const handleInputChange = (id: string, value: string) => {
     setNewUser((prev: any) => ({ ...prev, [id]: value }));
@@ -119,6 +133,28 @@ export default function SchoolManagementPage() {
   
   const handleDateChange = (field: 'dob' | 'admissionDate', date?: Date) => {
     setNewUser((prev: any) => ({ ...prev, [field]: date }));
+  };
+
+  const handleNoticeInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { id, value } = e.target;
+    setNewNotice(prev => ({ ...prev, [id]: value }));
+  };
+
+  const handleNoticeRoleChange = (value: Notice['role']) => {
+    setNewNotice(prev => ({ ...prev, role: value }));
+  };
+  
+  const handleCreateNotice = () => {
+    if (!newNotice.title || !newNotice.content) return;
+    const noticeToAdd: Notice = {
+      id: (notices.length + 1).toString(),
+      ...newNotice,
+      author: 'प्रधानाचार्य',
+      date: new Date().toISOString(),
+    };
+    setNotices(prev => [noticeToAdd, ...prev]);
+    setNewNotice(initialNewNoticeState);
+    setIsNoticeDialogOpen(false);
   };
 
 
@@ -458,6 +494,75 @@ export default function SchoolManagementPage() {
                   ))}
                 </TableBody>
               </Table>
+            </CardContent>
+          </TabsContent>
+           <TabsContent value="notice-management">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle>सूचना प्रबंधन</CardTitle>
+              <Dialog open={isNoticeDialogOpen} onOpenChange={setIsNoticeDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button onClick={() => setIsNoticeDialogOpen(true)} className="bg-amber-500 hover:bg-amber-600">
+                    <PlusCircle className="mr-2" />
+                    नई सूचना जोड़ें
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-lg">
+                  <DialogHeader>
+                    <DialogTitle>नई सूचना बनाएं</DialogTitle>
+                  </DialogHeader>
+                  <div className="grid gap-4 py-4">
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="title" className="text-right">
+                        शीर्षक
+                      </Label>
+                      <Input id="title" value={newNotice.title} onChange={handleNoticeInputChange} className="col-span-3" />
+                    </div>
+                    <div className="grid grid-cols-4 items-start gap-4">
+                      <Label htmlFor="content" className="text-right pt-2">
+                        विवरण
+                      </Label>
+                      <Textarea id="content" value={newNotice.content} onChange={handleNoticeInputChange} className="col-span-3" rows={5} />
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="role" className="text-right">
+                        किसके लिए
+                      </Label>
+                      <Select value={newNotice.role} onValueChange={handleNoticeRoleChange}>
+                        <SelectTrigger className="col-span-3">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="All">सभी</SelectItem>
+                          <SelectItem value="Teachers">शिक्षक</SelectItem>
+                          <SelectItem value="Students">छात्र</SelectItem>
+                          <SelectItem value="Parents">अभिभावक</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setIsNoticeDialogOpen(false)}>रद्द करें</Button>
+                    <Button type="submit" onClick={handleCreateNotice}>प्रकाशित करें</Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {notices.map(notice => (
+                <div key={notice.id} className="rounded-lg border bg-card text-card-foreground shadow-sm p-4 relative">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="font-semibold">{notice.title}</h3>
+                      <p className="text-sm text-muted-foreground mt-1">{notice.content}</p>
+                      <p className="text-xs text-muted-foreground mt-2">{format(new Date(notice.date), 'dd/MM/yyyy')} - {notice.author}</p>
+                    </div>
+                    <div className="flex items-center gap-2 absolute top-4 right-4">
+                        <Button variant="outline" size="sm" className="bg-amber-100 text-amber-800">उच्च</Button>
+                        <Button variant="destructive" size="sm">हटाएं</Button>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </CardContent>
           </TabsContent>
         </Tabs>
