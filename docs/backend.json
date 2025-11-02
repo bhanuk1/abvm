@@ -1,0 +1,112 @@
+{
+  "entities": {
+    "User": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "User",
+      "type": "object",
+      "description": "Represents a user of the Vidyalaya Connect application.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the User entity."
+        },
+        "username": {
+          "type": "string",
+          "description": "The username of the user."
+        },
+        "role": {
+          "type": "string",
+          "description": "The role of the user (e.g., teacher, parent, student, administrator)."
+        }
+      },
+      "required": [
+        "id",
+        "username",
+        "role"
+      ]
+    },
+    "Notice": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Notice",
+      "type": "object",
+      "description": "Represents a notice or announcement on the Notice Board.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Notice entity."
+        },
+        "title": {
+          "type": "string",
+          "description": "The title of the notice."
+        },
+        "content": {
+          "type": "string",
+          "description": "The content of the notice."
+        },
+        "authorId": {
+          "type": "string",
+          "description": "Reference to User. (Relationship: User 1:N Notice).  The user ID of the author of the notice."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "The date and time when the notice was created.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "content",
+        "authorId",
+        "createdAt"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "User",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Stores user profiles. Path-based ownership ensures only the user can access their profile.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/notices/{noticeId}",
+        "definition": {
+          "entityName": "Notice",
+          "schema": {
+            "$ref": "#/backend/entities/Notice"
+          },
+          "description": "Stores notices created by the associated user. Includes denormalized 'authorId' for authorization independence.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user who created the notice."
+            },
+            {
+              "name": "noticeId",
+              "description": "The unique identifier of the notice."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore structure is designed to securely manage users and notices for the Vidyalaya Connect application, prioritizing authorization independence and clear security rules. User data is stored in a dedicated collection (`/users/{userId}`) with path-based ownership, ensuring only the user can access their own data. The `Notice` documents are stored in a collection group called `notices` under each `user`, enabling scalable querying and management of notices associated with users.\n\nTo ensure authorization independence, we denormalize the `authorId` in the notice documents. This eliminates the need for `get()` calls in security rules to verify the author of a notice, allowing atomic creation and updates. The structure also segregates user data based on ownership, which helps to apply simple and robust security rules.\n\nThe QAPs requirements are met via structural segregation. Each user's data is stored under their own document, which makes it straightforward to implement rules that allow each user to only access their data. Notices will be publicly visible via the collection group queries and list operations. "
+  }
+}
