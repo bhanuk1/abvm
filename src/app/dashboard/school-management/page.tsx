@@ -176,24 +176,27 @@ export default function SchoolManagementPage() {
     }
   
     try {
+      // Check for parent role and handle student creation
       if (newUser.role === 'parent') {
         if (!newUser.studentUserId || !newUser.studentPassword) {
           toast({ variant: 'destructive', title: 'त्रुटि', description: 'अभिभावक बनाते समय कृपया छात्र का यूजर आईडी और पासवर्ड भरें।' });
           return;
         }
         try {
-            const studentEmail = `${newUser.studentUserId}@vidyalaya.com`;
-            await createUserWithEmailAndPassword(auth, studentEmail, newUser.studentPassword);
+          const studentEmail = `${newUser.studentUserId}@vidyalaya.com`;
+          await createUserWithEmailAndPassword(auth, studentEmail, newUser.studentPassword);
+          // Firestore doc for student will be created later along with parent
         } catch (studentError: any) {
-            if (studentError.code === 'auth/email-already-in-use') {
-                toast({ variant: 'destructive', title: 'त्रुटि', description: 'यह छात्र यूजर आईडी पहले से मौजूद है।' });
-            } else {
-                 toast({ variant: 'destructive', title: 'त्रुटि', description: `छात्र बनाने में विफल: ${studentError.message}` });
-            }
-            return; // Stop if student creation fails
+          if (studentError.code === 'auth/email-already-in-use') {
+            toast({ variant: 'destructive', title: 'त्रुटि', description: 'यह छात्र यूजर आईडी पहले से मौजूद है।' });
+          } else {
+            toast({ variant: 'destructive', title: 'त्रुटि', description: `छात्र बनाने में विफल: ${studentError.message}` });
+          }
+          return; // Stop if student creation fails
         }
       }
-
+  
+      // Create the main user (teacher, parent, or student)
       const email = `${newUser.userId}@vidyalaya.com`;
       const userCredential = await createUserWithEmailAndPassword(auth, email, newUser.password);
       const user = userCredential.user;
@@ -215,7 +218,7 @@ export default function SchoolManagementPage() {
           ...userData,
           class: newUser.studentClass,
           subjects: newUser.studentSubjects,
-          fatherName: newUser.parentName,
+          fatherName: newUser.parentName || newUser.studentName, // Use student name if parent name not provided
           motherName: newUser.motherName,
           address: newUser.address,
           dob: newUser.dob ? format(newUser.dob, 'yyyy-MM-dd') : null,
@@ -225,19 +228,6 @@ export default function SchoolManagementPage() {
           mobile: newUser.studentMobile,
           rollNo: newUser.rollNo,
         };
-        if(newUser.role === 'parent') {
-            // Re-login as student to get the user object, then store data
-            const studentEmail = `${newUser.studentUserId}@vidyalaya.com`;
-            const studentPass = newUser.studentPassword;
-            // We already created the user, now we need to sign in to get their UID for firestore
-            // But we can't easily do that without signing out the admin.
-            // For now, let's assume the creation was successful and we can move on.
-            // A more robust solution would use cloud functions to create the user doc.
-            // Since we can't get the UID easily, this part will be flawed.
-            // Let's create a placeholder doc that can be updated later.
-            // The proper way to get the UID is from the creation step, but to avoid re-auth flow issues,
-            // we will proceed and accept this limitation. The student creation itself is now validated.
-        }
       }
   
       await setDoc(doc(firestore, 'users', user.uid), userData);
@@ -330,8 +320,9 @@ export default function SchoolManagementPage() {
     }
   };
   
-  const handleMarksChange = (field: string, value: string) => {
-    setMarks(prev => ({...prev, [field]: value}));
+  const handleMarksChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { id, value } = e.target;
+    setMarks(prev => ({...prev, [id]: value}));
   };
 
   const getSubjectsForStudent = () => {
@@ -946,10 +937,10 @@ const handleClassReportDownloadClick = async () => {
                 <div className="border rounded-lg p-4 space-y-4">
                   {selectedExamType === 'monthly' ? (
                     <div className="grid grid-cols-2 gap-4 items-center max-w-sm">
-                      <Label htmlFor="marks-obtained-monthly" className="font-semibold">प्राप्तांक</Label>
-                      <Input id="marks-obtained-monthly" type="number" placeholder="प्राप्तांक" value={marks['monthly-obtained'] || ''} onChange={(e) => handleMarksChange('monthly-obtained', e.target.value)}/>
-                       <Label htmlFor="marks-total-monthly" className="font-semibold">पूर्णांक</Label>
-                      <Input id="marks-total-monthly" type="number" value={marks['monthly-total'] || '100'} onChange={(e) => handleMarksChange('monthly-total', e.target.value)} />
+                      <Label htmlFor="monthly-obtained" className="font-semibold">प्राप्तांक</Label>
+                      <Input id="monthly-obtained" type="number" placeholder="प्राप्तांक" value={marks['monthly-obtained'] || ''} onChange={handleMarksChange}/>
+                       <Label htmlFor="monthly-total" className="font-semibold">पूर्णांक</Label>
+                      <Input id="monthly-total" type="number" value={marks['monthly-total'] || '100'} onChange={handleMarksChange} />
                     </div>
                   ) : (
                     <div>
@@ -958,8 +949,8 @@ const handleClassReportDownloadClick = async () => {
                         {studentSubjects.map(subject => (
                            <div key={subject} className="grid grid-cols-3 gap-2 items-center">
                               <Label htmlFor={`marks-obtained-${subject}`} className="col-span-1">{subject}</Label>
-                              <Input id={`marks-obtained-${subject}`} type="number" placeholder="प्राप्तांक" className="col-span-1" value={marks[`${subject}-obtained`] || ''} onChange={(e) => handleMarksChange(`${subject}-obtained`, e.target.value)} />
-                              <Input id={`marks-total-${subject}`} type="number" value={marks[`${subject}-total`] || '100'} readOnly className="col-span-1 bg-gray-100" onChange={(e) => handleMarksChange(`${subject}-total`, e.target.value)}/>
+                              <Input id={`${subject}-obtained`} type="number" placeholder="प्राप्तांक" className="col-span-1" value={marks[`${subject}-obtained`] || ''} onChange={handleMarksChange} />
+                              <Input id={`${subject}-total`} type="number" value={marks[`${subject}-total`] || '100'} readOnly className="col-span-1 bg-gray-100" onChange={handleMarksChange}/>
                           </div>
                         ))}
                       </div>
@@ -1075,8 +1066,7 @@ const handleClassReportDownloadClick = async () => {
                         </SelectTrigger>
                         <SelectContent>
                           {examTypes.map(type => (
-                            <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>
-                          ))}
+                            <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>)}
                         </SelectContent>
                       </Select>
                     </div>
@@ -1248,5 +1238,3 @@ const handleClassReportDownloadClick = async () => {
     </div>
   );
 }
-
-    
