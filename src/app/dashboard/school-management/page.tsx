@@ -25,6 +25,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogTrigger,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -278,7 +279,7 @@ export default function SchoolManagementPage() {
                         </div>
                         <div className="grid grid-cols-4 items-center gap-4">
                           <Label htmlFor="teacherSubject" className="text-right">विषय</Label>
-                          <Input id="teacherSubject" value={newUser.teacherSubject} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" />
+                          <Input id="teacherSubject" value={newUser.teacherSubject} onChange={(e) => handleInputChange(e.target.id, e.-target.value)} className="col-span-3" />
                         </div>
                          <div className="grid grid-cols-4 items-center gap-4">
                           <Label htmlFor="teacherClass" className="text-right">कक्षा</Label>
@@ -606,3 +607,5 @@ export default function SchoolManagementPage() {
     </div>
   );
 }
+
+    
