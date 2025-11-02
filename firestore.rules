@@ -51,7 +51,7 @@ service cloud.firestore {
        }
 
       // Anyone can read or list notices (for the home page notice board)
-      allow get, list: if true;
+      allow read: if true;
       
       // Only signed-in users who are the author can write/delete.
       allow create: if isSignedIn() && isNewAuthor();
