@@ -76,6 +76,9 @@ export default function SchoolManagementPage() {
 
   const noticesQuery = useMemoFirebase(() => firestore ? collection(firestore, 'notices') : null, [firestore]);
   const { data: notices, isLoading: noticesLoading } = useCollection<Notice>(noticesQuery);
+  
+  const resultsQuery = useMemoFirebase(() => firestore ? collection(firestore, 'results') : null, [firestore]);
+  const { data: resultsData, isLoading: resultsLoading } = useCollection<Result>(resultsQuery);
 
 
   // const [students, setStudents] = React.useState(initialStudents);
@@ -265,19 +268,22 @@ export default function SchoolManagementPage() {
     }));
   };
   
-  const handleAddResult = () => {
-    if (!selectedResultClass || !selectedResultStudent || !selectedExamType || !students) {
-      alert('कृपया कक्षा, छात्र और परीक्षा का प्रकार चुनें।');
+  const handleAddResult = async () => {
+    if (!selectedResultClass || !selectedResultStudent || !selectedExamType || !students || !firestore) {
+      toast({ variant: 'destructive', title: 'त्रुटि', description: 'कृपया कक्षा, छात्र और परीक्षा का प्रकार चुनें।' });
       return;
     }
-  
+
     const student = students.find(s => s.id === selectedResultStudent);
-    if (!student) return;
-  
+    if (!student) {
+      toast({ variant: 'destructive', title: 'त्रुटि', description: 'चयनित छात्र नहीं मिला।' });
+      return;
+    }
+
     let resultMarks;
     if (selectedExamType === 'monthly') {
       if (!marks['monthly-obtained'] || !marks['monthly-total']) {
-        alert('कृपया मासिक परीक्षा के अंक भरें।');
+        toast({ variant: 'destructive', title: 'त्रुटि', description: 'कृपया मासिक परीक्षा के अंक भरें।' });
         return;
       }
       resultMarks = {
@@ -291,32 +297,37 @@ export default function SchoolManagementPage() {
         obtained: marks[`${subject}-obtained`] || '0',
         total: marks[`${subject}-total`] || '100',
       }));
-      
+
       const allMarksEntered = resultMarks.every(m => m.obtained);
       if (!allMarksEntered) {
-        alert('कृपया सभी विषयों के अंक भरें।');
+        toast({ variant: 'destructive', title: 'त्रुटि', description: 'कृपया सभी विषयों के अंक भरें।' });
         return;
       }
     }
-  
-    const newResult: Result = {
-      id: `RES${Date.now()}`,
+
+    const newResult: Omit<Result, 'id'> = {
       studentId: student.id,
       studentName: student.username,
       class: student.class,
       examType: examTypes.find(e => e.value === selectedExamType)?.label || '',
       marks: resultMarks,
     };
-  
-    setResults(prev => [...prev, newResult]);
-    
-    // Reset fields
-    setSelectedResultClass('');
-    setSelectedResultStudent('');
-    setSelectedExamType('');
-    setMarks({});
-    
-    alert('परिणाम सफलतापूर्वक जोड़ा गया!');
+
+    try {
+      const resultsCol = collection(firestore, 'results');
+      await addDoc(resultsCol, newResult);
+      
+      toast({ title: 'सफलता!', description: 'परिणाम सफलतापूर्वक जोड़ा गया!' });
+
+      // Reset fields
+      setSelectedResultClass('');
+      setSelectedResultStudent('');
+      setSelectedExamType('');
+      setMarks({});
+    } catch (error) {
+      console.error("Error adding result:", error);
+      toast({ variant: 'destructive', title: 'त्रुटि', description: 'परिणाम जोड़ने में विफल।' });
+    }
   };
   
   const handleMarksChange = (field: string, value: string) => {
@@ -408,7 +419,7 @@ export default function SchoolManagementPage() {
 };
 
 const handleDownloadClick = async () => {
-    if (!selectedReportClass || !selectedReportStudent || !students) {
+    if (!selectedReportClass || !selectedReportStudent || !students || !resultsData) {
       alert('कृपया रिपोर्ट बनाने के लिए कक्षा और छात्र चुनें।');
       return;
     }
@@ -419,7 +430,7 @@ const handleDownloadClick = async () => {
         return;
     }
 
-    const studentResults = results.filter(r => r.studentId === student.id);
+    const studentResults = resultsData.filter(r => r.studentId === student.id);
     if (studentResults.length === 0) {
         alert('इस छात्र के लिए कोई परिणाम नहीं मिला।');
         return;
@@ -436,7 +447,7 @@ const handleDownloadClick = async () => {
 };
 
 const handleClassReportDownloadClick = async () => {
-  if (!selectedClassReportClass || !selectedClassReportExam || !students) {
+  if (!selectedClassReportClass || !selectedClassReportExam || !students || !resultsData) {
     alert('कृपया कक्षा और परीक्षा का प्रकार चुनें।');
     return;
   }
@@ -448,7 +459,7 @@ const handleClassReportDownloadClick = async () => {
   }
 
   const examLabel = examTypes.find(e => e.value === selectedClassReportExam)?.label || '';
-  const resultsForExam = results.filter(r => r.class === selectedClassReportClass && r.examType === examLabel);
+  const resultsForExam = resultsData.filter(r => r.class === selectedClassReportClass && r.examType === examLabel);
 
   if (resultsForExam.length === 0) {
     alert(`इस कक्षा के लिए '${examLabel}' का कोई परिणाम नहीं मिला।`);
@@ -960,7 +971,8 @@ const handleClassReportDownloadClick = async () => {
               <div>
                 <h3 className="text-lg font-medium mb-4 mt-6">सभी परिणाम</h3>
                 <div className="border rounded-lg">
-                  {results.length > 0 ? (
+                  {(resultsLoading) && <p>परिणाम लोड हो रहे हैं...</p>}
+                  {resultsData && resultsData.length > 0 ? (
                     <Table>
                       <TableHeader>
                         <TableRow>
@@ -971,7 +983,7 @@ const handleClassReportDownloadClick = async () => {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {results.map(result => (
+                        {resultsData.map(result => (
                           <TableRow key={result.id}>
                             <TableCell>{result.studentName}</TableCell>
                             <TableCell>{result.class}</TableCell>
@@ -991,11 +1003,11 @@ const handleClassReportDownloadClick = async () => {
                         ))}
                       </TableBody>
                     </Table>
-                  ) : (
+                  ) : !resultsLoading ? (
                     <div className="p-4 min-h-[100px] flex items-center justify-center">
                       <p className="text-muted-foreground">कोई परिणाम उपलब्ध नहीं है</p>
                     </div>
-                  )}
+                  ) : null}
                 </div>
               </div>
             </CardContent>
@@ -1236,7 +1248,3 @@ const handleClassReportDownloadClick = async () => {
     </div>
   );
 }
-
-    
-
-    
