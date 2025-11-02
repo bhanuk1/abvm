@@ -40,10 +40,10 @@ export const initialStudents = [
     subjects: 'हिंदी, अंग्रेजी, गणित, विज्ञान, सा० विज्ञान',
     status: 'उपस्थित'
   },
-  { id: 'STU002', rollNo: '002', name: 'प्रिया कुमारी', class: '5', fatherName: 'अशोक कुमार', status: 'अनुपस्थित', password: 'stu123', mobile: '9876543214' },
-  { id: 'STU003', rollNo: '003', name: 'अमित सिंह', class: '5', fatherName: 'राजेश सिंह', status: 'उपस्थित', password: 'stu123', mobile: '9876543215' },
-  { id: 'STU004', rollNo: '004', name: 'नेहा यादव', class: '6', fatherName: 'महेश यादव', status: 'उपस्थित', password: 'stu123', mobile: '9876543216' },
-  { id: 'STU005', rollNo: '005', name: 'सुनीता देवी', class: '6', fatherName: 'राम प्रसाद', status: 'उपस्थित', password: 'stu123', mobile: '9876543217' },
+  { id: 'STU002', rollNo: '002', name: 'प्रिया कुमारी', class: '5', fatherName: 'अशोक कुमार', status: 'अनुपस्थित', password: 'stu123', mobile: '9876543214', subjects: 'हिंदी, अंग्रेजी, गणित, विज्ञान, सा० विज्ञान', },
+  { id: 'STU003', rollNo: '003', name: 'अमित सिंह', class: '5', fatherName: 'राजेश सिंह', status: 'उपस्थित', password: 'stu123', mobile: '9876543215', subjects: 'हिंदी, अंग्रेजी, गणित, विज्ञान, सा० विज्ञान', },
+  { id: 'STU004', rollNo: '004', name: 'नेहा यादव', class: '6', fatherName: 'महेश यादव', status: 'उपस्थित', password: 'stu123', mobile: '9876543216', subjects: 'हिंदी, अंग्रेजी, गणित, विज्ञान, सा० विज्ञान', },
+  { id: 'STU005', rollNo: '005', name: 'सुनीता देवी', class: '6', fatherName: 'राम प्रसाद', status: 'उपस्थित', password: 'stu123', mobile: '9876543217', subjects: 'हिंदी, अंग्रेजी, गणित, विज्ञान, सा० विज्ञान', },
 ];
 
 
@@ -117,6 +117,16 @@ export const homeworks: Homework[] = [
 ];
 
 export const subjects = [
+    'हिंदी',
+    'अंग्रेजी',
+    'गणित',
+    'विज्ञान',
+    'सामाजिक विज्ञान',
+    'कला',
+    'संस्कृत'
+];
+
+export const allSubjects = [
     'हिंदी',
     'अंग्रेजी',
     'गणित',
