@@ -62,7 +62,7 @@ function LoginOptions() {
       </CardHeader>
       <CardContent className="grid gap-4">
         <Button asChild size="lg" className="justify-start text-lg py-6">
-          <Link href="/dashboard">
+          <Link href="/login">
             <User className="mr-4" /> शिक्षक लॉगिन
           </Link>
         </Button>
@@ -72,7 +72,7 @@ function LoginOptions() {
           variant="secondary"
           className="justify-start text-lg py-6 hover:bg-amber-500"
         >
-          <Link href="/dashboard">
+          <Link href="/login">
             <Users className="mr-4" /> अभिभावक लॉगिन
           </Link>
         </Button>
@@ -81,12 +81,12 @@ function LoginOptions() {
           size="lg"
           className="justify-start text-lg py-6 bg-accent hover:bg-accent/90"
         >
-          <Link href="/dashboard">
+          <Link href="/login">
             <School className="mr-4" /> छात्र लॉगिन
           </Link>
         </Button>
         <Button asChild size="lg" className="justify-start text-lg py-6">
-          <Link href="/dashboard">
+          <Link href="/login">
             <Building className="mr-4" /> प्रधानाचार्य लॉगिन
           </Link>
         </Button>
