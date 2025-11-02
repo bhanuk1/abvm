@@ -42,19 +42,19 @@ export function AppHeader() {
             </Button>
           </div>
         </div>
-        <nav className="flex items-center space-x-6 border-t h-12">
+        <nav className="-mb-px flex space-x-8" aria-label="Tabs">
           {navLinks.map((link) => (
             <Link
-              key={link.href}
+              key={link.label}
               href={link.href}
               className={cn(
-                'flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-primary transition-colors pb-3',
+                'whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium',
                 pathname === link.href
-                  ? 'text-primary border-b-2 border-primary'
-                  : ''
+                  ? 'border-primary text-primary'
+                  : 'border-transparent text-muted-foreground hover:border-gray-300 hover:text-gray-700'
               )}
             >
-              <link.icon className="h-4 w-4" />
+               <link.icon className="inline-block h-4 w-4 mr-2" />
               {link.label}
             </Link>
           ))}
