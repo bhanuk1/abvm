@@ -1,50 +1,71 @@
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { notices, type Notice } from '@/lib/placeholder-data';
-import { format } from 'date-fns';
+import { School, User, Users, Building } from 'lucide-react';
 
-function getBadgeVariant(role: Notice['role']) {
-  switch (role) {
-    case 'Teachers':
-      return 'default';
-    case 'Students':
-      return 'secondary';
-    case 'Parents':
-      return 'outline';
-    default:
-      return 'destructive';
-  }
-}
+const stats = [
+  {
+    title: 'कुल छात्र',
+    value: '1',
+    icon: User,
+    color: 'bg-blue-100 text-blue-600',
+  },
+  {
+    title: 'शिक्षक',
+    value: '1',
+    icon: User,
+    color: 'bg-blue-100 text-blue-600',
+  },
+  {
+    title: 'अभिभावक',
+    value: '1',
+    icon: Users,
+    color: 'bg-amber-100 text-amber-600',
+  },
+  {
+    title: 'कक्षाएं',
+    value: '15',
+    icon: Building,
+    color: 'bg-pink-100 text-pink-600',
+  },
+];
 
-export default function NoticeBoardPage() {
+
+export default function DashboardPage() {
   return (
-    <>
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {notices.map((notice) => (
-          <Card key={notice.id} className="flex flex-col hover:shadow-lg transition-shadow duration-300">
-            <CardHeader>
-              <div className="flex justify-between items-start gap-2">
-                <CardTitle className="text-lg leading-snug">{notice.title}</CardTitle>
-                <Badge variant={getBadgeVariant(notice.role)} className="ml-2 shrink-0">{notice.role}</Badge>
+    <div className="flex flex-col gap-8">
+      <h1 className="text-3xl font-bold">डैशबोर्ड</h1>
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {stats.map((stat) => (
+          <Card key={stat.title}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <div className={`p-3 rounded-md ${stat.color}`}>
+                <stat.icon className="h-5 w-5" />
               </div>
-              <CardDescription>{format(new Date(notice.date), 'MMMM d, yyyy')}</CardDescription>
+              <div>
+                <CardTitle className="text-sm font-medium text-right">
+                  {stat.title}
+                </CardTitle>
+                <p className="text-2xl font-bold text-right">{stat.value}</p>
+              </div>
             </CardHeader>
-            <CardContent className="flex-grow">
-              <p className="text-sm text-muted-foreground line-clamp-4">{notice.content}</p>
-            </CardContent>
-            <CardFooter>
-              <p className="text-xs text-muted-foreground">By: {notice.author}</p>
-            </CardFooter>
           </Card>
         ))}
       </div>
-    </>
+      <Card>
+        <CardHeader>
+          <CardTitle>त्वरित कार्य</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="h-40 flex items-center justify-center text-muted-foreground">
+            {/* Quick actions content will go here */}
+            <p>कोई त्वरित कार्य उपलब्ध नहीं है।</p>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
