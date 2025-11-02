@@ -329,7 +329,7 @@ export default function SchoolManagementPage() {
     const doc = new jsPDF();
     
     try {
-        const fontResponse = await fetch('/fonts/NotoSansDevanagari-Regular.ttf');
+        const fontResponse = await fetch('https://raw.githubusercontent.com/google/fonts/main/ofl/notosansdevanagari/NotoSansDevanagari-Regular.ttf');
         if (!fontResponse.ok) {
           throw new Error('Font file could not be loaded.');
         }
@@ -338,7 +338,7 @@ export default function SchoolManagementPage() {
         
         const fontName = 'NotoSansDevanagari';
         doc.addFileToVFS(`${fontName}.ttf`, Buffer.from(fontUint8Array).toString('base64'));
-        doc.addFont(`${fontName}.ttf`, fontName, 'normal', 'UTF-8');
+        doc.addFont(`${fontName}.ttf`, fontName, 'normal', {encoding: 'UTF-8'});
         doc.setFont(fontName);
 
         doc.setFontSize(16);
