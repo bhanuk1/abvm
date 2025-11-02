@@ -330,12 +330,15 @@ export default function SchoolManagementPage() {
     
     try {
         const fontResponse = await fetch('/fonts/NotoSansDevanagari-Regular.ttf');
+        if (!fontResponse.ok) {
+          throw new Error('Font file could not be loaded.');
+        }
         const font = await fontResponse.arrayBuffer();
         const fontUint8Array = new Uint8Array(font);
         
         const fontName = 'NotoSansDevanagari';
         doc.addFileToVFS(`${fontName}.ttf`, Buffer.from(fontUint8Array).toString('base64'));
-        doc.addFont(`${fontName}.ttf`, fontName, 'normal');
+        doc.addFont(`${fontName}.ttf`, fontName, 'normal', 'UTF-8');
         doc.setFont(fontName);
 
         doc.setFontSize(16);
