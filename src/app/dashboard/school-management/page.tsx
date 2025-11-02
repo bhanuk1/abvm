@@ -336,7 +336,7 @@ export default function SchoolManagementPage() {
     
     // @ts-ignore
     return classSubjects[student.class] || [];
-  }
+  };
   
   const handleGeneratePdf = async (doc: jsPDF, student: any, results: Result[]) => {
     try {
