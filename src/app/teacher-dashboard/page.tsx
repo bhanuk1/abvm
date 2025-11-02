@@ -7,8 +7,9 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { User, Building, Book } from 'lucide-react';
+import { User, Building, Book, Users } from 'lucide-react';
 import Link from 'next/link';
+import { Button } from '@/components/ui/button';
 
 // Mock data for the logged-in teacher
 const teacherData = {
@@ -32,7 +33,7 @@ const stats = [
   {
     title: 'कुल छात्र',
     value: totalStudents,
-    icon: User,
+    icon: Users,
     color: 'bg-blue-100 text-blue-600',
   },
 ];
