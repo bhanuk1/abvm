@@ -21,7 +21,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, limit, orderBy, query, where } from 'firebase/firestore';
+import { collection, limit, query, where } from 'firebase/firestore';
 import type { Notice } from '@/lib/placeholder-data';
 
 function HomeHeader() {
@@ -114,7 +114,6 @@ function NoticeBoard() {
         ? query(
             collection(firestore, 'notices'),
             where('role', '==', 'All'),
-            orderBy('createdAt', 'desc'),
             limit(1)
           )
         : null,
