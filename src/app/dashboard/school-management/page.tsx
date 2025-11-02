@@ -52,8 +52,9 @@ import {
   type Result,
   homeworks as initialHomeworks,
   type Homework,
-  subjects as allSubjects,
+  allSubjects,
   results as initialResults,
+  classSubjects,
 } from '@/lib/school-data';
 
 
@@ -93,6 +94,15 @@ export default function SchoolManagementPage() {
 
   const handleInputChange = (id: string, value: string) => {
     setNewUser((prev: any) => ({ ...prev, [id]: value }));
+  };
+
+  const handleStudentClassChange = (value: string) => {
+    const subjectsForClass = classSubjects[value] || [];
+    setNewUser((prev: any) => ({
+      ...prev,
+      studentClass: value,
+      studentSubjects: subjectsForClass.join(', '),
+    }));
   };
   
   const handleSelectChange = (value: string) => {
@@ -257,7 +267,13 @@ export default function SchoolManagementPage() {
   const getSubjectsForStudent = () => {
     if (!selectedResultStudent) return [];
     const student = students.find(s => s.id === selectedResultStudent);
-    return student?.subjects ? student.subjects.split(',').map(s => s.trim()) : [];
+    if (!student) return [];
+    
+    if (student.subjects) {
+        return student.subjects.split(',').map(s => s.trim());
+    }
+    
+    return classSubjects[student.class] || [];
   }
   
   const handleGeneratePdf = (doc: jsPDF, student: any, results: Result[]) => {
@@ -500,7 +516,7 @@ const handleClassReportDownloadClick = () => {
                         </div>
                         <div className="grid grid-cols-4 items-center gap-4">
                           <Label htmlFor="studentClass" className="text-right">कक्षा</Label>
-                          <Select onValueChange={(value) => handleInputChange('studentClass', value)}>
+                          <Select onValueChange={handleStudentClassChange}>
                             <SelectTrigger className="col-span-3">
                               <SelectValue placeholder="कक्षा चुनें" />
                             </SelectTrigger>
@@ -511,7 +527,7 @@ const handleClassReportDownloadClick = () => {
                         </div>
                         <div className="grid grid-cols-4 items-center gap-4">
                           <Label htmlFor="studentSubjects" className="text-right">विषय</Label>
-                          <Input id="studentSubjects" value={newUser.studentSubjects} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" placeholder="जैसे: हिंदी, अंग्रेजी, गणित"/>
+                          <Input id="studentSubjects" value={newUser.studentSubjects} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" placeholder="कक्षा चुनने पर विषय स्वतः भर जाएंगे"/>
                         </div>
                          <div className="grid grid-cols-4 items-center gap-4">
                           <Label htmlFor="address" className="text-right">पता</Label>
