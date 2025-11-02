@@ -17,8 +17,8 @@ import {
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { initialStudents, homeworks, results as allResults, attendance as allAttendance } from '@/lib/school-data';
-import { notices, type Notice } from '@/lib/placeholder-data';
+import { initialStudents, homeworks, results as allResults, attendance as allAttendance, notices } from '@/lib/school-data';
+import { type Notice } from '@/lib/placeholder-data';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 

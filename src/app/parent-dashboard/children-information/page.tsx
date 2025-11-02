@@ -17,8 +17,8 @@ import {
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { initialStudents, homeworks, results as allResults, attendance as allAttendance } from '@/lib/school-data';
-import { notices, type Notice } from '@/lib/placeholder-data';
+import { initialStudents, homeworks, results as allResults, attendance as allAttendance, notices } from '@/lib/school-data';
+import { type Notice } from '@/lib/placeholder-data';
 import { format } from 'date-fns';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -79,13 +79,13 @@ export default function ChildrenInformationPage() {
                     <div className="space-y-4">
                       <DetailRow label="पिता का नाम" value={parentStudent.fatherName} />
                       <DetailRow label="माता का नाम" value={parentStudent.motherName} />
-                      <DetailRow label="जन्म तिथि" value={format(new Date(parentStudent.dob), 'dd/MM/yyyy')} />
+                      <DetailRow label="जन्म तिथि" value={parentStudent.dob ? format(new Date(parentStudent.dob), 'dd/MM/yyyy') : '-'} />
                       <DetailRow label="मोबाइल नंबर" value={parentStudent.mobile} />
                     </div>
                      <div className="space-y-4">
                         <DetailRow label="पता" value={parentStudent.address} />
                         <DetailRow label="आधार नंबर" value={parentStudent.aadhaar} />
-                        <DetailRow label="प्रवेश तिथि" value={format(new Date(parentStudent.admissionDate), 'dd/MM/yyyy')} />
+                        <DetailRow label="प्रवेश तिथि" value={parentStudent.admissionDate ? format(new Date(parentStudent.admissionDate), 'dd/MM/yyyy') : '-'} />
                         <DetailRow label="विषय" value={parentStudent.subjects} />
                     </div>
                   </dl>

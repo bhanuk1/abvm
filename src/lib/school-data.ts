@@ -1,6 +1,58 @@
 
 import type { Notice } from './placeholder-data';
 
+export const notices: Notice[] = [
+  {
+    id: '1',
+    title: 'स्कूल में वार्षिक उत्सव',
+    content: 'दिनांक 15 दिसंबर को स्कूल में वार्षिक उत्सव का आयोजन किया जाएगा। सभी छात्र और अभिभावक आमंत्रित हैं।',
+    author: 'प्रधानाचार्य',
+    role: 'All',
+    date: '2025-10-28',
+  },
+  {
+    id: '2',
+    title: 'Parent-Teacher Meeting Schedule',
+    content: 'A Parent-Teacher Meeting is scheduled for this Saturday to discuss the mid-term performance of students. Please book your slots with the respective class teachers.',
+    author: 'Administration',
+    role: 'Parents',
+    date: '2024-07-12',
+  },
+  {
+    id: '3',
+    title: 'Holiday for National Festival',
+    content: 'The school will remain closed on August 15th on account of Independence Day. We wish everyone a happy and patriotic celebration.',
+    author: 'Administration',
+    role: 'All',
+    date: '2024-07-10',
+  },
+  {
+    id: '4',
+    title: 'Science Fair Submissions',
+    content: 'Students interested in participating in the upcoming Science Fair should submit their project proposals by the end of this month. Please contact Mrs. Davis for the submission guidelines.',
+    author: 'Science Department',
+    role: 'Students',
+    date: '2024-07-08',
+  },
+  {
+    id: '5',
+    title: 'Staff Meeting Notification',
+    content: 'There will be a mandatory staff meeting on Friday at 3:00 PM in the staff room to discuss the curriculum for the new semester.',
+    author: 'Principal\'s Office',
+    role: 'Teachers',
+    date: '2024-07-05',
+  },
+  {
+    id: '6',
+    title: 'Library Books Return Deadline',
+    content: 'All students are reminded to return any overdue library books by this Friday to avoid fines. The library will be closed for stock-taking next week.',
+    author: 'Librarian',
+    role: 'Students',
+    date: '2024-07-02',
+  },
+];
+
+
 export const initialUsers = [
   {
     name: 'श्रीमती सुनीता गुप्ता',
@@ -39,10 +91,10 @@ export const initialStudents = [
     password: 'stu123',
     subjects: 'हिंदी, अंग्रेजी, गणित, विज्ञान, सामाजिक विज्ञान, कंप्यूटर, नैतिक शिक्षा, Drawing, संस्कृत/उर्दू',
   },
-  { id: 'STU002', rollNo: '002', name: 'प्रिया कुमारी', class: '5', fatherName: 'अशोक कुमार', password: 'stu123', mobile: '9876543214', subjects: 'हिंदी, अंग्रेजी, गणित, विज्ञान, सामाजिक विज्ञान, कंप्यूटर, नैतिक शिक्षा, Drawing, संस्कृत/उर्दू', },
-  { id: 'STU003', rollNo: '003', name: 'अमित सिंह', class: '5', fatherName: 'राजेश सिंह', password: 'stu123', mobile: '9876543215', subjects: 'हिंदी, अंग्रेजी, गणित, विज्ञान, सामाजिक विज्ञान, कंप्यूटर, नैतिक शिक्षा, Drawing, संस्कृत/उर्दू', },
-  { id: 'STU004', rollNo: '004', name: 'नेहा यादव', class: '6', fatherName: 'महेश यादव', password: 'stu123', mobile: '9876543216', subjects: 'हिंदी, अंग्रेजी, गणित, विज्ञान, सामाजिक विज्ञान, कंप्यूटर, नैतिक शिक्षा, Drawing, संस्कृत/उर्दू', },
-  { id: 'STU005', rollNo: '005', name: 'सुनीता देवी', class: '6', fatherName: 'राम प्रसाद', password: 'stu123', mobile: '9876543217', subjects: 'हिंदी, अंग्रेजी, गणित, विज्ञान, सामाजिक विज्ञान, कंप्यूटर, नैतिक शिक्षा, Drawing, संस्कृत/उर्दू', },
+  { id: 'STU002', rollNo: '002', name: 'प्रिया कुमारी', class: '5', fatherName: 'अशोक कुमार', password: 'stu123', mobile: '9876543214', motherName: 'a', dob: '2015-05-20', address: '123, गांधी नगर, दिल्ली', admissionDate: '2020-04-01', aadhaar: '1234 5678 9012', pen: 'PEN12345', subjects: 'हिंदी, अंग्रेजी, गणित, विज्ञान, सामाजिक विज्ञान, कंप्यूटर, नैतिक शिक्षा, Drawing, संस्कृत/उर्दू', },
+  { id: 'STU003', rollNo: '003', name: 'अमित सिंह', class: '5', fatherName: 'राजेश सिंह', password: 'stu123', mobile: '9876543215', motherName: 'a', dob: '2015-05-20', address: '123, गांधी नगर, दिल्ली', admissionDate: '2020-04-01', aadhaar: '1234 5678 9012', pen: 'PEN12345', subjects: 'हिंदी, अंग्रेजी, गणित, विज्ञान, सामाजिक विज्ञान, कंप्यूटर, नैतिक शिक्षा, Drawing, संस्कृत/उर्दू', },
+  { id: 'STU004', rollNo: '004', name: 'नेहा यादव', class: '6', fatherName: 'महेश यादव', password: 'stu123', mobile: '9876543216', motherName: 'a', dob: '2015-05-20', address: '123, गांधी नगर, दिल्ली', admissionDate: '2020-04-01', aadhaar: '1234 5678 9012', pen: 'PEN12345', subjects: 'हिंदी, अंग्रेजी, गणित, विज्ञान, सामाजिक विज्ञान, कंप्यूटर, नैतिक शिक्षा, Drawing, संस्कृत/उर्दू', },
+  { id: 'STU005', rollNo: '005', name: 'सुनीता देवी', class: '6', fatherName: 'राम प्रसाद', password: 'stu123', mobile: '9876543217', motherName: 'a', dob: '2015-05-20', address: '123, गांधी नगर, दिल्ली', admissionDate: '2020-04-01', aadhaar: '1234 5678 9012', pen: 'PEN12345', subjects: 'हिंदी, अंग्रेजी, गणित, विज्ञान, सामाजिक विज्ञान, कंप्यूटर, नैतिक शिक्षा, Drawing, संस्कृत/उर्दू', },
 ];
 
 

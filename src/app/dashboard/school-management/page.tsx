@@ -43,7 +43,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Textarea } from '@/components/ui/textarea';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { notices as initialNotices, type Notice } from '@/lib/placeholder-data';
+import { type Notice } from '@/lib/placeholder-data';
 import {
   initialUsers,
   initialStudents,
@@ -57,13 +57,14 @@ import {
   classSubjects,
   attendance as initialAttendance,
   type Attendance,
+  notices as allNotices
 } from '@/lib/school-data';
 
 
 export default function SchoolManagementPage() {
   const [users, setUsers] = React.useState(initialUsers);
   const [students, setStudents] = React.useState(initialStudents);
-  const [notices, setNotices] = React.useState<Notice[]>(initialNotices);
+  const [notices, setNotices] = React.useState<Notice[]>(allNotices);
   const [results, setResults] = React.useState<Result[]>(initialResults);
   const [homeworks, setHomeworks] = React.useState<Homework[]>(initialHomeworks);
   const [attendance, setAttendance] = React.useState<Attendance[]>(initialAttendance);
@@ -129,12 +130,14 @@ export default function SchoolManagementPage() {
   const handleCreateNotice = () => {
     if (!newNotice.title || !newNotice.content) return;
     const noticeToAdd: Notice = {
-      id: (notices.length + 1).toString(),
+      id: (allNotices.length + 1).toString(),
       ...newNotice,
       author: 'प्रधानाचार्य',
       date: new Date().toISOString(),
     };
-    setNotices(prev => [noticeToAdd, ...prev]);
+    // Add to the beginning of the array to show newest first
+    allNotices.unshift(noticeToAdd);
+    setNotices(allNotices);
     setNewNotice(initialNewNoticeState);
     setIsNoticeDialogOpen(false);
   };

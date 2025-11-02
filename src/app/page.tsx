@@ -17,7 +17,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { notices } from '@/lib/placeholder-data';
+import { notices } from '@/lib/school-data';
 import { format } from 'date-fns';
 
 function HomeHeader() {
@@ -106,15 +106,19 @@ function NoticeBoard() {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="border-l-4 border-amber-400 pl-4 bg-amber-50 p-4 rounded-r-lg">
-          <h3 className="font-bold">{firstNotice.title}</h3>
-          <p className="text-sm text-gray-600 mt-1 line-clamp-3">
-            {firstNotice.content}
-          </p>
-          <p className="text-xs text-gray-500 mt-2">
-            {format(new Date(firstNotice.date), 'dd/MM/yyyy')}
-          </p>
-        </div>
+        {firstNotice ? (
+          <div className="border-l-4 border-amber-400 pl-4 bg-amber-50 p-4 rounded-r-lg">
+            <h3 className="font-bold">{firstNotice.title}</h3>
+            <p className="text-sm text-gray-600 mt-1 line-clamp-3">
+              {firstNotice.content}
+            </p>
+            <p className="text-xs text-gray-500 mt-2">
+              {format(new Date(firstNotice.date), 'dd/MM/yyyy')}
+            </p>
+          </div>
+        ) : (
+          <p>कोई सूचना उपलब्ध नहीं है।</p>
+        )}
       </CardContent>
     </Card>
   );
