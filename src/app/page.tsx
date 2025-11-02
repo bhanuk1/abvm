@@ -1,38 +1,156 @@
-import Image from 'next/image';
-import { LoginForm } from '@/components/auth/login-form';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
-import { BookOpenCheck } from 'lucide-react';
+import Link from 'next/link';
+import {
+  BookOpenCheck,
+  Building,
+  Contact,
+  Mail,
+  Newspaper,
+  School,
+  User,
+  Users,
+} from 'lucide-react';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { notices } from '@/lib/placeholder-data';
+import { format } from 'date-fns';
 
-export default function LoginPage() {
-  const loginImage = PlaceHolderImages.find(p => p.id === 'login-background');
-
+function HomeHeader() {
   return (
-    <div className="w-full lg:grid lg:min-h-screen lg:grid-cols-2">
-      <div className="flex items-center justify-center py-12">
-        <div className="mx-auto grid w-[350px] gap-6">
-          <div className="grid gap-2 text-center">
-             <div className="flex items-center justify-center gap-2">
-              <BookOpenCheck className="h-8 w-8 text-primary" />
-              <h1 className="text-3xl font-bold font-headline">Adarsh Bal Vidya Mandir Inter College</h1>
+    <header className="bg-card shadow-md">
+      <div className="container mx-auto px-4 py-3">
+        <div className="flex justify-between items-center">
+          <div className="flex items-center gap-3">
+            <BookOpenCheck className="h-10 w-10 text-primary" />
+            <div>
+              <h1 className="text-xl font-bold text-primary">
+                आदर्श बाल विद्या मन्दिर
+              </h1>
+              <p className="text-sm text-green-600 font-semibold">
+                हमारा ध्येय संपूर्ण विकास
+              </p>
             </div>
-            <p className="text-balance text-muted-foreground">
-              Sign in to access your school dashboard
-            </p>
           </div>
-          <LoginForm />
+          <div className="text-sm text-gray-700 space-y-1 text-right">
+            <div className="flex items-center justify-end gap-2">
+              <Contact className="h-4 w-4" />
+              <span>संपर्क: +91 91406 24586</span>
+            </div>
+            <div className="flex items-center justify-end gap-2">
+              <Mail className="h-4 w-4" />
+              <span>ईमेल: abvmic@gmail.com</span>
+            </div>
+          </div>
         </div>
       </div>
-      <div className="hidden bg-muted lg:block relative">
-        {loginImage && (
-          <Image
-            src={loginImage.imageUrl}
-            alt={loginImage.description}
-            fill
-            className="h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
-            data-ai-hint={loginImage.imageHint}
-          />
-        )}
-      </div>
+    </header>
+  );
+}
+
+function LoginOptions() {
+  return (
+    <Card className="w-full max-w-md">
+      <CardHeader>
+        <CardTitle className="text-center text-2xl font-bold">
+          लॉगिन करें
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="grid gap-4">
+        <Button asChild size="lg" className="justify-start text-lg py-6">
+          <Link href="/dashboard">
+            <User className="mr-4" /> शिक्षक लॉगिन
+          </Link>
+        </Button>
+        <Button
+          asChild
+          size="lg"
+          variant="secondary"
+          className="justify-start text-lg py-6 hover:bg-amber-500"
+        >
+          <Link href="/dashboard">
+            <Users className="mr-4" /> अभिभावक लॉगिन
+          </Link>
+        </Button>
+        <Button
+          asChild
+          size="lg"
+          className="justify-start text-lg py-6 bg-accent hover:bg-accent/90"
+        >
+          <Link href="/dashboard">
+            <School className="mr-4" /> छात्र लॉगिन
+          </Link>
+        </Button>
+        <Button asChild size="lg" className="justify-start text-lg py-6">
+          <Link href="/dashboard">
+            <Building className="mr-4" /> प्रधानाचार्य लॉगिन
+          </Link>
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
+
+function NoticeBoard() {
+  const firstNotice = notices[0];
+  return (
+    <Card className="w-full max-w-md">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Newspaper className="text-red-500" />
+          सूचना बोर्ड
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="border-l-4 border-amber-400 pl-4 bg-amber-50 p-4 rounded-r-lg">
+          <h3 className="font-bold">{firstNotice.title}</h3>
+          <p className="text-sm text-gray-600 mt-1 line-clamp-3">
+            {firstNotice.content}
+          </p>
+          <p className="text-xs text-gray-500 mt-2">
+            {format(new Date(firstNotice.date), 'dd/MM/yyyy')}
+          </p>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function SchoolInfo() {
+  return (
+    <Card className="w-full max-w-md">
+      <CardHeader>
+        <CardTitle>स्कूल की जानकारी</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-2 text-gray-700">
+        <p><span className="font-semibold">स्थापना:</span> 1995</p>
+        <p><span className="font-semibold">कक्षाएं:</span> नर्सरी से 12वीं तक</p>
+        <p><span className="font-semibold">छात्र संख्या:</span> 600+</p>
+        <p><span className="font-semibold">शिक्षक:</span> 20+</p>
+      </CardContent>
+    </Card>
+  );
+}
+
+export default function HomePage() {
+  return (
+    <div className="min-h-screen bg-background">
+      <HomeHeader />
+      <main className="container mx-auto px-4 py-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="flex justify-center md:justify-end items-start">
+            <LoginOptions />
+          </div>
+          <div className="flex flex-col items-center md:items-start gap-8">
+            <NoticeBoard />
+            <SchoolInfo />
+          </div>
+        </div>
+      </main>
     </div>
   );
 }

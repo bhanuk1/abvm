@@ -10,11 +10,11 @@ export type Notice = {
 export const notices: Notice[] = [
   {
     id: '1',
-    title: 'Annual Sports Day Announcement',
-    content: 'The Annual Sports Day will be held on the 25th of next month. All students are requested to participate. Parents are welcome to attend and cheer for the participants. More details about the events will be shared soon.',
-    author: 'Mr. Sharma, Principal',
+    title: 'स्कूल में वार्षिक उत्सव',
+    content: 'दिनांक 15 दिसंबर को स्कूल में वार्षिक उत्सव का आयोजन किया जाएगा। सभी छात्र और अभिभावक आमंत्रित हैं।',
+    author: 'प्रधानाचार्य',
     role: 'All',
-    date: '2024-07-15',
+    date: '2025-10-28',
   },
   {
     id: '2',
