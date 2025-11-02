@@ -108,11 +108,21 @@ const initialNewNoticeState = {
   role: 'All' as Notice['role'],
 };
 
+export interface Result {
+  id: string;
+  studentId: string;
+  studentName: string;
+  class: string;
+  examType: string;
+  marks: { subject: string; obtained: string; total: string }[] | { obtained: string; total: string };
+}
+
 
 export default function SchoolManagementPage() {
   const [users, setUsers] = React.useState(initialUsers);
   const [students, setStudents] = React.useState(initialStudents);
   const [notices, setNotices] = React.useState<Notice[]>(initialNotices);
+  const [results, setResults] = React.useState<Result[]>([]);
 
   const [isUserDialogOpen, setIsUserDialogOpen] = React.useState(false);
   const [isNoticeDialogOpen, setIsNoticeDialogOpen] = React.useState(false);
@@ -126,7 +136,7 @@ export default function SchoolManagementPage() {
   const [selectedResultClass, setSelectedResultClass] = React.useState('');
   const [selectedResultStudent, setSelectedResultStudent] = React.useState('');
   const [selectedExamType, setSelectedExamType] = React.useState('');
-  const [marks, setMarks] = React.useState<{[key: string]: string}>({});
+  const [marks, setMarks] = React.useState<any>({});
 
   const handleInputChange = (id: string, value: string) => {
     setNewUser((prev: any) => ({ ...prev, [id]: value }));
@@ -229,16 +239,63 @@ export default function SchoolManagementPage() {
   };
   
   const handleAddResult = () => {
-    // Logic to add result will go here
-    console.log({
-      class: selectedResultClass,
-      student: selectedResultStudent,
-      examType: selectedExamType,
-      marks
-    });
-    alert('परिणाम जोड़ा गया!');
-  }
+    if (!selectedResultClass || !selectedResultStudent || !selectedExamType) {
+      alert('कृपया कक्षा, छात्र और परीक्षा का प्रकार चुनें।');
+      return;
+    }
   
+    const student = students.find(s => s.id === selectedResultStudent);
+    if (!student) return;
+  
+    let resultMarks;
+    if (selectedExamType === 'monthly') {
+      if (!marks['monthly-obtained'] || !marks['monthly-total']) {
+        alert('कृपया मासिक परीक्षा के अंक भरें।');
+        return;
+      }
+      resultMarks = {
+        obtained: marks['monthly-obtained'],
+        total: marks['monthly-total'],
+      };
+    } else {
+      const studentSubjects = getSubjectsForStudent();
+      resultMarks = studentSubjects.map(subject => ({
+        subject,
+        obtained: marks[`${subject}-obtained`] || '0',
+        total: marks[`${subject}-total`] || '100',
+      }));
+      
+      const allMarksEntered = resultMarks.every(m => m.obtained);
+      if (!allMarksEntered) {
+        alert('कृपया सभी विषयों के अंक भरें।');
+        return;
+      }
+    }
+  
+    const newResult: Result = {
+      id: `RES${Date.now()}`,
+      studentId: student.id,
+      studentName: student.name,
+      class: student.class,
+      examType: examTypes.find(e => e.value === selectedExamType)?.label || '',
+      marks: resultMarks,
+    };
+  
+    setResults(prev => [...prev, newResult]);
+    
+    // Reset fields
+    setSelectedResultClass('');
+    setSelectedResultStudent('');
+    setSelectedExamType('');
+    setMarks({});
+    
+    alert('परिणाम सफलतापूर्वक जोड़ा गया!');
+  };
+  
+  const handleMarksChange = (field: string, value: string) => {
+    setMarks(prev => ({...prev, [field]: value}));
+  };
+
   const getSubjectsForStudent = () => {
     if (!selectedResultStudent) return [];
     const student = students.find(s => s.id === selectedResultStudent);
@@ -605,7 +662,7 @@ export default function SchoolManagementPage() {
               <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 items-end">
                 <div className="space-y-2">
                   <Label htmlFor="result-class">कक्षा</Label>
-                  <Select value={selectedResultClass} onValueChange={(value) => { setSelectedResultClass(value); setSelectedResultStudent(''); }}>
+                  <Select value={selectedResultClass} onValueChange={(value) => { setSelectedResultClass(value); setSelectedResultStudent(''); setMarks({}); }}>
                     <SelectTrigger id="result-class">
                       <SelectValue placeholder="कक्षा चुनें" />
                     </SelectTrigger>
@@ -616,7 +673,7 @@ export default function SchoolManagementPage() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="result-student">छात्र</Label>
-                  <Select value={selectedResultStudent} onValueChange={setSelectedResultStudent} disabled={!selectedResultClass}>
+                  <Select value={selectedResultStudent} onValueChange={(value) => {setSelectedResultStudent(value); setMarks({});}} disabled={!selectedResultClass}>
                     <SelectTrigger id="result-student">
                       <SelectValue placeholder="छात्र चुनें" />
                     </SelectTrigger>
@@ -627,7 +684,7 @@ export default function SchoolManagementPage() {
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="result-exam-type">परीक्षा का प्रकार</Label>
-                    <Select value={selectedExamType} onValueChange={setSelectedExamType}>
+                    <Select value={selectedExamType} onValueChange={(value) => {setSelectedExamType(value); setMarks({});}}>
                         <SelectTrigger id="result-exam-type">
                             <SelectValue placeholder="परीक्षा चुनें" />
                         </SelectTrigger>
@@ -643,14 +700,14 @@ export default function SchoolManagementPage() {
                 </Button>
               </div>
 
-              {selectedExamType && (
+              {selectedExamType && selectedResultStudent && (
                 <div className="border rounded-lg p-4 space-y-4">
                   {selectedExamType === 'monthly' ? (
                     <div className="grid grid-cols-2 gap-4 items-center max-w-sm">
                       <Label htmlFor="marks-obtained-monthly" className="font-semibold">प्राप्तांक</Label>
-                      <Input id="marks-obtained-monthly" type="number" placeholder="प्राप्तांक"/>
+                      <Input id="marks-obtained-monthly" type="number" placeholder="प्राप्तांक" value={marks['monthly-obtained'] || ''} onChange={(e) => handleMarksChange('monthly-obtained', e.target.value)}/>
                        <Label htmlFor="marks-total-monthly" className="font-semibold">पूर्णांक</Label>
-                      <Input id="marks-total-monthly" type="number" value="100" readOnly className="bg-gray-100"/>
+                      <Input id="marks-total-monthly" type="number" value={marks['monthly-total'] || '100'} onChange={(e) => handleMarksChange('monthly-total', e.target.value)} />
                     </div>
                   ) : (
                     <div>
@@ -659,8 +716,8 @@ export default function SchoolManagementPage() {
                         {studentSubjects.map(subject => (
                            <div key={subject} className="grid grid-cols-3 gap-2 items-center">
                               <Label htmlFor={`marks-obtained-${subject}`} className="col-span-1">{subject}</Label>
-                              <Input id={`marks-obtained-${subject}`} type="number" placeholder="प्राप्तांक" className="col-span-1"/>
-                              <Input id={`marks-total-${subject}`} type="number" value="100" readOnly className="col-span-1 bg-gray-100"/>
+                              <Input id={`marks-obtained-${subject}`} type="number" placeholder="प्राप्तांक" className="col-span-1" value={marks[`${subject}-obtained`] || ''} onChange={(e) => handleMarksChange(`${subject}-obtained`, e.target.value)} />
+                              <Input id={`marks-total-${subject}`} type="number" value={marks[`${subject}-total`] || '100'} readOnly className="col-span-1 bg-gray-100" onChange={(e) => handleMarksChange(`${subject}-total`, e.target.value)}/>
                           </div>
                         ))}
                       </div>
@@ -671,8 +728,43 @@ export default function SchoolManagementPage() {
               
               <div>
                 <h3 className="text-lg font-medium mb-4 mt-6">सभी परिणाम</h3>
-                <div className="border rounded-lg p-4 min-h-[100px] flex items-center justify-center">
-                  <p className="text-muted-foreground">कोई परिणाम उपलब्ध नहीं है</p>
+                <div className="border rounded-lg">
+                  {results.length > 0 ? (
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>छात्र</TableHead>
+                          <TableHead>कक्षा</TableHead>
+                          <TableHead>परीक्षा</TableHead>
+                          <TableHead>परिणाम</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {results.map(result => (
+                          <TableRow key={result.id}>
+                            <TableCell>{result.studentName}</TableCell>
+                            <TableCell>{result.class}</TableCell>
+                            <TableCell>{result.examType}</TableCell>
+                            <TableCell>
+                              {Array.isArray(result.marks) ? (
+                                <ul className="list-disc pl-5">
+                                  {result.marks.map((mark, i) => (
+                                    <li key={i}>{mark.subject}: {mark.obtained}/{mark.total}</li>
+                                  ))}
+                                </ul>
+                              ) : (
+                                `प्राप्तांक: ${result.marks.obtained}/${result.marks.total}`
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  ) : (
+                    <div className="p-4 min-h-[100px] flex items-center justify-center">
+                      <p className="text-muted-foreground">कोई परिणाम उपलब्ध नहीं है</p>
+                    </div>
+                  )}
                 </div>
               </div>
             </CardContent>
