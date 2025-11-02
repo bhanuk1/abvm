@@ -12,6 +12,13 @@ export async function login(prevState: { message: string | null }, formData: For
     return { message: 'All fields are required.' };
   }
   
-  // Successful "login"
-  redirect('/dashboard');
+  if (role === 'admin') {
+    redirect('/dashboard');
+  } else if (role === 'teacher') {
+    redirect('/teacher-dashboard');
+  } else {
+    // For student and parent, redirect to a generic dashboard for now
+    redirect('/dashboard');
+  }
+
 }
