@@ -24,7 +24,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -563,6 +562,43 @@ export default function SchoolManagementPage() {
                   </div>
                 </div>
               ))}
+            </CardContent>
+          </TabsContent>
+          <TabsContent value="result-management">
+            <CardHeader>
+              <CardTitle>परिणाम प्रबंधन</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="flex items-center gap-4">
+                <Select>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="कक्षा चुनें" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">कक्षा 1</SelectItem>
+                    <SelectItem value="2">कक्षा 2</SelectItem>
+                    <SelectItem value="3">कक्षा 3</SelectItem>
+                    <SelectItem value="4">कक्षा 4</SelectItem>
+                    <SelectItem value="5">कक्षा 5</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="छात्र चुनें" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="student1">राहुल शर्मा</SelectItem>
+                    {/* Add more students as needed */}
+                  </SelectContent>
+                </Select>
+                <Button>परिणाम जोड़ें</Button>
+              </div>
+              <div>
+                <h3 className="text-lg font-medium mb-4">सभी परिणाम</h3>
+                <div className="border rounded-lg p-4 min-h-[100px] flex items-center justify-center">
+                  <p className="text-muted-foreground">कोई परिणाम उपलब्ध नहीं है</p>
+                </div>
+              </div>
             </CardContent>
           </TabsContent>
         </Tabs>
