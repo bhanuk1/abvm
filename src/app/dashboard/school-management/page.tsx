@@ -45,10 +45,8 @@ import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { type Notice } from '@/lib/placeholder-data';
 import {
-  initialUsers,
   initialStudents,
   initialNewUserState,
-  initialNewNoticeState,
   type Result,
   homeworks as initialHomeworks,
   type Homework,
@@ -57,14 +55,23 @@ import {
   classSubjects,
   attendance as initialAttendance,
   type Attendance,
-  allNotices
 } from '@/lib/school-data';
+import { useCollection, useFirestore, useUser, useMemoFirebase } from '@/firebase';
+import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { collection, serverTimestamp } from 'firebase/firestore';
 
 
 export default function SchoolManagementPage() {
-  const [users, setUsers] = React.useState(initialUsers);
+  const firestore = useFirestore();
+  const { user: currentUser } = useUser();
+  const usersQuery = useMemoFirebase(() => firestore ? collection(firestore, 'users') : null, [firestore]);
+  const { data: users, isLoading: usersLoading } = useCollection<any>(usersQuery);
+
+  const noticesQuery = useMemoFirebase(() => firestore ? collection(firestore, 'notices') : null, [firestore]);
+  const { data: notices, isLoading: noticesLoading } = useCollection<Notice>(noticesQuery);
+
+
   const [students, setStudents] = React.useState(initialStudents);
-  const [notices, setNotices] = React.useState<Notice[]>(allNotices);
   const [results, setResults] = React.useState<Result[]>(initialResults);
   const [homeworks, setHomeworks] = React.useState<Homework[]>(initialHomeworks);
   const [attendance, setAttendance] = React.useState<Attendance[]>(initialAttendance);
@@ -77,7 +84,7 @@ export default function SchoolManagementPage() {
   const [studentPasswordVisibility, setStudentPasswordVisibility] = React.useState<{[key: string]: boolean}>({});
 
   const [newUser, setNewUser] = React.useState<any>(initialNewUserState);
-  const [newNotice, setNewNotice] = React.useState(initialNewNoticeState);
+  const [newNotice, setNewNotice] = React.useState({ title: '', content: '', role: 'All' as Notice['role'] });
   
   const [selectedResultClass, setSelectedResultClass] = React.useState('');
   const [selectedResultStudent, setSelectedResultStudent] = React.useState('');
@@ -128,75 +135,26 @@ export default function SchoolManagementPage() {
   };
   
   const handleCreateNotice = () => {
-    if (!newNotice.title || !newNotice.content) return;
-    const noticeToAdd: Notice = {
-      id: (allNotices.length + 1).toString(),
+    if (!newNotice.title || !newNotice.content || !firestore || !currentUser) return;
+    
+    const noticesCol = collection(firestore, 'notices');
+    const noticeToAdd = {
       ...newNotice,
-      author: 'प्रधानाचार्य',
-      date: new Date().toISOString(),
+      authorId: currentUser.uid,
+      author: 'प्रधानाचार्य', // Or get current user's name
+      createdAt: serverTimestamp(),
     };
-    // Add to the beginning of the array to show newest first
-    allNotices.unshift(noticeToAdd);
-    setNotices([...allNotices]);
-    setNewNotice(initialNewNoticeState);
+
+    addDocumentNonBlocking(noticesCol, noticeToAdd);
+    
+    setNewNotice({ title: '', content: '', role: 'All' });
     setIsNoticeDialogOpen(false);
   };
 
 
   const handleCreateUser = () => {
-    if (!newUser.role) return;
-
-    const password = Math.random().toString(36).slice(-8);
-
-    if (newUser.role === 'teacher') {
-      if (!newUser.teacherName || !newUser.teacherMobile) return;
-      const userToAdd = {
-        name: newUser.teacherName,
-        role: 'शिक्षक',
-        mobile: newUser.teacherMobile,
-        classSubject: `${newUser.teacherSubject} - ${newUser.teacherClass}`,
-        password,
-        id: `teacher${(users.filter(u => u.role === 'शिक्षक').length + 1).toString().padStart(2, '0')}`,
-        classes: newUser.teacherClass.split(',').map((c: string) => c.trim()),
-        subjects: newUser.teacherSubject.split(',').map((s: string) => s.trim()),
-      };
-      setUsers((prev) => [...prev, userToAdd]);
-    } else if (newUser.role === 'parent') {
-      if (!newUser.parentName || !newUser.studentName) return;
-      
-      const parentToAdd = {
-        name: newUser.parentName,
-        role: 'अभिभावक',
-        mobile: newUser.studentMobile,
-        classSubject: newUser.studentClass,
-        password: password,
-        id: `parent${(users.filter(u => u.role === 'अभिभावक').length + 1).toString().padStart(2, '0')}`,
-      };
-      setUsers((prev) => [...prev, parentToAdd]);
-      
-      const studentId = `STU${(students.length + 1).toString().padStart(3, '0')}`;
-      const studentPassword = Math.random().toString(36).slice(-8);
-      const studentToAdd = {
-        rollNo: (students.length + 1).toString().padStart(3, '0'),
-        name: newUser.studentName,
-        class: newUser.studentClass,
-        fatherName: newUser.parentName,
-        motherName: newUser.motherName,
-        dob: newUser.dob ? format(newUser.dob, 'yyyy-MM-dd') : '',
-        address: newUser.address,
-        admissionDate: newUser.admissionDate ? format(newUser.admissionDate, 'yyyy-MM-dd') : '',
-        aadhaar: newUser.aadhaar,
-        pen: newUser.pen,
-        mobile: newUser.studentMobile,
-        id: studentId,
-        password: studentPassword,
-        subjects: newUser.studentSubjects,
-      };
-      setStudents((prev) => [...prev, studentToAdd]);
-    }
-    
-    setNewUser(initialNewUserState);
-    setIsUserDialogOpen(false);
+    // This function will need to be adapted for Firebase
+    console.log("Create user functionality needs to be migrated to Firebase.");
   };
   
   const togglePasswordVisibility = (id: string) => {
@@ -637,16 +595,17 @@ const handleClassReportDownloadClick = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {users.map((user) => (
+                  {usersLoading && <TableRow><TableCell colSpan={7} className="text-center">Loading...</TableCell></TableRow>}
+                  {users && users.map((user) => (
                     <TableRow key={user.id}>
-                      <TableCell className="font-medium">{user.name}</TableCell>
+                      <TableCell className="font-medium">{user.username}</TableCell>
                       <TableCell>
                         <Badge
                           variant={
-                            user.role === 'शिक्षक' ? 'secondary' : 'outline'
+                            user.role === 'teacher' ? 'secondary' : 'outline'
                           }
                           className={
-                            user.role === 'शिक्षक'
+                            user.role === 'teacher'
                               ? 'bg-blue-100 text-blue-800'
                               : 'bg-amber-100 text-amber-800'
                           }
@@ -654,16 +613,11 @@ const handleClassReportDownloadClick = () => {
                           {user.role}
                         </Badge>
                       </TableCell>
-                      <TableCell>{user.mobile}</TableCell>
-                      <TableCell>{user.classSubject}</TableCell>
+                      <TableCell>{user.mobile || '-'}</TableCell>
+                      <TableCell>{user.classSubject || '-'}</TableCell>
                       <TableCell>{user.id}</TableCell>
                       <TableCell className="flex items-center gap-2">
-                        <span>
-                            {passwordVisibility[user.id] ? user.password : '*'.repeat(user.password.length)}
-                        </span>
-                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => togglePasswordVisibility(user.id)}>
-                           {passwordVisibility[user.id] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                        </Button>
+                        <span>{'*'.repeat(8)}</span>
                       </TableCell>
                       <TableCell>
                         <Button variant="link" className="p-0 h-auto text-primary">
@@ -785,13 +739,14 @@ const handleClassReportDownloadClick = () => {
               </Dialog>
             </CardHeader>
             <CardContent className="space-y-4">
-              {notices.map(notice => (
+              {noticesLoading && <p>Loading notices...</p>}
+              {notices && notices.map(notice => (
                 <div key={notice.id} className="rounded-lg border bg-card text-card-foreground shadow-sm p-4 relative">
                   <div className="flex justify-between items-start">
                     <div>
                       <h3 className="font-semibold">{notice.title}</h3>
                       <p className="text-sm text-muted-foreground mt-1">{notice.content}</p>
-                      <p className="text-xs text-muted-foreground mt-2">{format(new Date(notice.date), 'dd/MM/yyyy')} - {notice.author}</p>
+                      <p className="text-xs text-muted-foreground mt-2">{notice.createdAt ? format(notice.createdAt.toDate(), 'dd/MM/yyyy') : ''} - {notice.author}</p>
                     </div>
                     <div className="flex items-center gap-2 absolute top-4 right-4">
                         <Button variant="outline" size="sm" className="bg-amber-100 text-amber-800">उच्च</Button>
@@ -1153,5 +1108,3 @@ const handleClassReportDownloadClick = () => {
     </div>
   );
 }
-
-    
