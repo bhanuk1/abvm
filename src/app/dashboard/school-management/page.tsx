@@ -600,7 +600,7 @@ export default function SchoolManagementPage() {
                                 </div>
                                 <div className="space-y-2">
                                     <Label htmlFor="result-student">छात्र</Label>
-                                    <Select value={selectedResultStudent} onValueChange={setSelectedResultStudent}>
+                                    <Select value={selectedResultStudent} onValueChange={setSelectedResultStudent} disabled={!selectedResultClass}>
                                         <SelectTrigger id="result-student">
                                             <SelectValue placeholder="छात्र चुनें" />
                                         </SelectTrigger>
