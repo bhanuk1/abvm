@@ -76,7 +76,7 @@ const initialStudents = [
     mobile: '9876543213',
     id: 'STU001',
     password: 'stu123',
-    subjects: 'हिंदी, अंग्रेजी, गणित'
+    subjects: 'हिंदी, अंग्रेजी, गणित, विज्ञान, सा० विज्ञान'
   },
 ]
 
@@ -116,15 +116,17 @@ export default function SchoolManagementPage() {
 
   const [isUserDialogOpen, setIsUserDialogOpen] = React.useState(false);
   const [isNoticeDialogOpen, setIsNoticeDialogOpen] = React.useState(false);
-  const [isResultDialogOpen, setIsResultDialogOpen] = React.useState(false);
 
   const [passwordVisibility, setPasswordVisibility] = React.useState<{[key: number]: boolean}>({});
   const [studentPasswordVisibility, setStudentPasswordVisibility] = React.useState<{[key: number]: boolean}>({});
 
   const [newUser, setNewUser] = React.useState<any>(initialNewUserState);
   const [newNotice, setNewNotice] = React.useState(initialNewNoticeState);
+  
   const [selectedResultClass, setSelectedResultClass] = React.useState('');
   const [selectedResultStudent, setSelectedResultStudent] = React.useState('');
+  const [selectedExamType, setSelectedExamType] = React.useState('');
+  const [marks, setMarks] = React.useState<{[key: string]: string}>({});
 
   const handleInputChange = (id: string, value: string) => {
     setNewUser((prev: any) => ({ ...prev, [id]: value }));
@@ -225,9 +227,33 @@ export default function SchoolManagementPage() {
         [index]: !prev[index]
     }));
   };
+  
+  const handleAddResult = () => {
+    // Logic to add result will go here
+    console.log({
+      class: selectedResultClass,
+      student: selectedResultStudent,
+      examType: selectedExamType,
+      marks
+    });
+    alert('परिणाम जोड़ा गया!');
+  }
+  
+  const getSubjectsForStudent = () => {
+    if (!selectedResultStudent) return [];
+    const student = students.find(s => s.id === selectedResultStudent);
+    return student?.subjects ? student.subjects.split(',').map(s => s.trim()) : [];
+  }
 
   const classes = ['Nursery', 'KG', ...Array.from({length: 12}, (_, i) => `${i + 1}`)];
-  const resultSubjects = ['हिंदी', 'अंग्रेजी', 'गणित', 'विज्ञान', 'सा० विज्ञान', 'नैतिक शिक्षा', 'कंप्यूटर', 'उर्दू'];
+  const examTypes = [
+    { value: 'monthly', label: 'मासिक परीक्षा' },
+    { value: 'quarterly', label: 'त्रैमासिक परीक्षा' },
+    { value: 'half-yearly', label: 'अर्धवार्षिक परीक्षा' },
+    { value: 'final', label: 'वार्षिक परीक्षा' },
+  ]
+  const studentSubjects = getSubjectsForStudent();
+
 
   return (
     <div className="flex flex-col gap-8">
@@ -571,90 +597,80 @@ export default function SchoolManagementPage() {
               ))}
             </CardContent>
           </TabsContent>
-          <TabsContent value="result-management">
-            <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle>परिणाम प्रबंधन</CardTitle>
-                 <Dialog open={isResultDialogOpen} onOpenChange={setIsResultDialogOpen}>
-                    <DialogTrigger asChild>
-                        <Button onClick={() => setIsResultDialogOpen(true)}>
-                            <PlusCircle className="mr-2" />
-                            परिणाम जोड़ें
-                        </Button>
-                    </DialogTrigger>
-                    <DialogContent className="sm:max-w-4xl">
-                        <DialogHeader>
-                            <DialogTitle>परिणाम जोड़ें</DialogTitle>
-                        </DialogHeader>
-                        <div className="grid gap-6 py-4">
-                            <div className="grid grid-cols-3 gap-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="result-class">कक्षा</Label>
-                                    <Select value={selectedResultClass} onValueChange={(value) => { setSelectedResultClass(value); setSelectedResultStudent(''); }}>
-                                        <SelectTrigger id="result-class">
-                                            <SelectValue placeholder="कक्षा चुनें" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {classes.map(c => <SelectItem key={c} value={c}>कक्षा {c}</SelectItem>)}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="result-student">छात्र</Label>
-                                    <Select value={selectedResultStudent} onValueChange={setSelectedResultStudent} disabled={!selectedResultClass}>
-                                        <SelectTrigger id="result-student">
-                                            <SelectValue placeholder="छात्र चुनें" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {students.filter(s => s.class === selectedResultClass).map(s => <SelectItem key={s.id} value={s.id}>{s.name} (रोल नं. {s.rollNo})</SelectItem>)}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                 <div className="space-y-2">
-                                    <Label htmlFor="result-exam-type">परीक्षा प्रकार</Label>
-                                    <Select>
-                                        <SelectTrigger id="result-exam-type">
-                                            <SelectValue placeholder="परीक्षा चुनें" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="monthly">मासिक टेस्ट</SelectItem>
-                                            <SelectItem value="quarterly">त्रैमासिक परीक्षा</SelectItem>
-                                            <SelectItem value="half-yearly">अर्धवार्षिक परीक्षा</SelectItem>
-                                            <SelectItem value="final">वार्षिक परीक्षा</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                            </div>
-                            <div>
-                              <h3 className="text-lg font-medium mb-4">विषयवार अंक</h3>
-                              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                                {resultSubjects.map(subject => (
-                                   <div key={subject} className="rounded-lg border bg-pink-50 p-4">
-                                      <Label htmlFor={`marks-${subject}`} className="font-semibold text-pink-800">{subject}</Label>
-                                      <div className="grid grid-cols-2 gap-2 mt-2 items-center">
-                                        <div>
-                                          <Label htmlFor={`marks-obtained-${subject}`} className="text-xs">प्राप्तांक</Label>
-                                          <Input id={`marks-obtained-${subject}`} type="number" className="mt-1"/>
-                                        </div>
-                                        <div>
-                                          <Label htmlFor={`marks-total-${subject}`} className="text-xs">पूर्णांक</Label>
-                                          <Input id={`marks-total-${subject}`} type="number" value="100" readOnly className="mt-1 bg-gray-100"/>
-                                        </div>
-                                      </div>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                        </div>
-                        <DialogFooter>
-                            <Button variant="outline" onClick={() => setIsResultDialogOpen(false)}>रद्द करें</Button>
-                            <Button type="submit">परिणाम सहेजें</Button>
-                        </DialogFooter>
-                    </DialogContent>
-                </Dialog>
+           <TabsContent value="result-management">
+            <CardHeader>
+              <CardTitle>परिणाम प्रबंधन</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
+              <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 items-end">
+                <div className="space-y-2">
+                  <Label htmlFor="result-class">कक्षा</Label>
+                  <Select value={selectedResultClass} onValueChange={(value) => { setSelectedResultClass(value); setSelectedResultStudent(''); }}>
+                    <SelectTrigger id="result-class">
+                      <SelectValue placeholder="कक्षा चुनें" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {classes.map(c => <SelectItem key={c} value={c}>कक्षा {c}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="result-student">छात्र</Label>
+                  <Select value={selectedResultStudent} onValueChange={setSelectedResultStudent} disabled={!selectedResultClass}>
+                    <SelectTrigger id="result-student">
+                      <SelectValue placeholder="छात्र चुनें" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {students.filter(s => s.class === selectedResultClass).map(s => <SelectItem key={s.id} value={s.id}>{s.name} (रोल नं. {s.rollNo})</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="result-exam-type">परीक्षा का प्रकार</Label>
+                    <Select value={selectedExamType} onValueChange={setSelectedExamType}>
+                        <SelectTrigger id="result-exam-type">
+                            <SelectValue placeholder="परीक्षा चुनें" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {examTypes.map(type => (
+                            <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+                <Button onClick={handleAddResult} disabled={!selectedResultClass || !selectedResultStudent || !selectedExamType}>
+                  परिणाम जोड़ें
+                </Button>
+              </div>
+
+              {selectedExamType && (
+                <div className="border rounded-lg p-4 space-y-4">
+                  {selectedExamType === 'monthly' ? (
+                    <div className="grid grid-cols-2 gap-4 items-center max-w-sm">
+                      <Label htmlFor="marks-obtained-monthly" className="font-semibold">प्राप्तांक</Label>
+                      <Input id="marks-obtained-monthly" type="number" placeholder="प्राप्तांक"/>
+                       <Label htmlFor="marks-total-monthly" className="font-semibold">पूर्णांक</Label>
+                      <Input id="marks-total-monthly" type="number" value="100" readOnly className="bg-gray-100"/>
+                    </div>
+                  ) : (
+                    <div>
+                      <h3 className="text-lg font-medium mb-4">विषयवार अंक</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {studentSubjects.map(subject => (
+                           <div key={subject} className="grid grid-cols-3 gap-2 items-center">
+                              <Label htmlFor={`marks-obtained-${subject}`} className="col-span-1">{subject}</Label>
+                              <Input id={`marks-obtained-${subject}`} type="number" placeholder="प्राप्तांक" className="col-span-1"/>
+                              <Input id={`marks-total-${subject}`} type="number" value="100" readOnly className="col-span-1 bg-gray-100"/>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+              
               <div>
-                <h3 className="text-lg font-medium mb-4">सभी परिणाम</h3>
+                <h3 className="text-lg font-medium mb-4 mt-6">सभी परिणाम</h3>
                 <div className="border rounded-lg p-4 min-h-[100px] flex items-center justify-center">
                   <p className="text-muted-foreground">कोई परिणाम उपलब्ध नहीं है</p>
                 </div>
