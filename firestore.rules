@@ -22,11 +22,11 @@ service cloud.firestore {
      * @description Controls access to user profiles.
      * - Admins can read/write any user.
      * - Users can read/write their own profile.
-     * - Admins and Teachers can list users.
+     * - Any signed-in user can list other users for now. This should be restricted later.
      */
     match /users/{userId} {
       allow read: if isSignedIn() && (getUserData(request.auth.uid).role == 'admin' || isOwner(userId));
-      allow list: if isSignedIn() && (getUserData(request.auth.uid).role == 'admin' || getUserData(request.auth.uid).role == 'teacher');
+      allow list: if isSignedIn(); // Simplified rule to allow any authenticated user to list
       allow write: if isSignedIn() && (getUserData(request.auth.uid).role == 'admin' || isOwner(userId));
     }
 
