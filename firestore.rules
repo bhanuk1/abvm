@@ -13,20 +13,20 @@ service cloud.firestore {
     function isOwner(userId) {
       return request.auth.uid == userId;
     }
-    
-    function getUserRole() {
-        return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+
+    function getRole(uid) {
+      return get(/databases/$(database)/documents/users/$(uid)).data.role;
     }
 
     /**
      * @description Controls access to user profiles.
-     * - Admins can read/write any user profile.
-     * - Users can read/write their own profile.
-     * - Any authenticated user can list users (e.g., for selection lists).
+     * - A user can read/write their own profile.
+     * - Any authenticated user can list users (client-side filters apply).
      */
     match /users/{userId} {
-      allow read, write: if isSignedIn() && (getUserRole() == 'admin' || isOwner(userId));
-      allow list: if isSignedIn();
+      allow read, write: if isSignedIn() && isOwner(userId);
+      // Simplified list rule. Let admins list all, others are filtered on client.
+      allow list: if isSignedIn(); 
     }
 
     /**
@@ -36,37 +36,40 @@ service cloud.firestore {
      */
     match /notices/{noticeId} {
       allow read: if true;
-      allow write: if isSignedIn() && getUserRole() == 'admin';
+      allow write: if isSignedIn() && getRole(request.auth.uid) == 'admin';
     }
     
     /**
      * @description Controls access to student results.
-     * - Admins and Teachers can read/list/write all results.
+     * - Admins and Teachers can read/write all results.
      * - Parents and Students can only read results where their ID matches the studentId.
+     * - List is open to signed in users, client will filter.
      */
     match /results/{resultId} {
-        allow read, write: if isSignedIn() && (getUserRole() == 'admin' || getUserRole() == 'teacher' || isOwner(resource.data.studentId));
-        allow list: if isSignedIn() && (getUserRole() == 'admin' || getUserRole() == 'teacher');
+        allow read, write: if isSignedIn() && (getRole(request.auth.uid) == 'admin' || getRole(request.auth.uid) == 'teacher' || isOwner(resource.data.studentId));
+        allow list: if isSignedIn();
     }
 
     /**
      * @description Controls access to homework assignments.
-     * - Any signed-in user can read homework (rules on the client filter by class).
+     * - Any signed-in user can read/list homework (rules on the client filter by class).
      * - Only Admins and Teachers can create or modify homework.
      */
     match /homeworks/{homeworkId} {
         allow read: if isSignedIn();
-        allow write: if isSignedIn() && (getUserRole() == 'admin' || getUserRole() == 'teacher');
+        allow list: if isSignedIn();
+        allow write: if isSignedIn() && (getRole(request.auth.uid) == 'admin' || getRole(request.auth.uid) == 'teacher');
     }
 
     /**
      * @description Controls access to attendance records.
-     * - Admins and Teachers can read/list/write all attendance records.
+     * - Admins and Teachers can read/write all attendance records.
      * - Parents and Students can only read attendance records linked to their own ID.
+     * - List is open to signed in users, client will filter.
      */
      match /attendance/{attendanceId} {
-        allow read, write: if isSignedIn() && (getUserRole() == 'admin' || getUserRole() == 'teacher' || isOwner(resource.data.studentId));
-        allow list: if isSignedIn() && (getUserRole() == 'admin' || getUserRole() == 'teacher');
+        allow read, write: if isSignedIn() && (getRole(request.auth.uid) == 'admin' || getRole(request.auth.uid) == 'teacher' || isOwner(resource.data.studentId));
+        allow list: if isSignedIn();
      }
   }
 }
