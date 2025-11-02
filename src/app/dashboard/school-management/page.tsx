@@ -3,6 +3,7 @@ import React from 'react';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { Buffer } from 'buffer';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -111,6 +112,7 @@ export default function SchoolManagementPage() {
   const [homeworkReportDate, setHomeworkReportDate] = React.useState<Date | undefined>();
 
   React.useEffect(() => {
+    // Set date on client-side only to avoid hydration mismatch
     setAttendanceReportDate(new Date());
     setHomeworkReportDate(new Date());
   }, []);
@@ -334,9 +336,14 @@ export default function SchoolManagementPage() {
     return classSubjects[student.class] || [];
   }
   
-  const handleGeneratePdf = (doc: jsPDF, student: any, results: Result[]) => {
+  const handleGeneratePdf = async (doc: jsPDF, student: any, results: Result[]) => {
     try {
-        doc.addFont('/fonts/TiroDevanagariHindi-Regular.ttf', 'TiroDevanagariHindi', 'normal');
+        const fontResponse = await fetch('/fonts/TiroDevanagariHindi-Regular.ttf');
+        const fontBuffer = await fontResponse.arrayBuffer();
+        const fontBase64 = Buffer.from(fontBuffer).toString('base64');
+        
+        doc.addFileToVFS('TiroDevanagariHindi-Regular.ttf', fontBase64);
+        doc.addFont('TiroDevanagariHindi-Regular.ttf', 'TiroDevanagariHindi', 'normal');
         doc.setFont('TiroDevanagariHindi');
 
         doc.setFontSize(16);
@@ -417,7 +424,7 @@ const handleDownloadClick = async () => {
     
     try {
         const doc = new jsPDF();
-        handleGeneratePdf(doc, student, studentResults);
+        await handleGeneratePdf(doc, student, studentResults);
         doc.save(`${student.username}_${student.class}_report.pdf`);
     } catch (e) {
         console.error(e);
@@ -425,7 +432,7 @@ const handleDownloadClick = async () => {
     }
 };
 
-const handleClassReportDownloadClick = () => {
+const handleClassReportDownloadClick = async () => {
   if (!selectedClassReportClass || !selectedClassReportExam || !students) {
     alert('कृपया कक्षा और परीक्षा का प्रकार चुनें।');
     return;
@@ -448,16 +455,16 @@ const handleClassReportDownloadClick = () => {
   const doc = new jsPDF();
   let isFirstPage = true;
 
-  studentsInClass.forEach(student => {
+  for (const student of studentsInClass) {
     const studentResults = resultsForExam.filter(r => r.studentId === student.id);
     if (studentResults.length > 0) {
       if (!isFirstPage) {
         doc.addPage();
       }
-      handleGeneratePdf(doc, student, studentResults);
+      await handleGeneratePdf(doc, student, studentResults);
       isFirstPage = false;
     }
-  });
+  }
 
   if (isFirstPage) {
       alert(`इस कक्षा और परीक्षा के लिए किसी भी छात्र का परिणाम नहीं मिला।`);
@@ -1226,5 +1233,7 @@ const handleClassReportDownloadClick = () => {
     </div>
   );
 }
+
+    
 
     
