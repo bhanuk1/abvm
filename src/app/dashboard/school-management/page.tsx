@@ -673,6 +673,16 @@ export default function SchoolManagementPage() {
               </div>
             </CardContent>
           </TabsContent>
+          <TabsContent value="reports">
+            <CardHeader>
+              <CardTitle>रिपोर्ट्स</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="h-40 flex items-center justify-center text-muted-foreground">
+                <p>कोई रिपोर्ट उपलब्ध नहीं है।</p>
+              </div>
+            </CardContent>
+          </TabsContent>
         </Tabs>
       </Card>
     </div>
