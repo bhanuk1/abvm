@@ -38,7 +38,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
-const users = [
+const initialUsers = [
   {
     name: 'श्रीमती सुनीता गुप्ता',
     role: 'शिक्षक',
@@ -56,7 +56,39 @@ const users = [
 ];
 
 export default function SchoolManagementPage() {
+  const [users, setUsers] = React.useState(initialUsers);
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
+
+  const [newUser, setNewUser] = React.useState({
+    role: '',
+    name: '',
+    mobile: '',
+    classSubject: '',
+  });
+
+  const handleInputChange = (id: string, value: string) => {
+    setNewUser((prev) => ({ ...prev, [id]: value }));
+  };
+  
+  const handleSelectChange = (value: string) => {
+    setNewUser((prev) => ({ ...prev, role: value }));
+  };
+
+  const handleCreateUser = () => {
+    if (!newUser.name || !newUser.role || !newUser.mobile) {
+      // Maybe show an error toast here in the future
+      return;
+    }
+    const password = Math.random().toString(36).slice(-8);
+    const userToAdd = {
+      ...newUser,
+      role: newUser.role === 'teacher' ? 'शिक्षक' : 'अभिभावक', // Adjust as needed
+      password: password,
+    };
+    setUsers((prev) => [...prev, userToAdd]);
+    setNewUser({ role: '', name: '', mobile: '', classSubject: '' });
+    setIsDialogOpen(false);
+  };
 
   return (
     <div className="flex flex-col gap-8">
@@ -91,7 +123,7 @@ export default function SchoolManagementPage() {
                       <Label htmlFor="role" className="text-right">
                         भूमिका
                       </Label>
-                      <Select>
+                      <Select value={newUser.role} onValueChange={handleSelectChange}>
                         <SelectTrigger className="col-span-3">
                           <SelectValue placeholder="भूमिका चुनें" />
                         </SelectTrigger>
@@ -106,17 +138,23 @@ export default function SchoolManagementPage() {
                       <Label htmlFor="name" className="text-right">
                         नाम
                       </Label>
-                      <Input id="name" className="col-span-3" />
+                      <Input id="name" value={newUser.name} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" />
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
                       <Label htmlFor="mobile" className="text-right">
                         मोबाइल नंबर
                       </Label>
-                      <Input id="mobile" className="col-span-3" />
+                      <Input id="mobile" value={newUser.mobile} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" />
+                    </div>
+                     <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="classSubject" className="text-right">
+                        कक्षा/विषय
+                      </Label>
+                      <Input id="classSubject" value={newUser.classSubject} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" />
                     </div>
                   </div>
                   <DialogFooter>
-                    <Button type="submit" onClick={() => setIsDialogOpen(false)}>बनाएं</Button>
+                    <Button type="submit" onClick={handleCreateUser}>बनाएं</Button>
                     <Button variant="outline" onClick={() => setIsDialogOpen(false)}>रद्द करें</Button>
                   </DialogFooter>
                 </DialogContent>
@@ -135,8 +173,8 @@ export default function SchoolManagementPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {users.map((user) => (
-                    <TableRow key={user.name}>
+                  {users.map((user, index) => (
+                    <TableRow key={index}>
                       <TableCell className="font-medium">{user.name}</TableCell>
                       <TableCell>
                         <Badge
@@ -155,7 +193,7 @@ export default function SchoolManagementPage() {
                       <TableCell>{user.mobile}</TableCell>
                       <TableCell>{user.classSubject}</TableCell>
                       <TableCell className="flex items-center gap-2">
-                        <span>{user.password}</span>
+                        <span>{'*'.repeat(user.password.length)}</span>
                         <Button variant="ghost" size="icon" className="h-6 w-6">
                            <EyeOff className="h-4 w-4" />
                         </Button>
