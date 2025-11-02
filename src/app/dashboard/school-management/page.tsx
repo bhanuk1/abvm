@@ -57,7 +57,7 @@ import {
   type Attendance,
 } from '@/lib/school-data';
 import { useCollection, useFirestore, useUser, useMemoFirebase, useAuth } from '@/firebase';
-import { addDoc, collection, serverTimestamp, setDoc, doc } from 'firebase/firestore';
+import { addDoc, collection, serverTimestamp, setDoc, doc, query, where } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 
 
@@ -160,7 +160,7 @@ export default function SchoolManagementPage() {
 
 
   const handleCreateUser = async () => {
-    if (!newUser.role || !newUser.userId || !newUser.password || !firestore) {
+    if (!newUser.role || !newUser.userId || !newUser.password || !firestore || !auth) {
       toast({ variant: 'destructive', title: 'त्रुटि', description: 'कृपया सभी आवश्यक फ़ील्ड भरें।' });
       return;
     }
@@ -243,7 +243,7 @@ export default function SchoolManagementPage() {
   };
   
   const handleAddResult = () => {
-    if (!selectedResultClass || !selectedResultStudent || !selectedExamType) {
+    if (!selectedResultClass || !selectedResultStudent || !selectedExamType || !students) {
       alert('कृपया कक्षा, छात्र और परीक्षा का प्रकार चुनें।');
       return;
     }
@@ -309,6 +309,7 @@ export default function SchoolManagementPage() {
         return student.subjects.split(',').map(s => s.trim());
     }
     
+    // @ts-ignore
     return classSubjects[student.class] || [];
   }
   
@@ -1204,3 +1205,5 @@ const handleClassReportDownloadClick = () => {
     </div>
   );
 }
+
+    
