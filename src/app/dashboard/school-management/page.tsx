@@ -328,12 +328,14 @@ export default function SchoolManagementPage() {
 
     const doc = new jsPDF();
     
-    // Add a Hindi font that supports the characters.
-    // The 'Amiri' font is a placeholder and might not render all characters perfectly.
-    // For full support, a specific Devanagari font would need to be embedded.
-    doc.setFont('Times', 'Roman');
+    // Devanagari font support
+    doc.addFont('/fonts/NotoSansDevanagari-Regular.ttf', 'NotoSansDevanagari', 'normal');
+    doc.setFont('NotoSansDevanagari');
 
-    doc.text('छात्र प्रगति रिपोर्ट', 14, 16);
+    doc.setFontSize(16);
+    doc.text('आदर्श बाल विद्या मन्दिर', doc.internal.pageSize.getWidth() / 2, 15, { align: 'center' });
+    doc.setFontSize(12);
+    doc.text('छात्र प्रगति रिपोर्ट', doc.internal.pageSize.getWidth() / 2, 22, { align: 'center' });
     
     // Student Details
     const studentDetails = [
@@ -346,17 +348,18 @@ export default function SchoolManagementPage() {
     ];
 
     (doc as any).autoTable({
-      startY: 22,
+      startY: 30,
       head: [['विवरण', 'जानकारी']],
       body: studentDetails,
       theme: 'grid',
-      styles: { font: 'Times', fontStyle: 'normal' },
-      headStyles: { fillColor: [41, 128, 185], font: 'Times', fontStyle: 'bold' },
+      styles: { font: 'NotoSansDevanagari', fontStyle: 'normal' },
+      headStyles: { fillColor: [41, 128, 185], font: 'NotoSansDevanagari', fontStyle: 'bold' },
     });
 
 
     studentResults.forEach(result => {
         const lastTableY = (doc as any).lastAutoTable.finalY;
+        doc.setFontSize(12);
         doc.text(`परीक्षा: ${result.examType}`, 14, lastTableY + 10);
 
         let tableBody: (string|number)[][] = [];
@@ -378,8 +381,8 @@ export default function SchoolManagementPage() {
             head: tableHead,
             body: tableBody,
             theme: 'grid',
-            styles: { font: 'Times', fontStyle: 'normal' },
-            headStyles: { fillColor: [22, 160, 133], font: 'Times', fontStyle: 'bold' },
+            styles: { font: 'NotoSansDevanagari', fontStyle: 'normal' },
+            headStyles: { fillColor: [22, 160, 133], font: 'NotoSansDevanagari', fontStyle: 'bold' },
         });
     });
 
