@@ -308,12 +308,10 @@ export default function SchoolManagementPage() {
     return student?.subjects ? student.subjects.split(',').map(s => s.trim()) : [];
   }
   
-  const handleGeneratePdf = (doc: jsPDF, student: any, results: Result[]) => {
+const handleGeneratePdf = (doc: jsPDF, student: any, results: Result[]) => {
     try {
         const fontName = 'NotoSansDevanagari';
-        doc.addFont('/fonts/NotoSansDevanagari-Regular.ttf', fontName, 'normal');
-        doc.setFont(fontName);
-
+        
         doc.setFontSize(16);
         doc.text('आदर्श बाल विद्या मन्दिर', doc.internal.pageSize.getWidth() / 2, 15, { align: 'center' });
         doc.setFontSize(12);
@@ -391,8 +389,13 @@ const handleDownloadClick = async () => {
         return;
     }
     
-    const doc = new jsPDF();
-    handleGeneratePdf(doc, student, studentResults);
+    try {
+        const doc = new jsPDF();
+        handleGeneratePdf(doc, student, studentResults);
+    } catch (e) {
+        console.error(e);
+        alert('PDF बनाने में त्रुटि हुई।');
+    }
 };
 
 
