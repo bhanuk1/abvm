@@ -45,12 +45,16 @@
         },
         "authorId": {
           "type": "string",
-          "description": "Reference to User. (Relationship: User 1:N Notice).  The user ID of the author of the notice."
+          "description": "The user ID of the author of the notice."
         },
         "createdAt": {
           "type": "string",
           "description": "The date and time when the notice was created.",
           "format": "date-time"
+        },
+        "role": {
+            "type": "string",
+            "description": "The role this notice is intended for (All, Teachers, Students, Parents)"
         }
       },
       "required": [
@@ -58,7 +62,8 @@
         "title",
         "content",
         "authorId",
-        "createdAt"
+        "createdAt",
+        "role"
       ]
     }
   },
@@ -87,18 +92,14 @@
         }
       },
       {
-        "path": "/users/{userId}/notices/{noticeId}",
+        "path": "/notices/{noticeId}",
         "definition": {
           "entityName": "Notice",
           "schema": {
             "$ref": "#/backend/entities/Notice"
           },
-          "description": "Stores notices created by the associated user. Includes denormalized 'authorId' for authorization independence.",
+          "description": "Stores all notices. Security rules will control visibility based on user role and notice 'role' field.",
           "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier of the user who created the notice."
-            },
             {
               "name": "noticeId",
               "description": "The unique identifier of the notice."
@@ -107,6 +108,6 @@
         }
       }
     ],
-    "reasoning": "The Firestore structure is designed to securely manage users and notices for the Vidyalaya Connect application, prioritizing authorization independence and clear security rules. User data is stored in a dedicated collection (`/users/{userId}`) with path-based ownership, ensuring only the user can access their own data. The `Notice` documents are stored in a collection group called `notices` under each `user`, enabling scalable querying and management of notices associated with users.\n\nTo ensure authorization independence, we denormalize the `authorId` in the notice documents. This eliminates the need for `get()` calls in security rules to verify the author of a notice, allowing atomic creation and updates. The structure also segregates user data based on ownership, which helps to apply simple and robust security rules.\n\nThe QAPs requirements are met via structural segregation. Each user's data is stored under their own document, which makes it straightforward to implement rules that allow each user to only access their data. Notices will be publicly visible via the collection group queries and list operations. "
+    "reasoning": "The Firestore structure is designed to securely manage users and notices for the Vidyalaya Connect application, prioritizing authorization independence and clear security rules. User data is stored in a dedicated collection (`/users/{userId}`) with path-based ownership, ensuring only the user can access their own data. Notices are stored in a top-level `notices` collection for easy querying across the app. Security rules will filter notices based on the logged-in user's role and the `role` property on the notice document itself, ensuring users only see relevant announcements."
   }
 }

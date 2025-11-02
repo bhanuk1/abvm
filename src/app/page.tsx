@@ -1,3 +1,5 @@
+'use client';
+
 import Link from 'next/link';
 import {
   BookOpenCheck,
@@ -17,8 +19,10 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { allNotices as notices } from '@/lib/school-data';
 import { format } from 'date-fns';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { collection, limit, orderBy, query, where } from 'firebase/firestore';
+import type { Notice } from '@/lib/placeholder-data';
 
 function HomeHeader() {
   return (
@@ -103,7 +107,23 @@ function LoginOptions() {
 }
 
 function NoticeBoard() {
-  const firstNotice = notices[0];
+  const firestore = useFirestore();
+  const noticesQuery = useMemoFirebase(
+    () =>
+      firestore
+        ? query(
+            collection(firestore, 'notices'),
+            where('role', '==', 'All'),
+            orderBy('createdAt', 'desc'),
+            limit(1)
+          )
+        : null,
+    [firestore]
+  );
+  const { data: notices, isLoading } = useCollection<Notice>(noticesQuery);
+
+  const firstNotice = notices && notices.length > 0 ? notices[0] : null;
+
   return (
     <Card className="w-full max-w-md">
       <CardHeader>
@@ -113,19 +133,20 @@ function NoticeBoard() {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        {firstNotice ? (
+        {isLoading && <p>सूचना लोड हो रही है...</p>}
+        {!isLoading && firstNotice ? (
           <div className="border-l-4 border-amber-400 pl-4 bg-amber-50 p-4 rounded-r-lg">
             <h3 className="font-bold">{firstNotice.title}</h3>
             <p className="text-sm text-gray-600 mt-1 line-clamp-3">
               {firstNotice.content}
             </p>
             <p className="text-xs text-gray-500 mt-2">
-              {format(new Date(firstNotice.date), 'dd/MM/yyyy')}
+              {firstNotice.createdAt ? format(firstNotice.createdAt.toDate(), 'dd/MM/yyyy') : ''}
             </p>
           </div>
-        ) : (
+        ) : !isLoading && !firstNotice ? (
           <p>कोई सूचना उपलब्ध नहीं है।</p>
-        )}
+        ) : null}
       </CardContent>
     </Card>
   );

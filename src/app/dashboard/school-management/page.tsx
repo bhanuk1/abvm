@@ -57,8 +57,7 @@ import {
   type Attendance,
 } from '@/lib/school-data';
 import { useCollection, useFirestore, useUser, useMemoFirebase } from '@/firebase';
-import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
-import { collection, serverTimestamp } from 'firebase/firestore';
+import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 
 
 export default function SchoolManagementPage() {
@@ -145,7 +144,7 @@ export default function SchoolManagementPage() {
       createdAt: serverTimestamp(),
     };
 
-    addDocumentNonBlocking(noticesCol, noticeToAdd);
+    addDoc(noticesCol, noticeToAdd);
     
     setNewNotice({ title: '', content: '', role: 'All' });
     setIsNoticeDialogOpen(false);

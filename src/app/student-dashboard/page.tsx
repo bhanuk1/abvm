@@ -17,25 +17,64 @@ import {
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { initialStudents, homeworks, results as allResults, attendance as allAttendance, allNotices as notices } from '@/lib/school-data';
-import { type Notice } from '@/lib/placeholder-data';
+import { initialStudents } from '@/lib/school-data';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { collection, query, where } from 'firebase/firestore';
+import type { Notice } from '@/lib/placeholder-data';
+
 
 // Assuming the logged in student is the first student for this example
 const loggedInStudent = initialStudents[0];
 
 export default function StudentDashboardPage() {
-  const studentHomeworks = homeworks.filter(
-    (hw) => loggedInStudent.subjects.includes(hw.subject) && loggedInStudent.class === hw.class
-  );
+  const firestore = useFirestore();
 
-  const studentNotices = notices.filter(
-    (notice) => notice.role === 'All' || notice.role === 'Students'
+  const homeworksQuery = useMemoFirebase(() => 
+    firestore && loggedInStudent 
+      ? query(
+          collection(firestore, 'homeworks'), 
+          where('class', '==', loggedInStudent.class)
+        ) 
+      : null, 
+    [firestore]
   );
+  const { data: studentHomeworks } = useCollection<any>(homeworksQuery);
+
+  const noticesQuery = useMemoFirebase(() => 
+    firestore
+      ? query(
+          collection(firestore, 'notices'),
+          where('role', 'in', ['All', 'Students'])
+        )
+      : null,
+    [firestore]
+  );
+  const { data: studentNotices } = useCollection<Notice>(noticesQuery);
+
+  const resultsQuery = useMemoFirebase(() => 
+    firestore && loggedInStudent
+      ? query(
+          collection(firestore, 'results'),
+          where('studentId', '==', loggedInStudent.id)
+        )
+      : null,
+    [firestore]
+  );
+  const { data: studentResults } = useCollection<any>(resultsQuery);
   
-  const studentResults = allResults.filter(r => r.studentId === loggedInStudent.id);
-  const studentAttendance = allAttendance.filter(att => att.studentId === loggedInStudent.id);
+  const attendanceQuery = useMemoFirebase(() =>
+    firestore && loggedInStudent
+      ? query(
+        collection(firestore, 'attendance'),
+        where('studentId', '==', loggedInStudent.id)
+      )
+      : null,
+    [firestore]
+  );
+  const { data: studentAttendance } = useCollection<any>(attendanceQuery);
+
 
   return (
     <div className="flex flex-col gap-8">
@@ -72,7 +111,7 @@ export default function StudentDashboardPage() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {studentHomeworks.map((hw) => (
+                      {studentHomeworks && studentHomeworks.filter(hw => loggedInStudent.subjects.includes(hw.subject)).map((hw) => (
                         <TableRow key={hw.id}>
                           <TableCell>{format(new Date(hw.date), 'dd/MM/yyyy')}</TableCell>
                           <TableCell>{hw.subject}</TableCell>
@@ -91,7 +130,7 @@ export default function StudentDashboardPage() {
                   <CardTitle>मेरी उपस्थिति</CardTitle>
                 </CardHeader>
                 <CardContent>
-                   {studentAttendance.length > 0 ? (
+                   {studentAttendance && studentAttendance.length > 0 ? (
                     <Table>
                       <TableHeader>
                         <TableRow>
@@ -131,7 +170,7 @@ export default function StudentDashboardPage() {
                   <CardTitle>मेरे परिणाम</CardTitle>
                 </CardHeader>
                  <CardContent>
-                   {studentResults.length > 0 ? (
+                   {studentResults && studentResults.length > 0 ? (
                     <div className="space-y-6">
                       {studentResults.map(result => (
                         <Card key={result.id}>
@@ -149,7 +188,7 @@ export default function StudentDashboardPage() {
                                     </TableRow>
                                   </TableHeader>
                                   <TableBody>
-                                    {result.marks.map((mark, i) => (
+                                    {result.marks.map((mark:any, i: number) => (
                                       <TableRow key={i}>
                                         <TableCell>{mark.subject}</TableCell>
                                         <TableCell>{mark.obtained}</TableCell>
@@ -182,11 +221,11 @@ export default function StudentDashboardPage() {
                   <CardTitle>स्कूल की सूचनाएं</CardTitle>
                 </CardHeader>
                  <CardContent className="space-y-4">
-                    {studentNotices.map(notice => (
+                    {studentNotices && studentNotices.map(notice => (
                         <div key={notice.id} className="rounded-lg border bg-card text-card-foreground shadow-sm p-4">
                             <h3 className="font-semibold">{notice.title}</h3>
                             <p className="text-sm text-muted-foreground mt-1">{notice.content}</p>
-                            <p className="text-xs text-muted-foreground mt-2">{format(new Date(notice.date), 'dd/MM/yyyy')} - {notice.author}</p>
+                            <p className="text-xs text-muted-foreground mt-2">{notice.createdAt ? format(notice.createdAt.toDate(), 'dd/MM/yyyy') : ''} - {notice.author}</p>
                         </div>
                     ))}
                 </CardContent>

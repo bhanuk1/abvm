@@ -1,9 +1,4 @@
-
 import type { Notice } from './placeholder-data';
-
-export const allNotices: Notice[] = [
- 
-];
 
 
 export const initialStudents = [
@@ -23,10 +18,6 @@ export const initialStudents = [
     password: 'stu123',
     subjects: 'हिंदी, अंग्रेजी, गणित, विज्ञान, सामाजिक विज्ञान, कंप्यूटर, नैतिक शिक्षा, Drawing, संस्कृत/उर्दू',
   },
-  { id: 'STU002', rollNo: '002', name: 'प्रिया कुमारी', class: '5', fatherName: 'अशोक कुमार', password: 'stu123', mobile: '9876543214', motherName: 'a', dob: '2015-05-20', address: '123, गांधी नगर, दिल्ली', admissionDate: '2020-04-01', aadhaar: '1234 5678 9012', pen: 'PEN12345', subjects: 'हिंदी, अंग्रेजी, गणित, विज्ञान, सामाजिक विज्ञान, कंप्यूटर, नैतिक शिक्षा, Drawing, संस्कृत/उर्दू', },
-  { id: 'STU003', rollNo: '003', name: 'अमित सिंह', class: '5', fatherName: 'राजेश सिंह', password: 'stu123', mobile: '9876543215', motherName: 'a', dob: '2015-05-20', address: '123, गांधी नगर, दिल्ली', admissionDate: '2020-04-01', aadhaar: '1234 5678 9012', pen: 'PEN12345', subjects: 'हिंदी, अंग्रेजी, गणित, विज्ञान, सामाजिक विज्ञान, कंप्यूटर, नैतिक शिक्षा, Drawing, संस्कृत/उर्दू', },
-  { id: 'STU004', rollNo: '004', name: 'नेहा यादव', class: '6', fatherName: 'महेश यादव', password: 'stu123', mobile: '9876543216', motherName: 'a', dob: '2015-05-20', address: '123, गांधी नगर, दिल्ली', admissionDate: '2020-04-01', aadhaar: '1234 5678 9012', pen: 'PEN12345', subjects: 'हिंदी, अंग्रेजी, गणित, विज्ञान, सामाजिक विज्ञान, कंप्यूटर, नैतिक शिक्षा, Drawing, संस्कृत/उर्दू', },
-  { id: 'STU005', rollNo: '005', name: 'सुनीता देवी', class: '6', fatherName: 'राम प्रसाद', password: 'stu123', mobile: '9876543217', motherName: 'a', dob: '2015-05-20', address: '123, गांधी नगर, दिल्ली', admissionDate: '2020-04-01', aadhaar: '1234 5678 9012', pen: 'PEN12345', subjects: 'हिंदी, अंग्रेजी, गणित, विज्ञान, सामाजिक विज्ञान, कंप्यूटर, नैतिक शिक्षा, Drawing, संस्कृत/उर्दू', },
 ];
 
 
@@ -39,20 +30,7 @@ export interface Result {
   marks: { subject: string; obtained: string; total: string }[] | { obtained: string; total: string };
 }
 
-export const results: Result[] = [
-    {
-        id: 'RES001',
-        studentId: 'STU001',
-        studentName: 'राहुल शर्मा',
-        class: '5',
-        examType: 'त्रैमासिक परीक्षा',
-        marks: [
-            { subject: 'हिंदी', obtained: '85', total: '100' },
-            { subject: 'अंग्रेजी', obtained: '78', total: '100' },
-            { subject: 'गणित', obtained: '92', total: '100' },
-        ]
-    }
-];
+export const results: Result[] = [];
 
 export const initialNewUserState = {
     role: '',
@@ -76,12 +54,6 @@ export const initialNewUserState = {
     studentMobile: ''
 };
 
-export const initialNewNoticeState = {
-  title: '',
-  content: '',
-  role: 'All' as Notice['role'],
-};
-
 // Mock data for the logged-in teacher
 export const teacherData = {
   name: 'श्रीमती सुनीता गुप्ता',
@@ -102,17 +74,7 @@ export interface Homework {
   teacherName: string;
 }
 
-export const homeworks: Homework[] = [
-    {
-        id: 'HW001',
-        class: '5',
-        subject: 'हिंदी',
-        content: 'पाठ 3 के प्रश्न उत्तर याद करें।',
-        date: '2024-07-29',
-        teacherId: 'teacher01',
-        teacherName: 'श्रीमती सुनीता गुप्ता'
-    }
-];
+export const homeworks: Homework[] = [];
 
 export const classSubjects: { [key: string]: string[] } = {
   'Nursery': ['हिंदी', 'अंग्रेजी', 'गणित', 'Drawing'],
@@ -152,14 +114,13 @@ export const allSubjects = [
 ];
 
 export interface Attendance {
+  id?: string;
   studentId: string;
   date: string; // YYYY-MM-DD
   status: 'उपस्थित' | 'अनुपस्थित';
   class: string;
 }
 
-export const attendance: Attendance[] = [
-    { studentId: 'STU001', date: '2024-07-29', status: 'उपस्थित', class: '5' },
-    { studentId: 'STU002', date: '2024-07-29', status: 'अनुपस्थित', class: '5' },
-    { studentId: 'STU003', date: '2024-07-29', status: 'उपस्थित', class: '5' },
-];
+export const attendance: Attendance[] = [];
+
+export const allNotices: Notice[] = [];
