@@ -26,14 +26,14 @@ export function AppHeader() {
         <nav className="flex items-center space-x-6 border-t h-12">
           <Link
             href="/dashboard"
-            className="flex items-center gap-2 text-sm font-medium text-primary border-b-2 border-primary pb-3"
+            className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-primary transition-colors pb-3"
           >
             <LayoutGrid className="h-4 w-4" />
             डेशबोर्ड
           </Link>
           <Link
-            href="#"
-            className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
+            href="/dashboard/school-management"
+            className="flex items-center gap-2 text-sm font-medium text-primary border-b-2 border-primary pb-3"
           >
             <FolderKanban className="h-4 w-4" />
             स्कूल प्रबंधन
