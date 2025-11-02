@@ -272,14 +272,15 @@ export default function SchoolManagementPage() {
 
     let resultMarks;
     if (selectedExamType === 'monthly') {
-      if (!marks.hasOwnProperty('monthly-obtained') || !marks.hasOwnProperty('monthly-total')) {
-        toast({ variant: 'destructive', title: 'त्रुटि', description: 'कृपया मासिक परीक्षा के अंक भरें।' });
-        return;
-      }
-      resultMarks = {
-        obtained: marks['monthly-obtained'],
-        total: marks['monthly-total'],
-      };
+        // Use hasOwnProperty to check for the key, allows '0' as a valid value
+        if (!marks.hasOwnProperty('monthly-obtained') || !marks.hasOwnProperty('monthly-total')) {
+            toast({ variant: 'destructive', title: 'त्रुटि', description: 'कृपया मासिक परीक्षा के अंक भरें।' });
+            return;
+        }
+        resultMarks = {
+            obtained: marks['monthly-obtained'],
+            total: marks['monthly-total'],
+        };
     } else {
       const studentSubjects = getSubjectsForStudent();
       resultMarks = studentSubjects.map(subject => ({
