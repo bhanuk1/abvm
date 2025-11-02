@@ -44,80 +44,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { notices as initialNotices, type Notice } from '@/lib/placeholder-data';
-
-
-const initialUsers = [
-  {
-    name: 'श्रीमती सुनीता गुप्ता',
-    role: 'शिक्षक',
-    mobile: '9876543211',
-    classSubject: 'हिंदी',
-    password: 'teacher123',
-  },
-  {
-    name: 'विकास शर्मा',
-    role: 'अभिभावक',
-    mobile: '9876543212',
-    classSubject: '5', // Represents the child's class
-    password: 'parent123',
-  },
-];
-
-const initialStudents = [
-  {
-    rollNo: '001',
-    name: 'राहुल शर्मा',
-    class: '5',
-    fatherName: 'विकास शर्मा',
-    motherName: 'कविता शर्मा',
-    dob: '2015-05-20',
-    address: '123, गांधी नगर, दिल्ली',
-    admissionDate: '2020-04-01',
-    aadhaar: '1234 5678 9012',
-    pen: 'PEN12345',
-    mobile: '9876543213',
-    id: 'STU001',
-    password: 'stu123',
-    subjects: 'हिंदी, अंग्रेजी, गणित, विज्ञान, सा० विज्ञान'
-  },
-]
-
-const initialNewUserState = {
-    role: '',
-    // Teacher fields
-    teacherName: '',
-    teacherMobile: '',
-    teacherSubject: '',
-    teacherClass: '',
-    // Parent fields
-    parentName: '',
-    // Student fields
-    studentName: '',
-    studentClass: '',
-    studentSubjects: '',
-    motherName: '',
-    address: '',
-    dob: undefined,
-    admissionDate: undefined,
-    aadhaar: '',
-    pen: '',
-    studentMobile: ''
-};
-
-const initialNewNoticeState = {
-  title: '',
-  content: '',
-  role: 'All' as Notice['role'],
-};
-
-export interface Result {
-  id: string;
-  studentId: string;
-  studentName: string;
-  class: string;
-  examType: string;
-  marks: { subject: string; obtained: string; total: string }[] | { obtained: string; total: string };
-}
+import {
+  initialUsers,
+  initialStudents,
+  initialNewUserState,
+  initialNewNoticeState,
+  type Result
+} from '@/lib/school-data';
 
 
 export default function SchoolManagementPage() {
@@ -129,8 +62,8 @@ export default function SchoolManagementPage() {
   const [isUserDialogOpen, setIsUserDialogOpen] = React.useState(false);
   const [isNoticeDialogOpen, setIsNoticeDialogOpen] = React.useState(false);
 
-  const [passwordVisibility, setPasswordVisibility] = React.useState<{[key: number]: boolean}>({});
-  const [studentPasswordVisibility, setStudentPasswordVisibility] = React.useState<{[key: number]: boolean}>({});
+  const [passwordVisibility, setPasswordVisibility] = React.useState<{[key: string]: boolean}>({});
+  const [studentPasswordVisibility, setStudentPasswordVisibility] = React.useState<{[key: string]: boolean}>({});
 
   const [newUser, setNewUser] = React.useState<any>(initialNewUserState);
   const [newNotice, setNewNotice] = React.useState(initialNewNoticeState);
@@ -194,6 +127,9 @@ export default function SchoolManagementPage() {
         mobile: newUser.teacherMobile,
         classSubject: `${newUser.teacherSubject} - ${newUser.teacherClass}`,
         password,
+        id: `teacher${(users.filter(u => u.role === 'शिक्षक').length + 1).toString().padStart(2, '0')}`,
+        classes: newUser.teacherClass.split(',').map((c: string) => c.trim()),
+        subjects: newUser.teacherSubject.split(',').map((s: string) => s.trim()),
       };
       setUsers((prev) => [...prev, userToAdd]);
     } else if (newUser.role === 'parent') {
@@ -205,6 +141,7 @@ export default function SchoolManagementPage() {
         mobile: newUser.studentMobile,
         classSubject: newUser.studentClass,
         password: password,
+        id: `parent${(users.filter(u => u.role === 'अभिभावक').length + 1).toString().padStart(2, '0')}`,
       };
       setUsers((prev) => [...prev, parentToAdd]);
       
@@ -224,7 +161,8 @@ export default function SchoolManagementPage() {
         mobile: newUser.studentMobile,
         id: studentId,
         password: studentPassword,
-        subjects: newUser.studentSubjects
+        subjects: newUser.studentSubjects,
+        status: 'उपस्थित',
       };
       setStudents((prev) => [...prev, studentToAdd]);
     }
@@ -233,16 +171,16 @@ export default function SchoolManagementPage() {
     setIsUserDialogOpen(false);
   };
   
-  const togglePasswordVisibility = (index: number) => {
+  const togglePasswordVisibility = (id: string) => {
     setPasswordVisibility(prev => ({
         ...prev,
-        [index]: !prev[index]
+        [id]: !prev[id]
     }));
   };
-  const toggleStudentPasswordVisibility = (index: number) => {
+  const toggleStudentPasswordVisibility = (id: string) => {
     setStudentPasswordVisibility(prev => ({
         ...prev,
-        [index]: !prev[index]
+        [id]: !prev[id]
     }));
   };
   
@@ -313,7 +251,7 @@ export default function SchoolManagementPage() {
   const handleGeneratePdf = (doc: jsPDF, student: any, results: Result[]) => {
     try {
         const fontName = 'NotoSansDevanagari';
-
+        
         doc.setFontSize(16);
         doc.text('आदर्श बाल विद्या मन्दिर', doc.internal.pageSize.getWidth() / 2, 15, { align: 'center' });
         doc.setFontSize(12);
@@ -509,11 +447,11 @@ const handleClassReportDownloadClick = () => {
                         </div>
                         <div className="grid grid-cols-4 items-center gap-4">
                           <Label htmlFor="teacherSubject" className="text-right">विषय</Label>
-                          <Input id="teacherSubject" value={newUser.teacherSubject} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" />
+                          <Input id="teacherSubject" value={newUser.teacherSubject} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" placeholder="जैसे: हिंदी, अंग्रेजी"/>
                         </div>
                          <div className="grid grid-cols-4 items-center gap-4">
                           <Label htmlFor="teacherClass" className="text-right">कक्षा</Label>
-                          <Input id="teacherClass" value={newUser.teacherClass} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" />
+                          <Input id="teacherClass" value={newUser.teacherClass} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" placeholder="जैसे: 5, 6, 7" />
                         </div>
                       </>
                     )}
@@ -626,13 +564,14 @@ const handleClassReportDownloadClick = () => {
                     <TableHead>भूमिका</TableHead>
                     <TableHead>मोबाइल</TableHead>
                     <TableHead>कक्षा/विषय</TableHead>
+                    <TableHead>यूज़र आईडी</TableHead>
                     <TableHead>पासवर्ड</TableHead>
                     <TableHead>कार्य</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {users.map((user, index) => (
-                    <TableRow key={index}>
+                  {users.map((user) => (
+                    <TableRow key={user.id}>
                       <TableCell className="font-medium">{user.name}</TableCell>
                       <TableCell>
                         <Badge
@@ -650,12 +589,13 @@ const handleClassReportDownloadClick = () => {
                       </TableCell>
                       <TableCell>{user.mobile}</TableCell>
                       <TableCell>{user.classSubject}</TableCell>
+                      <TableCell>{user.id}</TableCell>
                       <TableCell className="flex items-center gap-2">
                         <span>
-                            {passwordVisibility[index] ? user.password : '*'.repeat(user.password.length)}
+                            {passwordVisibility[user.id] ? user.password : '*'.repeat(user.password.length)}
                         </span>
-                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => togglePasswordVisibility(index)}>
-                           {passwordVisibility[index] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => togglePasswordVisibility(user.id)}>
+                           {passwordVisibility[user.id] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                         </Button>
                       </TableCell>
                       <TableCell>
@@ -693,8 +633,8 @@ const handleClassReportDownloadClick = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {students.map((student, index) => (
-                    <TableRow key={index}>
+                  {students.map((student) => (
+                    <TableRow key={student.id}>
                       <TableCell className="font-medium">{student.rollNo}</TableCell>
                       <TableCell>{student.name}</TableCell>
                       <TableCell>{student.class}</TableCell>
@@ -703,9 +643,9 @@ const handleClassReportDownloadClick = () => {
                       <TableCell>
                         <div>ID: {student.id}</div>
                         <div className="flex items-center gap-2">
-                            <span>पासवर्ड: {studentPasswordVisibility[index] ? student.password : '*'.repeat(student.password.length)}</span>
-                            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => toggleStudentPasswordVisibility(index)}>
-                               {studentPasswordVisibility[index] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                            <span>पासवर्ड: {studentPasswordVisibility[student.id] ? student.password : '*'.repeat(student.password.length)}</span>
+                            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => toggleStudentPasswordVisibility(student.id)}>
+                               {studentPasswordVisibility[student.id] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                             </Button>
                         </div>
                       </TableCell>
@@ -992,5 +932,3 @@ const handleClassReportDownloadClick = () => {
     </div>
   );
 }
-
-    

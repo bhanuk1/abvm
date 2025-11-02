@@ -31,29 +31,14 @@ import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { initialStudents, teacherData } from '@/lib/school-data';
 
-// Mock data
-const teacherData = {
-  classes: [
-    { name: 'कक्षा 5', subject: 'हिंदी' },
-    { name: 'कक्षा 6', subject: 'हिंदी' },
-    { name: 'कक्षा 7', subject: 'संस्कृत' },
-  ],
-};
-
-const initialStudents = [
-  { id: 'STU001', rollNo: 1, name: 'राहुल शर्मा', status: 'उपस्थित' },
-  { id: 'STU002', rollNo: 2, name: 'प्रिया कुमारी', status: 'अनुपस्थित' },
-  { id: 'STU003', rollNo: 3, name: 'अमित सिंह', status: 'उपस्थित' },
-  { id: 'STU004', rollNo: 4, name: 'नेहा यादव', status: 'उपस्थित' },
-  { id: 'STU005', rollNo: 5, name: 'सुनीता देवी', status: 'उपस्थित' },
-];
-
+type Student = typeof initialStudents[0];
 
 export default function TeacherClassManagementPage() {
-  const [selectedClass, setSelectedClass] = React.useState('');
+  const [selectedClass, setSelectedClass] = React.useState(teacherData.classes[0]?.name || '');
   const [selectedDate, setSelectedDate] = React.useState<Date | undefined>(new Date());
-  const [students, setStudents] = React.useState(initialStudents);
+  const [students, setStudents] = React.useState<Student[]>(initialStudents);
 
   const handleAttendanceChange = (studentId: string, isPresent: boolean) => {
     setStudents(currentStudents => 
@@ -64,10 +49,12 @@ export default function TeacherClassManagementPage() {
       )
     );
   };
+
+  const filteredStudents = students.filter(student => student.class === selectedClass);
   
   return (
     <div className="flex flex-col gap-8">
-      <h1 className="text-3xl font-bold">शिक्षक डैशबोर्ड</h1>
+      <h1 className="text-3xl font-bold">कक्षा प्रबंधन</h1>
 
       <Card>
         <CardContent className="p-4 flex items-center gap-4">
@@ -78,7 +65,7 @@ export default function TeacherClassManagementPage() {
             </SelectTrigger>
             <SelectContent>
               {teacherData.classes.map(c => (
-                <SelectItem key={c.name} value={c.name}>{c.name}</SelectItem>
+                <SelectItem key={c.name} value={c.name}>कक्षा {c.name}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -109,7 +96,7 @@ export default function TeacherClassManagementPage() {
       
       <Card>
         <CardHeader>
-            <CardTitle>छात्र सूची</CardTitle>
+            <CardTitle>छात्र सूची - कक्षा {selectedClass}</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
@@ -121,7 +108,7 @@ export default function TeacherClassManagementPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {students.map((student) => (
+              {filteredStudents.map((student) => (
                 <TableRow key={student.id}>
                   <TableCell>{student.rollNo}</TableCell>
                   <TableCell>{student.name}</TableCell>

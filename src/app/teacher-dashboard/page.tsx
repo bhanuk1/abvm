@@ -10,23 +10,14 @@ import {
 import { User, Building, Book, Users } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { teacherData as loggedInTeacherData } from '@/lib/school-data';
 
-// Mock data for the logged-in teacher
-const teacherData = {
-  name: 'श्रीमती सुनीता गुप्ता',
-  classes: [
-    { name: 'कक्षा 5', subject: 'हिंदी', students: 30 },
-    { name: 'कक्षा 6', subject: 'हिंदी', students: 25 },
-    { name: 'कक्षा 7', subject: 'संस्कृत', students: 30 },
-  ],
-};
-
-const totalStudents = teacherData.classes.reduce((sum, currentClass) => sum + currentClass.students, 0);
+const totalStudents = loggedInTeacherData.classes.reduce((sum, currentClass) => sum + currentClass.students, 0);
 
 const stats = [
   {
     title: 'मेरी कक्षाएं',
-    value: teacherData.classes.length,
+    value: loggedInTeacherData.classes.length,
     icon: Building,
     color: 'bg-pink-100 text-pink-600',
   },
@@ -68,11 +59,11 @@ export default function TeacherDashboardPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {teacherData.classes.map((c, index) => (
+          {loggedInTeacherData.classes.map((c, index) => (
             <Card key={index} className="flex flex-col">
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
-                  {c.name}
+                  कक्षा {c.name}
                   <Link href="/teacher-dashboard/class-management">
                     <Button variant="link">प्रबंधन करें</Button>
                   </Link>
