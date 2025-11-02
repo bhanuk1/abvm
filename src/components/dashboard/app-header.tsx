@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Menu, School, LogOut, LayoutGrid } from 'lucide-react';
+import { Menu, BookOpenCheck, LogOut, LayoutGrid } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -28,8 +28,8 @@ export function AppHeader() {
         <SheetContent side="left" className="flex flex-col p-0 bg-muted/40">
             <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
                 <Link href="/dashboard" className="flex items-center gap-2 font-semibold font-headline">
-                    <School className="h-6 w-6 text-primary" />
-                    <span className="">Vidyalaya Connect</span>
+                    <BookOpenCheck className="h-6 w-6 text-primary" />
+                    <span className="text-sm">Adarsh Bal Vidya Mandir Inter College</span>
                 </Link>
             </div>
             <div className="flex-1 py-2">

@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { LogOut, School, LayoutGrid } from 'lucide-react';
+import { LogOut, BookOpenCheck, LayoutGrid } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,8 +11,8 @@ export function AppSidebar() {
       <div className="flex h-full max-h-screen flex-col gap-2">
         <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
           <Link href="/dashboard" className="flex items-center gap-2 font-semibold font-headline">
-            <School className="h-6 w-6 text-primary" />
-            <span className="">Vidyalaya Connect</span>
+            <BookOpenCheck className="h-6 w-6 text-primary" />
+            <span className="text-sm">Adarsh Bal Vidya Mandir Inter College</span>
           </Link>
         </div>
         <div className="flex-1">

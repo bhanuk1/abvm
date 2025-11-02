@@ -3,7 +3,7 @@ import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 
 export const metadata: Metadata = {
-  title: 'Vidyalaya Connect',
+  title: 'Adarsh Bal Vidya Mandir Inter College',
   description: 'A modern school management app.',
 };
 
