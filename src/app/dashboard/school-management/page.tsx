@@ -18,12 +18,10 @@ import {
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Eye, EyeOff, UserPlus, PlusCircle } from 'lucide-react';
+import { Eye, EyeOff, UserPlus, Calendar as CalendarIcon } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -37,6 +35,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 const initialUsers = [
   {
@@ -50,7 +52,7 @@ const initialUsers = [
     name: 'विकास शर्मा',
     role: 'अभिभावक',
     mobile: '9876543212',
-    classSubject: '1',
+    classSubject: '1', // Represents the child's class
     password: 'parent123',
   },
 ];
@@ -61,51 +63,124 @@ const initialStudents = [
     name: 'राहुल शर्मा',
     class: '5',
     fatherName: 'विकास शर्मा',
+    motherName: 'कविता शर्मा',
+    dob: '2015-05-20',
+    address: '123, गांधी नगर, दिल्ली',
+    admissionDate: '2020-04-01',
+    aadhaar: '1234 5678 9012',
+    pen: 'PEN12345',
     mobile: '9876543213',
     id: 'STU001',
     password: 'stu123',
+    subjects: 'हिंदी, अंग्रेजी, गणित'
   },
 ]
+
+const initialNewUserState = {
+    role: '',
+    // Teacher fields
+    teacherName: '',
+    teacherMobile: '',
+    teacherSubject: '',
+    teacherClass: '',
+    // Parent fields
+    parentName: '',
+    // Student fields
+    studentName: '',
+    studentClass: '',
+    studentSubjects: '',
+    motherName: '',
+    address: '',
+    dob: undefined,
+    admissionDate: undefined,
+    aadhaar: '',
+    pen: '',
+    studentMobile: ''
+};
+
 
 export default function SchoolManagementPage() {
   const [users, setUsers] = React.useState(initialUsers);
   const [students, setStudents] = React.useState(initialStudents);
   const [isUserDialogOpen, setIsUserDialogOpen] = React.useState(false);
   const [passwordVisibility, setPasswordVisibility] = React.useState<{[key: number]: boolean}>({});
+  const [studentPasswordVisibility, setStudentPasswordVisibility] = React.useState<{[key: number]: boolean}>({});
 
-  const [newUser, setNewUser] = React.useState({
-    role: '',
-    name: '',
-    mobile: '',
-    classSubject: '',
-  });
+  const [newUser, setNewUser] = React.useState(initialNewUserState);
 
   const handleInputChange = (id: string, value: string) => {
     setNewUser((prev) => ({ ...prev, [id]: value }));
   };
   
   const handleSelectChange = (value: string) => {
-    setNewUser((prev) => ({ ...prev, role: value }));
+    setNewUser({ ...initialNewUserState, role: value });
+  };
+  
+  const handleDateChange = (field: 'dob' | 'admissionDate', date?: Date) => {
+    setNewUser((prev) => ({ ...prev, [field]: date }));
   };
 
+
   const handleCreateUser = () => {
-    if (!newUser.name || !newUser.role || !newUser.mobile) {
-      // Maybe show an error toast here in the future
-      return;
-    }
+    if (!newUser.role) return;
+
     const password = Math.random().toString(36).slice(-8);
-    const userToAdd = {
-      ...newUser,
-      role: newUser.role === 'teacher' ? 'शिक्षक' : 'अभिभावक', // Adjust as needed
-      password: password,
-    };
-    setUsers((prev) => [...prev, userToAdd]);
-    setNewUser({ role: '', name: '', mobile: '', classSubject: '' });
+
+    if (newUser.role === 'teacher') {
+      if (!newUser.teacherName || !newUser.teacherMobile) return;
+      const userToAdd = {
+        name: newUser.teacherName,
+        role: 'शिक्षक',
+        mobile: newUser.teacherMobile,
+        classSubject: `${newUser.teacherSubject} - ${newUser.teacherClass}`,
+        password,
+      };
+      setUsers((prev) => [...prev, userToAdd]);
+    } else if (newUser.role === 'parent') {
+      if (!newUser.parentName || !newUser.studentName) return;
+      
+      const parentToAdd = {
+        name: newUser.parentName,
+        role: 'अभिभावक',
+        mobile: newUser.studentMobile,
+        classSubject: newUser.studentClass,
+        password: password,
+      };
+      setUsers((prev) => [...prev, parentToAdd]);
+      
+      const studentId = `STU${(students.length + 1).toString().padStart(3, '0')}`;
+      const studentPassword = Math.random().toString(36).slice(-8);
+      const studentToAdd = {
+        rollNo: (students.length + 1).toString().padStart(3, '0'),
+        name: newUser.studentName,
+        class: newUser.studentClass,
+        fatherName: newUser.parentName,
+        motherName: newUser.motherName,
+        dob: newUser.dob ? format(newUser.dob, 'yyyy-MM-dd') : '',
+        address: newUser.address,
+        admissionDate: newUser.admissionDate ? format(newUser.admissionDate, 'yyyy-MM-dd') : '',
+        aadhaar: newUser.aadhaar,
+        pen: newUser.pen,
+        mobile: newUser.studentMobile,
+        id: studentId,
+        password: studentPassword,
+        subjects: newUser.studentSubjects
+      };
+      setStudents((prev) => [...prev, studentToAdd]);
+    }
+    
+    setNewUser(initialNewUserState);
     setIsUserDialogOpen(false);
   };
   
   const togglePasswordVisibility = (index: number) => {
     setPasswordVisibility(prev => ({
+        ...prev,
+        [index]: !prev[index]
+    }));
+  };
+  const toggleStudentPasswordVisibility = (index: number) => {
+    setStudentPasswordVisibility(prev => ({
         ...prev,
         [index]: !prev[index]
     }));
@@ -135,7 +210,7 @@ export default function SchoolManagementPage() {
                     नया उपयोगकर्ता बनाएं
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="sm:max-w-[425px]">
+                <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle>नया उपयोगकर्ता बनाएं</DialogTitle>
                   </DialogHeader>
@@ -151,32 +226,127 @@ export default function SchoolManagementPage() {
                         <SelectContent>
                           <SelectItem value="teacher">शिक्षक</SelectItem>
                           <SelectItem value="parent">अभिभावक</SelectItem>
-                          <SelectItem value="student">छात्र</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="name" className="text-right">
-                        नाम
-                      </Label>
-                      <Input id="name" value={newUser.name} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" />
-                    </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="mobile" className="text-right">
-                        मोबाइल नंबर
-                      </Label>
-                      <Input id="mobile" value={newUser.mobile} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" />
-                    </div>
-                     <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="classSubject" className="text-right">
-                        कक्षा/विषय
-                      </Label>
-                      <Input id="classSubject" value={newUser.classSubject} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" />
-                    </div>
+
+                    {newUser.role === 'teacher' && (
+                      <>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                          <Label htmlFor="teacherName" className="text-right">नाम</Label>
+                          <Input id="teacherName" value={newUser.teacherName} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                          <Label htmlFor="teacherMobile" className="text-right">मोबाइल नंबर</Label>
+                          <Input id="teacherMobile" value={newUser.teacherMobile} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                          <Label htmlFor="teacherSubject" className="text-right">विषय</Label>
+                          <Input id="teacherSubject" value={newUser.teacherSubject} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" />
+                        </div>
+                         <div className="grid grid-cols-4 items-center gap-4">
+                          <Label htmlFor="teacherClass" className="text-right">कक्षा</Label>
+                          <Input id="teacherClass" value={newUser.teacherClass} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" />
+                        </div>
+                      </>
+                    )}
+                    
+                    {newUser.role === 'parent' && (
+                      <>
+                        <h3 className="col-span-4 font-semibold text-lg border-b pb-2 mb-2">अभिभावक विवरण</h3>
+                         <div className="grid grid-cols-4 items-center gap-4">
+                          <Label htmlFor="parentName" className="text-right">पिता का नाम</Label>
+                          <Input id="parentName" value={newUser.parentName} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" />
+                        </div>
+                         <div className="grid grid-cols-4 items-center gap-4">
+                          <Label htmlFor="motherName" className="text-right">माता का नाम</Label>
+                          <Input id="motherName" value={newUser.motherName} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="studentMobile" className="text-right">मोबाइल नंबर</Label>
+                            <Input id="studentMobile" value={newUser.studentMobile} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" />
+                        </div>
+                        <h3 className="col-span-4 font-semibold text-lg border-b pb-2 mt-4 mb-2">छात्र विवरण</h3>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                          <Label htmlFor="studentName" className="text-right">छात्र का नाम</Label>
+                          <Input id="studentName" value={newUser.studentName} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                          <Label htmlFor="studentClass" className="text-right">कक्षा</Label>
+                          <Input id="studentClass" value={newUser.studentClass} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                          <Label htmlFor="studentSubjects" className="text-right">विषय</Label>
+                          <Input id="studentSubjects" value={newUser.studentSubjects} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" placeholder="जैसे: हिंदी, अंग्रेजी, गणित"/>
+                        </div>
+                         <div className="grid grid-cols-4 items-center gap-4">
+                          <Label htmlFor="address" className="text-right">पता</Label>
+                          <Input id="address" value={newUser.address} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" />
+                        </div>
+                         <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="dob" className="text-right">जन्म तिथि</Label>
+                             <Popover>
+                                <PopoverTrigger asChild>
+                                <Button
+                                    variant={"outline"}
+                                    className={cn(
+                                    "col-span-3 justify-start text-left font-normal",
+                                    !newUser.dob && "text-muted-foreground"
+                                    )}
+                                >
+                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                    {newUser.dob ? format(newUser.dob, "PPP") : <span>Pick a date</span>}
+                                </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0">
+                                <Calendar
+                                    mode="single"
+                                    selected={newUser.dob}
+                                    onSelect={(date) => handleDateChange('dob', date)}
+                                    initialFocus
+                                />
+                                </PopoverContent>
+                            </Popover>
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="admissionDate" className="text-right">प्रवेश तिथि</Label>
+                             <Popover>
+                                <PopoverTrigger asChild>
+                                <Button
+                                    variant={"outline"}
+                                    className={cn(
+                                    "col-span-3 justify-start text-left font-normal",
+                                    !newUser.admissionDate && "text-muted-foreground"
+                                    )}
+                                >
+                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                    {newUser.admissionDate ? format(newUser.admissionDate, "PPP") : <span>Pick a date</span>}
+                                </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0">
+                                <Calendar
+                                    mode="single"
+                                    selected={newUser.admissionDate}
+                                    onSelect={(date) => handleDateChange('admissionDate', date)}
+                                    initialFocus
+                                />
+                                </PopoverContent>
+                            </Popover>
+                        </div>
+                         <div className="grid grid-cols-4 items-center gap-4">
+                          <Label htmlFor="aadhaar" className="text-right">आधार नंबर</Label>
+                          <Input id="aadhaar" value={newUser.aadhaar} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" />
+                        </div>
+                         <div className="grid grid-cols-4 items-center gap-4">
+                          <Label htmlFor="pen" className="text-right">PEN नंबर</Label>
+                          <Input id="pen" value={newUser.pen} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" />
+                        </div>
+                      </>
+                    )}
                   </div>
                   <DialogFooter>
-                    <Button type="submit" onClick={handleCreateUser}>बनाएं</Button>
                     <Button variant="outline" onClick={() => setIsUserDialogOpen(false)}>रद्द करें</Button>
+                    <Button type="submit" onClick={handleCreateUser}>बनाएं</Button>
                   </DialogFooter>
                 </DialogContent>
               </Dialog>
@@ -239,12 +409,8 @@ export default function SchoolManagementPage() {
             </CardContent>
           </TabsContent>
           <TabsContent value="student-management">
-            <CardHeader className="flex flex-row items-center justify-between">
+            <CardHeader>
               <CardTitle>छात्र प्रबंधन</CardTitle>
-              <Button>
-                <PlusCircle className="mr-2" />
-                नया छात्र जोड़ें
-              </Button>
             </CardHeader>
             <CardContent>
               <Table>
@@ -269,7 +435,12 @@ export default function SchoolManagementPage() {
                       <TableCell>{student.mobile}</TableCell>
                       <TableCell>
                         <div>ID: {student.id}</div>
-                        <div>पासवर्ड: {student.password}</div>
+                        <div className="flex items-center gap-2">
+                            <span>पासवर्ड: {studentPasswordVisibility[index] ? student.password : '*'.repeat(student.password.length)}</span>
+                            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => toggleStudentPasswordVisibility(index)}>
+                               {studentPasswordVisibility[index] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                            </Button>
+                        </div>
                       </TableCell>
                        <TableCell>
                         <Button variant="link" className="p-0 h-auto text-primary">
@@ -293,3 +464,5 @@ export default function SchoolManagementPage() {
     </div>
   );
 }
+
+    
