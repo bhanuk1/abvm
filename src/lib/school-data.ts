@@ -38,12 +38,11 @@ export const initialStudents = [
     id: 'STU001',
     password: 'stu123',
     subjects: 'हिंदी, अंग्रेजी, गणित, विज्ञान, सामाजिक विज्ञान, कंप्यूटर, नैतिक शिक्षा, Drawing, संस्कृत/उर्दू',
-    status: 'उपस्थित'
   },
-  { id: 'STU002', rollNo: '002', name: 'प्रिया कुमारी', class: '5', fatherName: 'अशोक कुमार', status: 'अनुपस्थित', password: 'stu123', mobile: '9876543214', subjects: 'हिंदी, अंग्रेजी, गणित, विज्ञान, सामाजिक विज्ञान, कंप्यूटर, नैतिक शिक्षा, Drawing, संस्कृत/उर्दू', },
-  { id: 'STU003', rollNo: '003', name: 'अमित सिंह', class: '5', fatherName: 'राजेश सिंह', status: 'उपस्थित', password: 'stu123', mobile: '9876543215', subjects: 'हिंदी, अंग्रेजी, गणित, विज्ञान, सामाजिक विज्ञान, कंप्यूटर, नैतिक शिक्षा, Drawing, संस्कृत/उर्दू', },
-  { id: 'STU004', rollNo: '004', name: 'नेहा यादव', class: '6', fatherName: 'महेश यादव', status: 'उपस्थित', password: 'stu123', mobile: '9876543216', subjects: 'हिंदी, अंग्रेजी, गणित, विज्ञान, सामाजिक विज्ञान, कंप्यूटर, नैतिक शिक्षा, Drawing, संस्कृत/उर्दू', },
-  { id: 'STU005', rollNo: '005', name: 'सुनीता देवी', class: '6', fatherName: 'राम प्रसाद', status: 'उपस्थित', password: 'stu123', mobile: '9876543217', subjects: 'हिंदी, अंग्रेजी, गणित, विज्ञान, सामाजिक विज्ञान, कंप्यूटर, नैतिक शिक्षा, Drawing, संस्कृत/उर्दू', },
+  { id: 'STU002', rollNo: '002', name: 'प्रिया कुमारी', class: '5', fatherName: 'अशोक कुमार', password: 'stu123', mobile: '9876543214', subjects: 'हिंदी, अंग्रेजी, गणित, विज्ञान, सामाजिक विज्ञान, कंप्यूटर, नैतिक शिक्षा, Drawing, संस्कृत/उर्दू', },
+  { id: 'STU003', rollNo: '003', name: 'अमित सिंह', class: '5', fatherName: 'राजेश सिंह', password: 'stu123', mobile: '9876543215', subjects: 'हिंदी, अंग्रेजी, गणित, विज्ञान, सामाजिक विज्ञान, कंप्यूटर, नैतिक शिक्षा, Drawing, संस्कृत/उर्दू', },
+  { id: 'STU004', rollNo: '004', name: 'नेहा यादव', class: '6', fatherName: 'महेश यादव', password: 'stu123', mobile: '9876543216', subjects: 'हिंदी, अंग्रेजी, गणित, विज्ञान, सामाजिक विज्ञान, कंप्यूटर, नैतिक शिक्षा, Drawing, संस्कृत/उर्दू', },
+  { id: 'STU005', rollNo: '005', name: 'सुनीता देवी', class: '6', fatherName: 'राम प्रसाद', password: 'stu123', mobile: '9876543217', subjects: 'हिंदी, अंग्रेजी, गणित, विज्ञान, सामाजिक विज्ञान, कंप्यूटर, नैतिक शिक्षा, Drawing, संस्कृत/उर्दू', },
 ];
 
 
@@ -168,3 +167,15 @@ export const allSubjects = [
     'गणित/जीव विज्ञान/समाजशास्त्र',
 ];
 
+export interface Attendance {
+  studentId: string;
+  date: string; // YYYY-MM-DD
+  status: 'उपस्थित' | 'अनुपस्थित';
+  class: string;
+}
+
+export const attendance: Attendance[] = [
+    { studentId: 'STU001', date: '2024-07-29', status: 'उपस्थित', class: '5' },
+    { studentId: 'STU002', date: '2024-07-29', status: 'अनुपस्थित', class: '5' },
+    { studentId: 'STU003', date: '2024-07-29', status: 'उपस्थित', class: '5' },
+];

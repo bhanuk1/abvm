@@ -39,7 +39,7 @@ import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { initialStudents, teacherData } from '@/lib/school-data';
+import { initialStudents, teacherData, type Attendance, attendance as initialAttendance } from '@/lib/school-data';
 import { useToast } from '@/hooks/use-toast';
 import { Textarea } from '@/components/ui/textarea';
 
@@ -50,21 +50,41 @@ export default function TeacherClassManagementPage() {
   const [selectedClass, setSelectedClass] = React.useState(teacherData.classes[0]?.name || '');
   const [selectedDate, setSelectedDate] = React.useState<Date | undefined>(new Date());
   const [students, setStudents] = React.useState<Student[]>(initialStudents);
+  const [attendance, setAttendance] = React.useState<Attendance[]>(initialAttendance);
+
   const [isHomeworkDialogOpen, setIsHomeworkDialogOpen] = React.useState(false);
   const [homeworkContent, setHomeworkContent] = React.useState('');
   const { toast } = useToast();
 
   const handleAttendanceChange = (studentId: string, isPresent: boolean) => {
-    setStudents(currentStudents => 
-      currentStudents.map(student => 
-        student.id === studentId 
-          ? { ...student, status: isPresent ? 'उपस्थित' : 'अनुपस्थित' }
-          : student
-      )
-    );
+    const reportDateStr = selectedDate ? format(selectedDate, 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd');
+    
+    setAttendance(currentAttendance => {
+        const existingRecordIndex = currentAttendance.findIndex(
+            att => att.studentId === studentId && att.date === reportDateStr
+        );
+
+        if (existingRecordIndex > -1) {
+            const updatedAttendance = [...currentAttendance];
+            updatedAttendance[existingRecordIndex].status = isPresent ? 'उपस्थित' : 'अनुपस्थित';
+            return updatedAttendance;
+        } else {
+            return [
+                ...currentAttendance,
+                {
+                    studentId,
+                    date: reportDateStr,
+                    status: isPresent ? 'उपस्थित' : 'अनुपस्थित',
+                    class: selectedClass,
+                }
+            ];
+        }
+    });
   };
   
   const handleSaveAttendance = () => {
+    // In a real app, this is where you'd send the `attendance` state to your backend.
+    // For this mock app, the state is already updated, so we just show a confirmation.
     toast({
         title: "सफलता!",
         description: "उपस्थिति सफलतापूर्वक सेव हो गई है।",
@@ -81,6 +101,7 @@ export default function TeacherClassManagementPage() {
         });
         return;
     }
+    // In a real app, this would be sent to the backend.
     console.log(`Homework for class ${selectedClass}: ${homeworkContent}`);
     toast({
         title: "सफलता!",
@@ -91,8 +112,16 @@ export default function TeacherClassManagementPage() {
     setIsHomeworkDialogOpen(false);
   }
 
-  const filteredStudents = students.filter(student => student.class === selectedClass);
+  const getStudentStatus = (studentId: string) => {
+    const reportDateStr = selectedDate ? format(selectedDate, 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd');
+    const attendanceRecord = attendance.find(
+      att => att.studentId === studentId && att.date === reportDateStr
+    );
+    return attendanceRecord?.status || 'अनुपस्थित'; // Default to absent
+  };
   
+  const filteredStudents = students.filter(student => student.class === selectedClass);
+
   return (
     <div className="flex flex-col gap-8">
       <h1 className="text-3xl font-bold">कक्षा प्रबंधन</h1>
@@ -150,28 +179,31 @@ export default function TeacherClassManagementPage() {
             </TableHeader>
             <TableBody>
               {filteredStudents.length > 0 ? (
-                filteredStudents.map((student) => (
-                  <TableRow key={student.id}>
-                    <TableCell>{student.rollNo}</TableCell>
-                    <TableCell>{student.name}</TableCell>
-                    <TableCell className="flex justify-end items-center gap-4">
-                       <Badge 
-                         variant={student.status === 'उपस्थित' ? 'default' : 'destructive'}
-                         className={cn(
-                           student.status === 'उपस्थित' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800',
-                           'w-20 justify-center'
-                         )}
-                        >
-                         {student.status}
-                       </Badge>
-                       <Switch
-                          checked={student.status === 'उपस्थित'}
-                          onCheckedChange={(isChecked) => handleAttendanceChange(student.id, isChecked)}
-                          aria-label={`Mark ${student.name} as ${student.status === 'उपस्थित' ? 'absent' : 'present'}`}
-                       />
-                    </TableCell>
-                  </TableRow>
-                ))
+                filteredStudents.map((student) => {
+                  const status = getStudentStatus(student.id);
+                  return (
+                    <TableRow key={student.id}>
+                      <TableCell>{student.rollNo}</TableCell>
+                      <TableCell>{student.name}</TableCell>
+                      <TableCell className="flex justify-end items-center gap-4">
+                         <Badge 
+                           variant={status === 'उपस्थित' ? 'default' : 'destructive'}
+                           className={cn(
+                             status === 'उपस्थित' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800',
+                             'w-20 justify-center'
+                           )}
+                          >
+                           {status}
+                         </Badge>
+                         <Switch
+                            checked={status === 'उपस्थित'}
+                            onCheckedChange={(isChecked) => handleAttendanceChange(student.id, isChecked)}
+                            aria-label={`Mark ${student.name} as ${status === 'उपस्थित' ? 'absent' : 'present'}`}
+                         />
+                      </TableCell>
+                    </TableRow>
+                  )
+                })
               ) : (
                 <TableRow>
                   <TableCell colSpan={3} className="text-center h-24">

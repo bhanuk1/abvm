@@ -55,6 +55,8 @@ import {
   allSubjects,
   results as initialResults,
   classSubjects,
+  attendance as initialAttendance,
+  type Attendance,
 } from '@/lib/school-data';
 
 
@@ -64,6 +66,8 @@ export default function SchoolManagementPage() {
   const [notices, setNotices] = React.useState<Notice[]>(initialNotices);
   const [results, setResults] = React.useState<Result[]>(initialResults);
   const [homeworks, setHomeworks] = React.useState<Homework[]>(initialHomeworks);
+  const [attendance, setAttendance] = React.useState<Attendance[]>(initialAttendance);
+
 
   const [isUserDialogOpen, setIsUserDialogOpen] = React.useState(false);
   const [isNoticeDialogOpen, setIsNoticeDialogOpen] = React.useState(false);
@@ -184,7 +188,6 @@ export default function SchoolManagementPage() {
         id: studentId,
         password: studentPassword,
         subjects: newUser.studentSubjects,
-        status: 'उपस्थित',
       };
       setStudents((prev) => [...prev, studentToAdd]);
     }
@@ -419,7 +422,23 @@ const handleClassReportDownloadClick = () => {
   ]
   const studentSubjects = getSubjectsForStudent();
   
-  const attendanceFilteredStudents = students.filter(student => student.class === attendanceReportClass);
+  const attendanceFilteredStudents = React.useMemo(() => {
+    if (!attendanceReportClass || !attendanceReportDate) return [];
+    
+    const reportDateStr = format(attendanceReportDate, 'yyyy-MM-dd');
+    const studentsInClass = students.filter(s => s.class === attendanceReportClass);
+
+    return studentsInClass.map(student => {
+      const attendanceRecord = attendance.find(
+        att => att.studentId === student.id && att.date === reportDateStr
+      );
+      return {
+        ...student,
+        status: attendanceRecord ? attendanceRecord.status : 'अनुपस्थित', // Default to absent
+      };
+    });
+  }, [attendanceReportClass, attendanceReportDate, students, attendance]);
+  
   const filteredHomework = homeworks.find(h => 
     h.class === homeworkReportClass &&
     h.subject === homeworkReportSubject &&
