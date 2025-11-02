@@ -339,6 +339,9 @@ export default function SchoolManagementPage() {
   const handleGeneratePdf = async (doc: jsPDF, student: any, results: Result[]) => {
     try {
         const fontResponse = await fetch('/fonts/TiroDevanagariHindi-Regular.ttf');
+        if (!fontResponse.ok) {
+            throw new Error(`Failed to fetch font: ${fontResponse.statusText}`);
+        }
         const fontBuffer = await fontResponse.arrayBuffer();
         const fontBase64 = Buffer.from(fontBuffer).toString('base64');
         
