@@ -381,7 +381,7 @@ const handleClassReportDownloadClick = () => {
 };
 
 
-  const classes = ['Nursery', 'KG', ...Array.from({length: 12}, (_, i) => `${i + 1}`)];
+  const classes = ['Nursery', 'KG', ...Array.from({length: 12}, (_, i) => (i + 1).toString())];
   const examTypes = [
     { value: 'monthly', label: 'मासिक परीक्षा' },
     { value: 'quarterly', label: 'त्रैमासिक परीक्षा' },
