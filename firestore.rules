@@ -39,7 +39,7 @@ service cloud.firestore {
     /**
      * @description Controls access to notices.
      * @path /notices/{noticeId}
-     * @principle Allows public read access for notices with role 'All', but enforces document ownership for write operations.
+     * @principle Allows public read access for all notices, but enforces document ownership for write operations.
      */
     match /notices/{noticeId} {
        function isAuthor() {
@@ -50,10 +50,8 @@ service cloud.firestore {
          return request.auth.uid == request.resource.data.authorId;
        }
 
-      // Anyone can read or list notices intended for 'All'.
-      // Signed-in users can read any notice.
-      allow get: if resource.data.role == 'All' || isSignedIn();
-      allow list: if true; // Allow listing for queries, will be filtered by rules on get.
+      // Anyone can read or list any notice. This is required for the homepage notice board.
+      allow read: if true;
       
       // Only signed-in users who are the author can write/delete.
       allow create: if isSignedIn() && isNewAuthor();
