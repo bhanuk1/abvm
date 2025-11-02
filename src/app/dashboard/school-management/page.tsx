@@ -308,7 +308,7 @@ export default function SchoolManagementPage() {
     return student?.subjects ? student.subjects.split(',').map(s => s.trim()) : [];
   }
   
-  const handleGeneratePdf = () => {
+  const handleGeneratePdf = async () => {
     if (!selectedReportClass || !selectedReportStudent) {
       alert('कृपया रिपोर्ट बनाने के लिए कक्षा और छात्र चुनें।');
       return;
@@ -328,65 +328,74 @@ export default function SchoolManagementPage() {
 
     const doc = new jsPDF();
     
-    // Devanagari font support
-    doc.addFont('/fonts/NotoSansDevanagari-Regular.ttf', 'NotoSansDevanagari', 'normal');
-    doc.setFont('NotoSansDevanagari');
+    try {
+        const fontResponse = await fetch('/fonts/NotoSansDevanagari-Regular.ttf');
+        const font = await fontResponse.arrayBuffer();
+        const fontUint8Array = new Uint8Array(font);
+        
+        const fontName = 'NotoSansDevanagari';
+        doc.addFileToVFS(`${fontName}.ttf`, Buffer.from(fontUint8Array).toString('base64'));
+        doc.addFont(`${fontName}.ttf`, fontName, 'normal');
+        doc.setFont(fontName);
 
-    doc.setFontSize(16);
-    doc.text('आदर्श बाल विद्या मन्दिर', doc.internal.pageSize.getWidth() / 2, 15, { align: 'center' });
-    doc.setFontSize(12);
-    doc.text('छात्र प्रगति रिपोर्ट', doc.internal.pageSize.getWidth() / 2, 22, { align: 'center' });
-    
-    // Student Details
-    const studentDetails = [
-        ['नाम', student.name],
-        ['कक्षा', student.class],
-        ['रोल नंबर', student.rollNo],
-        ['पिता का नाम', student.fatherName],
-        ['जन्म तिथि', student.dob],
-        ['पता', student.address],
-    ];
-
-    (doc as any).autoTable({
-      startY: 30,
-      head: [['विवरण', 'जानकारी']],
-      body: studentDetails,
-      theme: 'grid',
-      styles: { font: 'NotoSansDevanagari', fontStyle: 'normal' },
-      headStyles: { fillColor: [41, 128, 185], font: 'NotoSansDevanagari', fontStyle: 'bold' },
-    });
-
-
-    studentResults.forEach(result => {
-        const lastTableY = (doc as any).lastAutoTable.finalY;
+        doc.setFontSize(16);
+        doc.text('आदर्श बाल विद्या मन्दिर', doc.internal.pageSize.getWidth() / 2, 15, { align: 'center' });
         doc.setFontSize(12);
-        doc.text(`परीक्षा: ${result.examType}`, 14, lastTableY + 10);
-
-        let tableBody: (string|number)[][] = [];
-        let tableHead;
-
-        if (Array.isArray(result.marks)) {
-            tableHead = [['विषय', 'प्राप्तांक', 'पूर्णांक']];
-            tableBody = result.marks.map(m => [m.subject, m.obtained, m.total]);
-        } else {
-            tableHead = [['विवरण', 'अंक']];
-            tableBody = [
-                ['प्राप्तांक', result.marks.obtained],
-                ['पूर्णांक', result.marks.total]
-            ];
-        }
+        doc.text('छात्र प्रगति रिपोर्ट', doc.internal.pageSize.getWidth() / 2, 22, { align: 'center' });
+        
+        // Student Details
+        const studentDetails = [
+            ['नाम', student.name],
+            ['कक्षा', student.class],
+            ['रोल नंबर', student.rollNo],
+            ['पिता का नाम', student.fatherName],
+            ['जन्म तिथि', student.dob],
+            ['पता', student.address],
+        ];
 
         (doc as any).autoTable({
-            startY: lastTableY + 16,
-            head: tableHead,
-            body: tableBody,
-            theme: 'grid',
-            styles: { font: 'NotoSansDevanagari', fontStyle: 'normal' },
-            headStyles: { fillColor: [22, 160, 133], font: 'NotoSansDevanagari', fontStyle: 'bold' },
+          startY: 30,
+          head: [['विवरण', 'जानकारी']],
+          body: studentDetails,
+          theme: 'grid',
+          styles: { font: fontName, fontStyle: 'normal' },
+          headStyles: { fillColor: [41, 128, 185], font: fontName, fontStyle: 'normal' },
         });
-    });
 
-    doc.save(`${student.name}_${student.class}_report.pdf`);
+        studentResults.forEach(result => {
+            const lastTableY = (doc as any).lastAutoTable.finalY;
+            doc.setFontSize(12);
+            doc.text(`परीक्षा: ${result.examType}`, 14, lastTableY + 10);
+
+            let tableBody: (string|number)[][] = [];
+            let tableHead;
+
+            if (Array.isArray(result.marks)) {
+                tableHead = [['विषय', 'प्राप्तांक', 'पूर्णांक']];
+                tableBody = result.marks.map(m => [m.subject, m.obtained, m.total]);
+            } else {
+                tableHead = [['विवरण', 'अंक']];
+                tableBody = [
+                    ['प्राप्तांक', result.marks.obtained],
+                    ['पूर्णांक', result.marks.total]
+                ];
+            }
+
+            (doc as any).autoTable({
+                startY: lastTableY + 16,
+                head: tableHead,
+                body: tableBody,
+                theme: 'grid',
+                styles: { font: fontName, fontStyle: 'normal' },
+                headStyles: { fillColor: [22, 160, 133], font: fontName, fontStyle: 'normal' },
+            });
+        });
+
+        doc.save(`${student.name}_${student.class}_report.pdf`);
+    } catch (error) {
+        console.error("Error generating PDF:", error);
+        alert('PDF बनाने में त्रुटि हुई। कृपया कंसोल देखें।');
+    }
 };
 
   const classes = ['Nursery', 'KG', ...Array.from({length: 12}, (_, i) => `${i + 1}`)];
