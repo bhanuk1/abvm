@@ -199,12 +199,12 @@ export default function SchoolManagementPage() {
           classSubject: `${newUser.teacherClass} - ${newUser.teacherSubject}`,
         };
       } else if (newUser.role === 'parent' || newUser.role === 'student') {
-         const studentName = newUser.role === 'student' ? newUser.username : newUser.studentName;
-         const parentName = newUser.role === 'parent' ? newUser.username : newUser.parentName;
+        const studentName = newUser.role === 'student' ? newUser.username : newUser.studentName;
+        const parentName = newUser.role === 'parent' ? newUser.username : newUser.parentName;
 
         userData = {
           ...userData,
-          username: studentName,
+          username: newUser.role === 'student' ? studentName : parentName,
           class: newUser.studentClass,
           subjects: newUser.studentSubjects,
           fatherName: parentName,
@@ -217,6 +217,10 @@ export default function SchoolManagementPage() {
           mobile: newUser.studentMobile,
           rollNo: newUser.rollNo,
         };
+        
+        if (newUser.role === 'student') {
+            userData.fatherName = newUser.parentName;
+        }
       }
 
       await setDoc(doc(firestore, 'users', user.uid), userData);
@@ -233,7 +237,7 @@ export default function SchoolManagementPage() {
             role: 'student',
             class: newUser.studentClass,
             subjects: newUser.studentSubjects,
-            fatherName: newUser.username, // This should be the parent's name
+            fatherName: newUser.username, // Parent's name from the main form
             motherName: newUser.motherName,
             address: newUser.address,
             dob: newUser.dob ? format(newUser.dob, 'yyyy-MM-dd') : null,
@@ -246,7 +250,6 @@ export default function SchoolManagementPage() {
           };
           await setDoc(doc(firestore, 'users', studentUser.uid), studentData);
         } catch (studentError: any) {
-          // Handle student creation error (e.g., email already exists)
            console.error("Error creating student user:", studentError);
            toast({ variant: 'destructive', title: 'त्रुटि', description: `मुख्य उपयोगकर्ता बनाया गया, लेकिन छात्र बनाने में विफल: ${studentError.message}` });
         }
@@ -294,7 +297,6 @@ export default function SchoolManagementPage() {
 
     let resultMarks;
     if (selectedExamType === 'monthly') {
-        // Use hasOwnProperty to check for the key, allows '0' as a valid value
         if (!marks.hasOwnProperty('monthly-obtained') || !marks.hasOwnProperty('monthly-total')) {
             toast({ variant: 'destructive', title: 'त्रुटि', description: 'कृपया मासिक परीक्षा के अंक भरें।' });
             return;
@@ -332,7 +334,6 @@ export default function SchoolManagementPage() {
       
       toast({ title: 'सफलता!', description: 'परिणाम सफलतापूर्वक जोड़ा गया!' });
 
-      // Reset fields
       setSelectedResultClass('');
       setSelectedResultStudent('');
       setSelectedExamType('');
