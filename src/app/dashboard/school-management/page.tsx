@@ -250,6 +250,7 @@ export default function SchoolManagementPage() {
         [id]: !prev[id]
     }));
   };
+
   const toggleStudentPasswordVisibility = (id: string) => {
     setStudentPasswordVisibility(prev => ({
         ...prev,
