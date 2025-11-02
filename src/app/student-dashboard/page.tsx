@@ -17,9 +17,10 @@ import {
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { initialStudents, homeworks, results as allResults } from '@/lib/school-data';
+import { initialStudents, homeworks, results as allResults, attendance as allAttendance } from '@/lib/school-data';
 import { notices, type Notice } from '@/lib/placeholder-data';
 import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 // Assuming the logged in student is the first student for this example
 const loggedInStudent = initialStudents[0];
@@ -34,6 +35,7 @@ export default function StudentDashboardPage() {
   );
   
   const studentResults = allResults.filter(r => r.studentId === loggedInStudent.id);
+  const studentAttendance = allAttendance.filter(att => att.studentId === loggedInStudent.id);
 
   return (
     <div className="flex flex-col gap-8">
@@ -89,9 +91,37 @@ export default function StudentDashboardPage() {
                   <CardTitle>मेरी उपस्थिति</CardTitle>
                 </CardHeader>
                 <CardContent>
-                   <div className="p-4 min-h-[150px] flex items-center justify-center">
-                     <p className="text-muted-foreground">इस महीने का उपस्थिति डेटा जल्द ही उपलब्ध होगा।</p>
-                   </div>
+                   {studentAttendance.length > 0 ? (
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>तारीख</TableHead>
+                          <TableHead className="text-right">स्थिति</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {studentAttendance.map((att, index) => (
+                          <TableRow key={index}>
+                            <TableCell>{format(new Date(att.date), 'PPP')}</TableCell>
+                            <TableCell className="text-right">
+                              <Badge 
+                                variant={att.status === 'उपस्थित' ? 'default' : 'destructive'}
+                                className={cn(
+                                 att.status === 'उपस्थित' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                               )}
+                              >
+                               {att.status}
+                             </Badge>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                   ) : (
+                     <div className="p-4 min-h-[150px] flex items-center justify-center">
+                       <p className="text-muted-foreground">इस महीने का उपस्थिति डेटा जल्द ही उपलब्ध होगा।</p>
+                     </div>
+                   )}
                 </CardContent>
               </Card>
             </TabsContent>
