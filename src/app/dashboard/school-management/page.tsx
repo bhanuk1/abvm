@@ -407,9 +407,9 @@ export default function SchoolManagementPage() {
         console.error("Error generating PDF:", error);
         alert('PDF बनाने में त्रुटि हुई। कृपया कंसोल देखें।');
     }
-};
+  };
 
-const handleDownloadClick = async () => {
+  const handleDownloadClick = async () => {
     if (!selectedReportClass || !selectedReportStudent || !students || !resultsData) {
       alert('कृपया रिपोर्ट बनाने के लिए कक्षा और छात्र चुनें।');
       return;
@@ -435,49 +435,49 @@ const handleDownloadClick = async () => {
         console.error(e);
         alert('PDF बनाने में त्रुटि हुई।');
     }
-};
+  };
 
-const handleClassReportDownloadClick = async () => {
-  if (!selectedClassReportClass || !selectedClassReportExam || !students || !resultsData) {
-    alert('कृपया कक्षा और परीक्षा का प्रकार चुनें।');
-    return;
-  }
-
-  const studentsInClass = students.filter(s => s.class === selectedClassReportClass);
-  if (studentsInClass.length === 0) {
-    alert('इस कक्षा में कोई छात्र नहीं हैं।');
-    return;
-  }
-
-  const examLabel = examTypes.find(e => e.value === selectedClassReportExam)?.label || '';
-  const resultsForExam = resultsData.filter(r => r.class === selectedClassReportClass && r.examType === examLabel);
-
-  if (resultsForExam.length === 0) {
-    alert(`इस कक्षा के लिए '${examLabel}' का कोई परिणाम नहीं मिला।`);
-    return;
-  }
-
-  const doc = new jsPDF();
-  let isFirstPage = true;
-
-  for (const student of studentsInClass) {
-    const studentResults = resultsForExam.filter(r => r.studentId === student.id);
-    if (studentResults.length > 0) {
-      if (!isFirstPage) {
-        doc.addPage();
-      }
-      await handleGeneratePdf(doc, student, studentResults);
-      isFirstPage = false;
-    }
-  }
-
-  if (isFirstPage) {
-      alert(`इस कक्षा और परीक्षा के लिए किसी भी छात्र का परिणाम नहीं मिला।`);
+  const handleClassReportDownloadClick = async () => {
+    if (!selectedClassReportClass || !selectedClassReportExam || !students || !resultsData) {
+      alert('कृपया कक्षा और परीक्षा का प्रकार चुनें।');
       return;
-  }
+    }
 
-  doc.save(`कक्षा-${selectedClassReportClass}_${examLabel}_रिपोर्ट.pdf`);
-};
+    const studentsInClass = students.filter(s => s.class === selectedClassReportClass);
+    if (studentsInClass.length === 0) {
+      alert('इस कक्षा में कोई छात्र नहीं हैं।');
+      return;
+    }
+
+    const examLabel = examTypes.find(e => e.value === selectedClassReportExam)?.label || '';
+    const resultsForExam = resultsData.filter(r => r.class === selectedClassReportClass && r.examType === examLabel);
+
+    if (resultsForExam.length === 0) {
+      alert(`इस कक्षा के लिए '${examLabel}' का कोई परिणाम नहीं मिला।`);
+      return;
+    }
+
+    const doc = new jsPDF();
+    let isFirstPage = true;
+
+    for (const student of studentsInClass) {
+      const studentResults = resultsForExam.filter(r => r.studentId === student.id);
+      if (studentResults.length > 0) {
+        if (!isFirstPage) {
+          doc.addPage();
+        }
+        await handleGeneratePdf(doc, student, studentResults);
+        isFirstPage = false;
+      }
+    }
+
+    if (isFirstPage) {
+        alert(`इस कक्षा और परीक्षा के लिए किसी भी छात्र का परिणाम नहीं मिला।`);
+        return;
+    }
+
+    doc.save(`कक्षा-${selectedClassReportClass}_${examLabel}_रिपोर्ट.pdf`);
+  };
 
 
   const classes = ['Nursery', 'KG', ...Array.from({length: 12}, (_, i) => (i + 1).toString())];
@@ -486,7 +486,7 @@ const handleClassReportDownloadClick = async () => {
     { value: 'quarterly', label: 'त्रैमासिक परीक्षा' },
     { value: 'half-yearly', label: 'अर्धवार्षिक परीक्षा' },
     { value: 'final', label: 'वार्षिक परीक्षा' },
-  ]
+  ];
   const studentSubjects = getSubjectsForStudent();
   
   const attendanceFilteredStudents = React.useMemo(() => {
