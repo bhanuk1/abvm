@@ -53,6 +53,7 @@ import {
   homeworks as initialHomeworks,
   type Homework,
   subjects as allSubjects,
+  results as initialResults,
 } from '@/lib/school-data';
 
 
@@ -60,7 +61,7 @@ export default function SchoolManagementPage() {
   const [users, setUsers] = React.useState(initialUsers);
   const [students, setStudents] = React.useState(initialStudents);
   const [notices, setNotices] = React.useState<Notice[]>(initialNotices);
-  const [results, setResults] = React.useState<Result[]>([]);
+  const [results, setResults] = React.useState<Result[]>(initialResults);
   const [homeworks, setHomeworks] = React.useState<Homework[]>(initialHomeworks);
 
   const [isUserDialogOpen, setIsUserDialogOpen] = React.useState(false);
@@ -261,8 +262,9 @@ export default function SchoolManagementPage() {
   
   const handleGeneratePdf = (doc: jsPDF, student: any, results: Result[]) => {
     try {
-        doc.setFont('sans-serif'); // Use a built-in font that supports Hindi
-        
+        doc.addFont('/fonts/TiroDevanagariHindi-Regular.ttf', 'TiroDevanagariHindi', 'normal');
+        doc.setFont('TiroDevanagariHindi');
+
         doc.setFontSize(16);
         doc.text('आदर्श बाल विद्या मन्दिर', doc.internal.pageSize.getWidth() / 2, 15, { align: 'center' });
         doc.setFontSize(12);
@@ -282,8 +284,8 @@ export default function SchoolManagementPage() {
           head: [['विवरण', 'जानकारी']],
           body: studentDetails,
           theme: 'grid',
-          styles: { font: 'sans-serif', fontStyle: 'normal' },
-          headStyles: { fillColor: [41, 128, 185], font: 'sans-serif', fontStyle: 'normal' },
+          styles: { font: 'TiroDevanagariHindi', fontStyle: 'normal' },
+          headStyles: { fillColor: [41, 128, 185], font: 'TiroDevanagariHindi', fontStyle: 'normal' },
         });
 
         results.forEach(result => {
@@ -310,8 +312,8 @@ export default function SchoolManagementPage() {
                 head: tableHead,
                 body: tableBody,
                 theme: 'grid',
-                styles: { font: 'sans-serif', fontStyle: 'normal' },
-                headStyles: { fillColor: [22, 160, 133], font: 'sans-serif', fontStyle: 'normal' },
+                styles: { font: 'TiroDevanagariHindi', fontStyle: 'normal' },
+                headStyles: { fillColor: [22, 160, 133], font: 'TiroDevanagariHindi', fontStyle: 'normal' },
             });
         });
         

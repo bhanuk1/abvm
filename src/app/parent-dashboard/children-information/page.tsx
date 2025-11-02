@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { initialStudents, homeworks, type Homework } from '@/lib/school-data';
+import { initialStudents, homeworks, results as allResults } from '@/lib/school-data';
 import { notices, type Notice } from '@/lib/placeholder-data';
 import { format } from 'date-fns';
 import { Label } from '@/components/ui/label';
@@ -34,6 +34,8 @@ export default function ChildrenInformationPage() {
   const studentNotices = notices.filter(
     (notice) => notice.role === 'All' || notice.role === 'Students' || notice.role === 'Parents'
   );
+
+  const studentResults = allResults.filter(r => r.studentId === parentStudent.id);
   
   function DetailRow({ label, value }: { label: string; value?: string }) {
     return (
@@ -134,9 +136,48 @@ export default function ChildrenInformationPage() {
                   <CardTitle>परीक्षा परिणाम</CardTitle>
                 </CardHeader>
                  <CardContent>
-                   <div className="p-4 min-h-[150px] flex items-center justify-center">
-                     <p className="text-muted-foreground">कोई परिणाम उपलब्ध नहीं है।</p>
-                   </div>
+                   {studentResults.length > 0 ? (
+                    <div className="space-y-6">
+                      {studentResults.map(result => (
+                        <Card key={result.id}>
+                          <CardHeader>
+                            <CardTitle className="text-lg">{result.examType}</CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                             {Array.isArray(result.marks) ? (
+                                <Table>
+                                  <TableHeader>
+                                    <TableRow>
+                                      <TableHead>विषय</TableHead>
+                                      <TableHead>प्राप्तांक</TableHead>
+                                      <TableHead>पूर्णांक</TableHead>
+                                    </TableRow>
+                                  </TableHeader>
+                                  <TableBody>
+                                    {result.marks.map((mark, i) => (
+                                      <TableRow key={i}>
+                                        <TableCell>{mark.subject}</TableCell>
+                                        <TableCell>{mark.obtained}</TableCell>
+                                        <TableCell>{mark.total}</TableCell>
+                                      </TableRow>
+                                    ))}
+                                  </TableBody>
+                                </Table>
+                              ) : (
+                                <div className="flex gap-4">
+                                  <p><strong>प्राप्तांक:</strong> {result.marks.obtained}</p>
+                                  <p><strong>पूर्णांक:</strong> {result.marks.total}</p>
+                                </div>
+                              )}
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                   ) : (
+                     <div className="p-4 min-h-[150px] flex items-center justify-center">
+                       <p className="text-muted-foreground">कोई परिणाम उपलब्ध नहीं है।</p>
+                     </div>
+                   )}
                 </CardContent>
               </Card>
             </TabsContent>

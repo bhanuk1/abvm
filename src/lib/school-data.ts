@@ -56,6 +56,21 @@ export interface Result {
   marks: { subject: string; obtained: string; total: string }[] | { obtained: string; total: string };
 }
 
+export const results: Result[] = [
+    {
+        id: 'RES001',
+        studentId: 'STU001',
+        studentName: 'राहुल शर्मा',
+        class: '5',
+        examType: 'त्रैमासिक परीक्षा',
+        marks: [
+            { subject: 'हिंदी', obtained: '85', total: '100' },
+            { subject: 'अंग्रेजी', obtained: '78', total: '100' },
+            { subject: 'गणित', obtained: '92', total: '100' },
+        ]
+    }
+];
+
 export const initialNewUserState = {
     role: '',
     // Teacher fields
