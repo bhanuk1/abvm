@@ -34,6 +34,7 @@ import { Label } from '@/components/ui/label';
 import { initialStudents, teacherData } from '@/lib/school-data';
 
 type Student = typeof initialStudents[0];
+const allClasses = ['Nursery', 'KG', ...Array.from({length: 12}, (_, i) => (i + 1).toString())];
 
 export default function TeacherClassManagementPage() {
   const [selectedClass, setSelectedClass] = React.useState(teacherData.classes[0]?.name || '');
@@ -64,8 +65,8 @@ export default function TeacherClassManagementPage() {
               <SelectValue placeholder="कक्षा चुनें" />
             </SelectTrigger>
             <SelectContent>
-              {teacherData.classes.map(c => (
-                <SelectItem key={c.name} value={c.name}>कक्षा {c.name}</SelectItem>
+              {allClasses.map(c => (
+                <SelectItem key={c} value={c}>कक्षा {c}</SelectItem>
               ))}
             </SelectContent>
           </Select>
