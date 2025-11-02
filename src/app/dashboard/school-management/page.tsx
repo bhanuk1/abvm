@@ -143,6 +143,8 @@ export default function SchoolManagementPage() {
   const [selectedReportClass, setSelectedReportClass] = React.useState('');
   const [selectedReportStudent, setSelectedReportStudent] = React.useState('');
 
+  const [selectedClassReportClass, setSelectedClassReportClass] = React.useState('');
+  const [selectedClassReportExam, setSelectedClassReportExam] = React.useState('');
 
   const handleInputChange = (id: string, value: string) => {
     setNewUser((prev: any) => ({ ...prev, [id]: value }));
@@ -308,10 +310,10 @@ export default function SchoolManagementPage() {
     return student?.subjects ? student.subjects.split(',').map(s => s.trim()) : [];
   }
   
-const handleGeneratePdf = (doc: jsPDF, student: any, results: Result[]) => {
+  const handleGeneratePdf = (doc: jsPDF, student: any, results: Result[]) => {
     try {
         const fontName = 'NotoSansDevanagari';
-        
+
         doc.setFontSize(16);
         doc.text('आदर्श बाल विद्या मन्दिर', doc.internal.pageSize.getWidth() / 2, 15, { align: 'center' });
         doc.setFontSize(12);
@@ -363,8 +365,7 @@ const handleGeneratePdf = (doc: jsPDF, student: any, results: Result[]) => {
                 headStyles: { fillColor: [22, 160, 133], font: fontName, fontStyle: 'normal' },
             });
         });
-
-        doc.save(`${student.name}_${student.class}_report.pdf`);
+        
     } catch (error) {
         console.error("Error generating PDF:", error);
         alert('PDF बनाने में त्रुटि हुई। कृपया कंसोल देखें।');
@@ -392,10 +393,53 @@ const handleDownloadClick = async () => {
     try {
         const doc = new jsPDF();
         handleGeneratePdf(doc, student, studentResults);
+        doc.save(`${student.name}_${student.class}_report.pdf`);
     } catch (e) {
         console.error(e);
         alert('PDF बनाने में त्रुटि हुई।');
     }
+};
+
+const handleClassReportDownloadClick = () => {
+  if (!selectedClassReportClass || !selectedClassReportExam) {
+    alert('कृपया कक्षा और परीक्षा का प्रकार चुनें।');
+    return;
+  }
+
+  const studentsInClass = students.filter(s => s.class === selectedClassReportClass);
+  if (studentsInClass.length === 0) {
+    alert('इस कक्षा में कोई छात्र नहीं हैं।');
+    return;
+  }
+
+  const examLabel = examTypes.find(e => e.value === selectedClassReportExam)?.label || '';
+  const resultsForExam = results.filter(r => r.class === selectedClassReportClass && r.examType === examLabel);
+
+  if (resultsForExam.length === 0) {
+    alert(`इस कक्षा के लिए '${examLabel}' का कोई परिणाम नहीं मिला।`);
+    return;
+  }
+
+  const doc = new jsPDF();
+  let isFirstPage = true;
+
+  studentsInClass.forEach(student => {
+    const studentResults = resultsForExam.filter(r => r.studentId === student.id);
+    if (studentResults.length > 0) {
+      if (!isFirstPage) {
+        doc.addPage();
+      }
+      handleGeneratePdf(doc, student, studentResults);
+      isFirstPage = false;
+    }
+  });
+
+  if (isFirstPage) {
+      alert(`इस कक्षा और परीक्षा के लिए किसी भी छात्र का परिणाम नहीं मिला।`);
+      return;
+  }
+
+  doc.save(`कक्षा-${selectedClassReportClass}_${examLabel}_रिपोर्ट.pdf`);
 };
 
 
@@ -871,10 +915,10 @@ const handleDownloadClick = async () => {
               <CardTitle>रिपोर्ट्स</CardTitle>
             </CardHeader>
             <CardContent>
-               <div className="max-w-md mx-auto space-y-6">
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-base">मासिक प्रगति रिपोर्ट</CardTitle>
+                    <CardTitle className="text-base">छात्र प्रगति रिपोर्ट</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                      <div className="space-y-2">
@@ -905,6 +949,41 @@ const handleDownloadClick = async () => {
                     </Button>
                   </CardContent>
                 </Card>
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base">कक्षा-वार रिपोर्ट</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                     <div className="space-y-2">
+                      <Label htmlFor="class-report-class">कक्षा चुनें</Label>
+                      <Select value={selectedClassReportClass} onValueChange={setSelectedClassReportClass}>
+                        <SelectTrigger id="class-report-class">
+                          <SelectValue placeholder="कक्षा चुनें" />
+                        </SelectTrigger>
+                        <SelectContent>
+                           {classes.map(c => <SelectItem key={c} value={c}>कक्षा {c}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                     <div className="space-y-2">
+                      <Label htmlFor="class-report-exam">परीक्षा चुनें</Label>
+                      <Select value={selectedClassReportExam} onValueChange={setSelectedClassReportExam}>
+                        <SelectTrigger id="class-report-exam">
+                          <SelectValue placeholder="परीक्षा चुनें" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {examTypes.map(type => (
+                            <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <Button className="w-full bg-green-600 hover:bg-green-700 text-white" onClick={handleClassReportDownloadClick}>
+                      <FileDown className="mr-2"/>
+                      PDF रिपोर्ट बनाएँ
+                    </Button>
+                  </CardContent>
+                </Card>
               </div>
             </CardContent>
           </TabsContent>
@@ -913,3 +992,5 @@ const handleDownloadClick = async () => {
     </div>
   );
 }
+
+    
