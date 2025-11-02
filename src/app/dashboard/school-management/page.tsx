@@ -173,39 +173,25 @@ export default function SchoolManagementPage() {
       toast({ variant: 'destructive', title: 'त्रुटि', description: 'कृपया सभी आवश्यक फ़ील्ड भरें।' });
       return;
     }
-  
+
     try {
-      // Check for parent role and handle student creation
       if (newUser.role === 'parent') {
         if (!newUser.studentUserId || !newUser.studentPassword) {
           toast({ variant: 'destructive', title: 'त्रुटि', description: 'अभिभावक बनाते समय कृपया छात्र का यूजर आईडी और पासवर्ड भरें।' });
           return;
         }
-        try {
-          const studentEmail = `${newUser.studentUserId}@vidyalaya.com`;
-          await createUserWithEmailAndPassword(auth, studentEmail, newUser.studentPassword);
-          // Firestore doc for student will be created later along with parent
-        } catch (studentError: any) {
-          if (studentError.code === 'auth/email-already-in-use') {
-            toast({ variant: 'destructive', title: 'त्रुटि', description: 'यह छात्र यूजर आईडी पहले से मौजूद है।' });
-          } else {
-            toast({ variant: 'destructive', title: 'त्रुटि', description: `छात्र बनाने में विफल: ${studentError.message}` });
-          }
-          return; // Stop if student creation fails
-        }
       }
-  
-      // Create the main user (teacher, parent, or student)
+
       const email = `${newUser.userId}@vidyalaya.com`;
       const userCredential = await createUserWithEmailAndPassword(auth, email, newUser.password);
       const user = userCredential.user;
-  
+
       let userData: any = {
         id: user.uid,
         username: newUser.username,
         role: newUser.role,
       };
-  
+
       if (newUser.role === 'teacher') {
         userData = {
           ...userData,
@@ -213,11 +199,15 @@ export default function SchoolManagementPage() {
           classSubject: `${newUser.teacherClass} - ${newUser.teacherSubject}`,
         };
       } else if (newUser.role === 'parent' || newUser.role === 'student') {
+         const studentName = newUser.role === 'student' ? newUser.username : newUser.studentName;
+         const parentName = newUser.role === 'parent' ? newUser.username : newUser.parentName;
+
         userData = {
           ...userData,
+          username: studentName,
           class: newUser.studentClass,
           subjects: newUser.studentSubjects,
-          fatherName: newUser.parentName || newUser.studentName, // Use student name if parent name not provided
+          fatherName: parentName,
           motherName: newUser.motherName,
           address: newUser.address,
           dob: newUser.dob ? format(newUser.dob, 'yyyy-MM-dd') : null,
@@ -228,12 +218,44 @@ export default function SchoolManagementPage() {
           rollNo: newUser.rollNo,
         };
       }
-  
+
       await setDoc(doc(firestore, 'users', user.uid), userData);
-  
+
+      // If a parent was created, now create the student linked to them
+      if (newUser.role === 'parent' && newUser.studentUserId && newUser.studentPassword) {
+        try {
+          const studentEmail = `${newUser.studentUserId}@vidyalaya.com`;
+          const studentUserCredential = await createUserWithEmailAndPassword(auth, studentEmail, newUser.studentPassword);
+          const studentUser = studentUserCredential.user;
+          const studentData = {
+            id: studentUser.uid,
+            username: newUser.studentName,
+            role: 'student',
+            class: newUser.studentClass,
+            subjects: newUser.studentSubjects,
+            fatherName: newUser.username, // This should be the parent's name
+            motherName: newUser.motherName,
+            address: newUser.address,
+            dob: newUser.dob ? format(newUser.dob, 'yyyy-MM-dd') : null,
+            admissionDate: newUser.admissionDate ? format(newUser.admissionDate, 'yyyy-MM-dd') : null,
+            aadhaar: newUser.aadhaar,
+            pen: newUser.pen,
+            mobile: newUser.studentMobile,
+            rollNo: newUser.rollNo,
+            parentId: user.uid, // Link to parent
+          };
+          await setDoc(doc(firestore, 'users', studentUser.uid), studentData);
+        } catch (studentError: any) {
+          // Handle student creation error (e.g., email already exists)
+           console.error("Error creating student user:", studentError);
+           toast({ variant: 'destructive', title: 'त्रुटि', description: `मुख्य उपयोगकर्ता बनाया गया, लेकिन छात्र बनाने में विफल: ${studentError.message}` });
+        }
+      }
+
       toast({ title: 'सफलता!', description: 'नया उपयोगकर्ता सफलतापूर्वक बनाया गया।' });
       setNewUser(initialNewUserState);
       setIsUserDialogOpen(false);
+
     } catch (error: any) {
       console.error("Error creating user:", error);
       if (error.code === 'auth/email-already-in-use') {
