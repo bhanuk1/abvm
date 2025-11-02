@@ -18,7 +18,7 @@ import {
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Eye, EyeOff, UserPlus, Calendar as CalendarIcon, PlusCircle } from 'lucide-react';
+import { Eye, EyeOff, UserPlus, Calendar as CalendarIcon, PlusCircle, FileUp } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -56,7 +56,7 @@ const initialUsers = [
     name: 'विकास शर्मा',
     role: 'अभिभावक',
     mobile: '9876543212',
-    classSubject: '1', // Represents the child's class
+    classSubject: '5', // Represents the child's class
     password: 'parent123',
   },
 ];
@@ -116,12 +116,15 @@ export default function SchoolManagementPage() {
 
   const [isUserDialogOpen, setIsUserDialogOpen] = React.useState(false);
   const [isNoticeDialogOpen, setIsNoticeDialogOpen] = React.useState(false);
+  const [isResultDialogOpen, setIsResultDialogOpen] = React.useState(false);
 
   const [passwordVisibility, setPasswordVisibility] = React.useState<{[key: number]: boolean}>({});
   const [studentPasswordVisibility, setStudentPasswordVisibility] = React.useState<{[key: number]: boolean}>({});
 
   const [newUser, setNewUser] = React.useState<any>(initialNewUserState);
   const [newNotice, setNewNotice] = React.useState(initialNewNoticeState);
+  const [selectedResultClass, setSelectedResultClass] = React.useState('');
+  const [selectedResultStudent, setSelectedResultStudent] = React.useState('');
 
   const handleInputChange = (id: string, value: string) => {
     setNewUser((prev: any) => ({ ...prev, [id]: value }));
@@ -222,6 +225,9 @@ export default function SchoolManagementPage() {
         [index]: !prev[index]
     }));
   };
+
+  const classes = ['Nursery', 'KG', ...Array.from({length: 12}, (_, i) => `${i + 1}`)];
+  const resultSubjects = ['हिंदी', 'अंग्रेजी', 'गणित', 'विज्ञान', 'सा० विज्ञान', 'नैतिक शिक्षा', 'कंप्यूटर', 'उर्दू'];
 
   return (
     <div className="flex flex-col gap-8">
@@ -566,34 +572,99 @@ export default function SchoolManagementPage() {
             </CardContent>
           </TabsContent>
           <TabsContent value="result-management">
-            <CardHeader>
-              <CardTitle>परिणाम प्रबंधन</CardTitle>
+            <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle>परिणाम प्रबंधन</CardTitle>
+                 <Dialog open={isResultDialogOpen} onOpenChange={setIsResultDialogOpen}>
+                    <DialogTrigger asChild>
+                        <Button onClick={() => setIsResultDialogOpen(true)}>
+                            <PlusCircle className="mr-2" />
+                            परिणाम जोड़ें
+                        </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-4xl">
+                        <DialogHeader>
+                            <DialogTitle>परिणाम जोड़ें</DialogTitle>
+                        </DialogHeader>
+                        <div className="grid gap-6 py-4">
+                            <div className="grid grid-cols-3 gap-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="result-class">कक्षा</Label>
+                                    <Select value={selectedResultClass} onValueChange={(value) => { setSelectedResultClass(value); setSelectedResultStudent(''); }}>
+                                        <SelectTrigger id="result-class">
+                                            <SelectValue placeholder="कक्षा चुनें" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {classes.map(c => <SelectItem key={c} value={c}>कक्षा {c}</SelectItem>)}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="result-student">छात्र</Label>
+                                    <Select value={selectedResultStudent} onValueChange={setSelectedResultStudent}>
+                                        <SelectTrigger id="result-student">
+                                            <SelectValue placeholder="छात्र चुनें" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {students.filter(s => s.class === selectedResultClass).map(s => <SelectItem key={s.id} value={s.id}>{s.name} (रोल नं. {s.rollNo})</SelectItem>)}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                 <div className="space-y-2">
+                                    <Label htmlFor="result-exam-type">परीक्षा प्रकार</Label>
+                                    <Select>
+                                        <SelectTrigger id="result-exam-type">
+                                            <SelectValue placeholder="परीक्षा चुनें" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="monthly">मासिक परीक्षा</SelectItem>
+                                            <SelectItem value="half-yearly">अर्धवार्षिक परीक्षा</SelectItem>
+                                            <SelectItem value="final">वार्षिक परीक्षा</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            </div>
+                            <div>
+                              <h3 className="text-lg font-medium mb-4">विषयवार अंक</h3>
+                              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                                {resultSubjects.map(subject => (
+                                   <div key={subject} className="rounded-lg border bg-pink-50 p-4">
+                                      <Label htmlFor={`marks-${subject}`} className="font-semibold text-pink-800">{subject}</Label>
+                                      <div className="grid grid-cols-2 gap-2 mt-2 items-center">
+                                        <div>
+                                          <Label htmlFor={`marks-obtained-${subject}`} className="text-xs">प्राप्तांक</Label>
+                                          <Input id={`marks-obtained-${subject}`} type="number" className="mt-1"/>
+                                        </div>
+                                        <div>
+                                          <Label htmlFor={`marks-total-${subject}`} className="text-xs">पूर्णांक</Label>
+                                          <Input id={`marks-total-${subject}`} type="number" value="100" readOnly className="mt-1 bg-gray-100"/>
+                                        </div>
+                                      </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                             <div className="space-y-2">
+                                <Label htmlFor="result-upload">परिणाम फाइल संलग्न करें</Label>
+                                <div className="flex items-center justify-center w-full">
+                                    <Label htmlFor="result-upload-input" className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-gray-100">
+                                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                                            <FileUp className="w-8 h-8 mb-4 text-gray-500" />
+                                            <p className="mb-2 text-sm text-gray-500"><span className="font-semibold">अपलोड करने के लिए क्लिक करें</span> या फ़ाइल खींचें और छोड़ें</p>
+                                            <p className="text-xs text-gray-500">PDF, PNG, JPG (MAX. 5MB)</p>
+                                        </div>
+                                        <Input id="result-upload-input" type="file" className="hidden" />
+                                    </Label>
+                                </div> 
+                            </div>
+                        </div>
+                        <DialogFooter>
+                            <Button variant="outline" onClick={() => setIsResultDialogOpen(false)}>रद्द करें</Button>
+                            <Button type="submit">परिणाम सहेजें</Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="flex items-center gap-4">
-                <Select>
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="कक्षा चुनें" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1">कक्षा 1</SelectItem>
-                    <SelectItem value="2">कक्षा 2</SelectItem>
-                    <SelectItem value="3">कक्षा 3</SelectItem>
-                    <SelectItem value="4">कक्षा 4</SelectItem>
-                    <SelectItem value="5">कक्षा 5</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Select>
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="छात्र चुनें" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="student1">राहुल शर्मा</SelectItem>
-                    {/* Add more students as needed */}
-                  </SelectContent>
-                </Select>
-                <Button>परिणाम जोड़ें</Button>
-              </div>
               <div>
                 <h3 className="text-lg font-medium mb-4">सभी परिणाम</h3>
                 <div className="border rounded-lg p-4 min-h-[100px] flex items-center justify-center">
