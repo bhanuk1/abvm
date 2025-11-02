@@ -57,7 +57,7 @@ import {
   type Attendance,
 } from '@/lib/school-data';
 import { useCollection, useFirestore, useUser, useMemoFirebase, useAuth } from '@/firebase';
-import { addDoc, collection, serverTimestamp, setDoc, doc } from 'firebase/firestore';
+import { addDoc, collection, serverTimestamp, setDoc, doc, query, where } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 
 
@@ -70,7 +70,7 @@ export default function SchoolManagementPage() {
   const usersQuery = useMemoFirebase(() => firestore ? collection(firestore, 'users') : null, [firestore]);
   const { data: users, isLoading: usersLoading } = useCollection<any>(usersQuery);
 
-  const studentsQuery = useMemoFirebase(() => firestore ? collection(firestore, 'users') : null, [firestore]);
+  const studentsQuery = useMemoFirebase(() => firestore ? query(collection(firestore, 'users'), where('role', '==', 'student')) : null, [firestore]);
   const { data: students, isLoading: studentsLoading } = useCollection<any>(studentsQuery);
 
   const noticesQuery = useMemoFirebase(() => firestore ? collection(firestore, 'notices') : null, [firestore]);
@@ -104,11 +104,16 @@ export default function SchoolManagementPage() {
   const [selectedClassReportExam, setSelectedClassReportExam] = React.useState('');
 
   const [attendanceReportClass, setAttendanceReportClass] = React.useState('');
-  const [attendanceReportDate, setAttendanceReportDate] = React.useState<Date | undefined>(new Date());
+  const [attendanceReportDate, setAttendanceReportDate] = React.useState<Date | undefined>();
   
   const [homeworkReportClass, setHomeworkReportClass] = React.useState('');
   const [homeworkReportSubject, setHomeworkReportSubject] = React.useState('');
-  const [homeworkReportDate, setHomeworkReportDate] = React.useState<Date | undefined>(new Date());
+  const [homeworkReportDate, setHomeworkReportDate] = React.useState<Date | undefined>();
+
+  React.useEffect(() => {
+    setAttendanceReportDate(new Date());
+    setHomeworkReportDate(new Date());
+  }, []);
 
   const handleInputChange = (id: string, value: string) => {
     setNewUser((prev: any) => ({ ...prev, [id]: value }));

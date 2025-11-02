@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   Card,
   CardContent,
@@ -58,8 +58,13 @@ export default function TeacherClassManagementPage() {
   const firestore = useFirestore();
   const { user: currentUser } = useUser();
   const [selectedClass, setSelectedClass] = React.useState(teacherData.classes[0]?.name || '');
-  const [selectedDate, setSelectedDate] = React.useState<Date | undefined>(new Date());
+  const [selectedDate, setSelectedDate] = React.useState<Date | undefined>();
   
+  useEffect(() => {
+    setSelectedDate(new Date());
+  }, []);
+
+
   const studentsQuery = useMemoFirebase(() => 
     firestore && selectedClass
         ? query(collection(firestore, 'users'), where('role', '==', 'student'), where('class', '==', selectedClass))
