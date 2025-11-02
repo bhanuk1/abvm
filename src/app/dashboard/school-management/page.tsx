@@ -18,7 +18,7 @@ import {
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Eye, EyeOff, UserPlus, Calendar as CalendarIcon, PlusCircle, FileUp } from 'lucide-react';
+import { Eye, EyeOff, UserPlus, Calendar as CalendarIcon, PlusCircle } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -616,7 +616,8 @@ export default function SchoolManagementPage() {
                                             <SelectValue placeholder="परीक्षा चुनें" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="monthly">मासिक परीक्षा</SelectItem>
+                                            <SelectItem value="monthly">मासिक टेस्ट</SelectItem>
+                                            <SelectItem value="quarterly">त्रैमासिक परीक्षा</SelectItem>
                                             <SelectItem value="half-yearly">अर्धवार्षिक परीक्षा</SelectItem>
                                             <SelectItem value="final">वार्षिक परीक्षा</SelectItem>
                                         </SelectContent>
@@ -642,19 +643,6 @@ export default function SchoolManagementPage() {
                                   </div>
                                 ))}
                               </div>
-                            </div>
-                             <div className="space-y-2">
-                                <Label htmlFor="result-upload">परिणाम फाइल संलग्न करें</Label>
-                                <div className="flex items-center justify-center w-full">
-                                    <Label htmlFor="result-upload-input" className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-gray-100">
-                                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                                            <FileUp className="w-8 h-8 mb-4 text-gray-500" />
-                                            <p className="mb-2 text-sm text-gray-500"><span className="font-semibold">अपलोड करने के लिए क्लिक करें</span> या फ़ाइल खींचें और छोड़ें</p>
-                                            <p className="text-xs text-gray-500">PDF, PNG, JPG (MAX. 5MB)</p>
-                                        </div>
-                                        <Input id="result-upload-input" type="file" className="hidden" />
-                                    </Label>
-                                </div> 
                             </div>
                         </div>
                         <DialogFooter>
