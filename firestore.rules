@@ -8,7 +8,7 @@
  *
  * Key Security Decisions:
  * - User profiles are private to the owner, but other signed-in users can list them (e.g., for directories).
- * - Notices are readable by signed-in users if the notice's role matches the user's role or is 'All'.
+ * - Notices are publicly readable.
  * - Only the author can create, update, or delete their notices.
  */
 rules_version = '2';
@@ -39,7 +39,7 @@ service cloud.firestore {
     /**
      * @description Controls access to notices.
      * @path /notices/{noticeId}
-     * @principle Allows public read access to signed-in users, but enforces document ownership for write operations.
+     * @principle Allows public read access, but enforces document ownership for write operations.
      */
     match /notices/{noticeId} {
        function isAuthor() {
@@ -50,8 +50,8 @@ service cloud.firestore {
          return request.auth.uid == request.resource.data.authorId;
        }
 
-      allow get: if isSignedIn();
-      allow list: if isSignedIn();
+      allow get: if true;
+      allow list: if true;
       allow create: if isSignedIn() && isNewAuthor();
       allow update: if isSignedIn() && isAuthor();
       allow delete: if isSignedIn() && isAuthor();
