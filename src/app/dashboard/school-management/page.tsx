@@ -512,7 +512,6 @@ const handleClassReportDownloadClick = async () => {
     homeworkReportDate && h.date === format(homeworkReportDate, 'yyyy-MM-dd')
   );
 
-
   return (
     <div className="flex flex-col gap-8">
       <h1 className="text-3xl font-bold">प्रधानाचार्य डैशबोर्ड</h1>
