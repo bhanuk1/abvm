@@ -168,7 +168,6 @@ export default function SchoolManagementPage() {
     setIsNoticeDialogOpen(false);
   };
 
-
   const handleCreateUser = async () => {
     if (!newUser.role || !newUser.userId || !newUser.password || !firestore || !auth) {
       toast({ variant: 'destructive', title: 'त्रुटि', description: 'कृपया सभी आवश्यक फ़ील्ड भरें।' });
@@ -479,7 +478,6 @@ export default function SchoolManagementPage() {
 
     doc.save(`कक्षा-${selectedClassReportClass}_${examLabel}_रिपोर्ट.pdf`);
   };
-
 
   const classes = ['Nursery', 'KG', ...Array.from({length: 12}, (_, i) => (i + 1).toString())];
   const examTypes = [
