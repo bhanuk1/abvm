@@ -1,5 +1,7 @@
 'use client';
 import React from 'react';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -311,8 +313,79 @@ export default function SchoolManagementPage() {
       alert('कृपया रिपोर्ट बनाने के लिए कक्षा और छात्र चुनें।');
       return;
     }
-    alert(`Generating PDF for ${selectedReportStudent} in class ${selectedReportClass}... (Functionality to be added)`);
-  }
+
+    const student = students.find(s => s.id === selectedReportStudent);
+    if (!student) {
+        alert('छात्र नहीं मिला।');
+        return;
+    }
+
+    const studentResults = results.filter(r => r.studentId === student.id);
+    if (studentResults.length === 0) {
+        alert('इस छात्र के लिए कोई परिणाम नहीं मिला।');
+        return;
+    }
+
+    const doc = new jsPDF();
+    
+    // Hindi font needs to be added to VFS. This is a placeholder.
+    // For this to work, you need to load a Hindi font that supports the characters.
+    // E.g., doc.addFont('NotoSansDevanagari-Regular.ttf', 'NotoSansDevanagari', 'normal');
+    // doc.setFont('NotoSansDevanagari');
+
+    doc.text('छात्र प्रगति रिपोर्ट', 14, 16);
+    
+    // Student Details
+    const studentDetails = [
+        ['नाम', student.name],
+        ['कक्षा', student.class],
+        ['रोल नंबर', student.rollNo],
+        ['पिता का नाम', student.fatherName],
+        ['जन्म तिथि', student.dob],
+        ['पता', student.address],
+    ];
+
+    (doc as any).autoTable({
+      startY: 22,
+      head: [['विवरण', 'जानकारी']],
+      body: studentDetails,
+      theme: 'grid',
+      styles: { font: 'helvetica' }, // Change to a Hindi font if available
+      headStyles: { fillColor: [41, 128, 185] },
+    });
+
+
+    studentResults.forEach(result => {
+        const lastTableY = (doc as any).lastAutoTable.finalY;
+        doc.text(`परीक्षा: ${result.examType}`, 14, lastTableY + 10);
+
+        let tableBody: (string|number)[][] = [];
+        if (Array.isArray(result.marks)) {
+             (doc as any).autoTable({
+                startY: lastTableY + 16,
+                head: [['विषय', 'प्राप्तांक', 'पूर्णांक']],
+                body: result.marks.map(m => [m.subject, m.obtained, m.total]),
+                theme: 'grid',
+                styles: { font: 'helvetica' },
+                headStyles: { fillColor: [22, 160, 133] },
+            });
+        } else {
+            (doc as any).autoTable({
+                startY: lastTableY + 16,
+                head: [['विवरण', 'अंक']],
+                body: [
+                    ['प्राप्तांक', result.marks.obtained],
+                    ['पूर्णांक', result.marks.total]
+                ],
+                theme: 'grid',
+                styles: { font: 'helvetica' },
+                headStyles: { fillColor: [22, 160, 133] },
+            });
+        }
+    });
+
+    doc.save(`${student.name}_${student.class}_report.pdf`);
+};
 
   const classes = ['Nursery', 'KG', ...Array.from({length: 12}, (_, i) => `${i + 1}`)];
   const examTypes = [
