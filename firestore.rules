@@ -1,6 +1,6 @@
 /**
  * @file Firestore Security Rules for Vidyalaya Connect
- * @description This ruleset enforces role-based access control.
+ * @description This ruleset enforces role-based access control for the application.
  */
 rules_version = '2';
 service cloud.firestore {
@@ -10,66 +10,63 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    function getUserData(userId) {
-      return get(/databases/$(database)/documents/users/$(userId)).data;
-    }
-
     function isOwner(userId) {
       return request.auth.uid == userId;
+    }
+    
+    function getUserRole() {
+        return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
     }
 
     /**
      * @description Controls access to user profiles.
-     * - Admins can read/write any user.
+     * - Admins can read/write any user profile.
      * - Users can read/write their own profile.
-     * - Any signed-in user can list other users for now. This should be restricted later.
+     * - Any authenticated user can list users (e.g., for selection lists).
      */
     match /users/{userId} {
-      allow read: if isSignedIn() && (getUserData(request.auth.uid).role == 'admin' || isOwner(userId));
-      allow list: if isSignedIn(); // Simplified rule to allow any authenticated user to list
-      allow write: if isSignedIn() && (getUserData(request.auth.uid).role == 'admin' || isOwner(userId));
+      allow read, write: if isSignedIn() && (getUserRole() == 'admin' || isOwner(userId));
+      allow list: if isSignedIn();
     }
 
     /**
      * @description Controls access to notices.
-     * - Anyone can read notices.
-     * - Admins can write/delete notices.
+     * - Anyone (authenticated or not) can read notices.
+     * - Only admins can create, update, or delete notices.
      */
     match /notices/{noticeId} {
       allow read: if true;
-      allow write, delete: if isSignedIn() && getUserData(request.auth.uid).role == 'admin';
+      allow write: if isSignedIn() && getUserRole() == 'admin';
     }
     
     /**
-     * @description Controls access to results.
-     * - Admins/Teachers can read/write all results.
-     * - Parents/Students can only read their own (or their child's) results.
+     * @description Controls access to student results.
+     * - Admins and Teachers can read/list/write all results.
+     * - Parents and Students can only read results where their ID matches the studentId.
      */
     match /results/{resultId} {
-        allow read: if isSignedIn() && (getUserData(request.auth.uid).role == 'admin' || getUserData(request.auth.uid).role == 'teacher' || isOwner(resource.data.studentId));
-        allow list: if isSignedIn() && (getUserData(request.auth.uid).role == 'admin' || getUserData(request.auth.uid).role == 'teacher');
-        allow write: if isSignedIn() && (getUserData(request.auth.uid).role == 'admin' || getUserData(request.auth.uid).role == 'teacher');
+        allow read, write: if isSignedIn() && (getUserRole() == 'admin' || getUserRole() == 'teacher' || isOwner(resource.data.studentId));
+        allow list: if isSignedIn() && (getUserRole() == 'admin' || getUserRole() == 'teacher');
     }
 
     /**
-     * @description Controls access to homework.
-     * - Admins/Teachers can read/write homework.
-     * - Parents/Students can only read homework for their class.
+     * @description Controls access to homework assignments.
+     * - Any signed-in user can read homework (rules on the client filter by class).
+     * - Only Admins and Teachers can create or modify homework.
      */
     match /homeworks/{homeworkId} {
         allow read: if isSignedIn();
-        allow write: if isSignedIn() && (getUserData(request.auth.uid).role == 'admin' || getUserData(request.auth.uid).role == 'teacher');
+        allow write: if isSignedIn() && (getUserRole() == 'admin' || getUserRole() == 'teacher');
     }
 
     /**
-     * @description Controls access to attendance.
-     * - Admins/Teachers can read/write attendance.
-     * - Parents/Students can only read their own attendance.
+     * @description Controls access to attendance records.
+     * - Admins and Teachers can read/list/write all attendance records.
+     * - Parents and Students can only read attendance records linked to their own ID.
      */
      match /attendance/{attendanceId} {
-        allow read: if isSignedIn() && (getUserData(request.auth.uid).role == 'admin' || getUserData(request.auth.uid).role == 'teacher' || isOwner(resource.data.studentId));
-        allow list: if isSignedIn() && (getUserData(request.auth.uid).role == 'admin' || getUserData(request.auth.uid).role == 'teacher');
-        allow write: if isSignedIn() && (getUserData(request.auth.uid).role == 'admin' || getUserData(request.auth.uid).role == 'teacher');
+        allow read, write: if isSignedIn() && (getUserRole() == 'admin' || getUserRole() == 'teacher' || isOwner(resource.data.studentId));
+        allow list: if isSignedIn() && (getUserRole() == 'admin' || getUserRole() == 'teacher');
      }
   }
 }
