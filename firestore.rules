@@ -10,12 +10,8 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    function getUserData() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
-    }
-
-    function isRole(role) {
-      return isSignedIn() && getUserData().role == role;
+    function getUserData(userId) {
+      return get(/databases/$(database)/documents/users/$(userId)).data;
     }
 
     function isOwner(userId) {
@@ -26,12 +22,12 @@ service cloud.firestore {
      * @description Controls access to user profiles.
      * - Admins can read/write any user.
      * - Users can read/write their own profile.
-     * - Teachers can list students.
+     * - Admins and Teachers can list users.
      */
     match /users/{userId} {
-      allow read: if isRole('admin') || isOwner(userId);
-      allow list: if isRole('admin') || isRole('teacher');
-      allow write: if isRole('admin') || isOwner(userId);
+      allow read: if isSignedIn() && (getUserData(request.auth.uid).role == 'admin' || isOwner(userId));
+      allow list: if isSignedIn() && (getUserData(request.auth.uid).role == 'admin' || getUserData(request.auth.uid).role == 'teacher');
+      allow write: if isSignedIn() && (getUserData(request.auth.uid).role == 'admin' || isOwner(userId));
     }
 
     /**
@@ -41,7 +37,7 @@ service cloud.firestore {
      */
     match /notices/{noticeId} {
       allow read: if true;
-      allow write, delete: if isRole('admin');
+      allow write, delete: if isSignedIn() && getUserData(request.auth.uid).role == 'admin';
     }
     
     /**
@@ -50,9 +46,9 @@ service cloud.firestore {
      * - Parents/Students can only read their own (or their child's) results.
      */
     match /results/{resultId} {
-        allow read: if isRole('admin') || isRole('teacher') || (isOwner(resource.data.studentId));
-        allow list: if isRole('admin') || isRole('teacher');
-        allow write: if isRole('admin') || isRole('teacher');
+        allow read: if isSignedIn() && (getUserData(request.auth.uid).role == 'admin' || getUserData(request.auth.uid).role == 'teacher' || isOwner(resource.data.studentId));
+        allow list: if isSignedIn() && (getUserData(request.auth.uid).role == 'admin' || getUserData(request.auth.uid).role == 'teacher');
+        allow write: if isSignedIn() && (getUserData(request.auth.uid).role == 'admin' || getUserData(request.auth.uid).role == 'teacher');
     }
 
     /**
@@ -62,7 +58,7 @@ service cloud.firestore {
      */
     match /homeworks/{homeworkId} {
         allow read: if isSignedIn();
-        allow write: if isRole('admin') || isRole('teacher');
+        allow write: if isSignedIn() && (getUserData(request.auth.uid).role == 'admin' || getUserData(request.auth.uid).role == 'teacher');
     }
 
     /**
@@ -71,9 +67,9 @@ service cloud.firestore {
      * - Parents/Students can only read their own attendance.
      */
      match /attendance/{attendanceId} {
-        allow read: if isRole('admin') || isRole('teacher') || (isOwner(resource.data.studentId));
-        allow list: if isRole('admin') || isRole('teacher');
-        allow write: if isRole('admin') || isRole('teacher');
+        allow read: if isSignedIn() && (getUserData(request.auth.uid).role == 'admin' || getUserData(request.auth.uid).role == 'teacher' || isOwner(resource.data.studentId));
+        allow list: if isSignedIn() && (getUserData(request.auth.uid).role == 'admin' || getUserData(request.auth.uid).role == 'teacher');
+        allow write: if isSignedIn() && (getUserData(request.auth.uid).role == 'admin' || getUserData(request.auth.uid).role == 'teacher');
      }
   }
 }
