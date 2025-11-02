@@ -50,7 +50,7 @@ service cloud.firestore {
          return request.auth.uid == request.resource.data.authorId;
        }
 
-      allow read: if true;
+      allow get, list: if true;
       allow create: if isSignedIn() && isNewAuthor();
       allow update: if isSignedIn() && isAuthor();
       allow delete: if isSignedIn() && isAuthor();
