@@ -12,15 +12,14 @@ const createDefaultAdmin = async () => {
   const { auth, firestore } = initializeFirebase();
   const adminEmail = 'admin@vidyalaya.com';
   const adminPassword = 'admin123';
-  const adminUid = 'default-admin-uid'; // A predictable UID
-
+  
   try {
-    // Check if user already exists by trying to sign in.
-    // This is a workaround as listing users is an admin SDK feature.
+    // Attempt to sign in to check if the user exists.
     await signInWithEmailAndPassword(auth, adminEmail, adminPassword);
     console.log('Default admin user already exists.');
   } catch (error: any) {
-    if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
+    // Check for specific auth errors that indicate the user does not exist.
+    if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password') {
       console.log('Default admin user not found, creating one...');
       try {
         // Create the user
@@ -36,11 +35,16 @@ const createDefaultAdmin = async () => {
           mobile: '9140624586'
         });
         console.log('Default admin user created successfully.');
-      } catch (creationError) {
-        console.error('Error creating default admin user:', creationError);
+      } catch (creationError: any) {
+        // Handle cases where creation might fail, e.g., if it was created between check and now.
+        if (creationError.code !== 'auth/email-already-in-use') {
+            console.error('Error creating default admin user:', creationError);
+        } else {
+            console.log('Default admin was created by another process.');
+        }
       }
     } else {
-        // Another error occurred during sign-in check
+        // Another error occurred during the sign-in check
         console.error("Error checking for admin user:", error);
     }
   }
