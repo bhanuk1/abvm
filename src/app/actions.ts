@@ -16,7 +16,10 @@ export async function login(prevState: { message: string | null }, formData: For
     redirect('/dashboard');
   } else if (role === 'teacher') {
     redirect('/teacher-dashboard');
-  } else {
+  } else if (role === 'parent') {
+    redirect('/parent-dashboard');
+  }
+  else {
     // For student and parent, redirect to a generic dashboard for now
     redirect('/dashboard');
   }
