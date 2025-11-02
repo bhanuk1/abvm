@@ -1,6 +1,6 @@
 'use client';
 
-import { useFormState, useFormStatus } from 'react-dom';
+import { useActionState, useFormStatus } from 'react';
 import { LogIn } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -30,7 +30,7 @@ function LoginButton() {
 }
 
 export function LoginForm() {
-  const [state, formAction] = useFormState(login, initialState);
+  const [state, formAction] = useActionState(login, initialState);
 
   return (
     <form action={formAction} className="grid gap-4">

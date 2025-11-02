@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { BookOpenCheck, LayoutGrid, BookMark } from 'lucide-react';
+import { BookOpenCheck, LayoutGrid, BookMarked } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 import { Button } from '@/components/ui/button';
@@ -16,7 +16,7 @@ export function TeacherAppHeader() {
     {
       href: '/teacher-dashboard/class-management',
       label: 'कक्षा प्रबंधन',
-      icon: BookMark,
+      icon: BookMarked,
     },
   ];
 
