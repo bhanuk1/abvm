@@ -175,7 +175,6 @@ export default function SchoolManagementPage() {
     }
 
     try {
-      // Common user creation
       const email = `${newUser.userId}@vidyalaya.com`;
       const userCredential = await createUserWithEmailAndPassword(auth, email, newUser.password);
       const user = userCredential.user;
@@ -195,14 +194,13 @@ export default function SchoolManagementPage() {
       } else if (newUser.role === 'parent') {
         userData = {
           ...userData,
-          username: newUser.username, // Parent's name
+          username: newUser.username,
           fatherName: newUser.username,
           motherName: newUser.motherName,
           address: newUser.address,
           mobile: newUser.studentMobile,
         };
         
-        // If parent role, create linked student
         if (!newUser.studentUserId || !newUser.studentPassword) {
             toast({ variant: 'destructive', title: 'त्रुटि', description: 'अभिभावक बनाते समय कृपया छात्र का यूजर आईडी और पासवर्ड भरें।' });
             return;
@@ -227,18 +225,17 @@ export default function SchoolManagementPage() {
               pen: newUser.pen,
               mobile: newUser.studentMobile,
               rollNo: newUser.rollNo,
-              parentId: user.uid, // Link to parent
+              parentId: user.uid,
             };
             await setDoc(doc(firestore, 'users', studentUser.uid), studentData);
         } catch (studentError: any) {
            console.error("Error creating student user:", studentError);
            toast({ variant: 'destructive', title: 'त्रुटि', description: `मुख्य उपयोगकर्ता बनाया गया, लेकिन छात्र बनाने में विफल: ${studentError.message}` });
-           // Note: You might want to delete the parent user here if the student creation fails
         }
       } else if (newUser.role === 'student') {
          userData = {
           ...userData,
-          username: newUser.username, // Student's name
+          username: newUser.username,
           class: newUser.studentClass,
           subjects: newUser.studentSubjects,
           fatherName: newUser.parentName,
@@ -1088,7 +1085,7 @@ export default function SchoolManagementPage() {
                         </SelectTrigger>
                         <SelectContent>
                           {examTypes.map(type => (
-                            <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>)}
+                            <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>))}
                         </SelectContent>
                       </Select>
                     </div>
