@@ -47,7 +47,7 @@ service cloud.firestore {
      * - List is open to signed in users, client will filter.
      */
     match /results/{resultId} {
-        allow create: if isSignedIn() && getUserData(request.auth.uid).role in ['admin', 'teacher'];
+        allow create: if isSignedIn();
         allow read, update, delete: if isSignedIn() && (getUserData(request.auth.uid).role in ['admin', 'teacher'] || isOwner(resource.data.studentId));
         allow list: if isSignedIn();
     }
