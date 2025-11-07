@@ -101,6 +101,10 @@ export default function SchoolManagementPage() {
   const [selectedExamType, setSelectedExamType] = React.useState('');
   const [marks, setMarks] = React.useState<any>({});
   
+  // Separate state for monthly test marks for clarity and robustness
+  const [monthlyObtained, setMonthlyObtained] = React.useState('');
+  const [monthlyTotal, setMonthlyTotal] = React.useState('100');
+
   const [selectedReportClass, setSelectedReportClass] = React.useState('');
   const [selectedReportStudent, setSelectedReportStudent] = React.useState('');
 
@@ -335,35 +339,37 @@ export default function SchoolManagementPage() {
     }
 
     let resultMarks;
+
     if (selectedExamType === 'monthly') {
+        // New robust validation for monthly test
         if (
-            marks['monthly-obtained'] === undefined ||
-            marks['monthly-obtained'] === null ||
-            String(marks['monthly-obtained']).trim() === '' ||
-            marks['monthly-total'] === undefined ||
-            marks['monthly-total'] === null ||
-            String(marks['monthly-total']).trim() === ''
+            monthlyObtained === undefined ||
+            monthlyObtained === null ||
+            String(monthlyObtained).trim() === '' ||
+            monthlyTotal === undefined ||
+            monthlyTotal === null ||
+            String(monthlyTotal).trim() === ''
         ) {
             toast({ variant: 'destructive', title: 'त्रुटि', description: 'कृपया मासिक टेस्ट के अंक भरें।' });
             return;
         }
         resultMarks = {
-            obtained: marks['monthly-obtained'],
-            total: marks['monthly-total'],
+            obtained: monthlyObtained,
+            total: monthlyTotal,
         };
     } else {
-      const studentSubjects = getSubjectsForStudent();
-      resultMarks = studentSubjects.map(subject => ({
-        subject,
-        obtained: marks[`${subject}-obtained`] || '0',
-        total: marks[`${subject}-total`] || '100',
-      }));
+        const studentSubjects = getSubjectsForStudent();
+        resultMarks = studentSubjects.map(subject => ({
+            subject,
+            obtained: marks[`${subject}-obtained`] || '0',
+            total: marks[`${subject}-total`] || '100',
+        }));
 
-      const allMarksEntered = resultMarks.every(m => m.obtained);
-      if (!allMarksEntered) {
-        toast({ variant: 'destructive', title: 'त्रुटि', description: 'कृपया सभी विषयों के अंक भरें।' });
-        return;
-      }
+        const allMarksEntered = resultMarks.every(m => m.obtained);
+        if (!allMarksEntered) {
+            toast({ variant: 'destructive', title: 'त्रुटि', description: 'कृपया सभी विषयों के अंक भरें।' });
+            return;
+        }
     }
 
     const newResult: Omit<Result, 'id'> = {
@@ -381,6 +387,8 @@ export default function SchoolManagementPage() {
         setSelectedResultStudent('');
         setSelectedExamType('');
         setMarks({});
+        setMonthlyObtained('');
+        setMonthlyTotal('100');
     }).catch(error => {
         const contextualError = new FirestorePermissionError({
             operation: 'create',
@@ -1016,9 +1024,9 @@ export default function SchoolManagementPage() {
                     <div className="space-y-4">
                       <div className="grid grid-cols-2 gap-4 items-center max-w-sm">
                         <Label htmlFor="monthly-obtained" className="font-semibold">प्राप्तांक</Label>
-                        <Input id="monthly-obtained" type="number" placeholder="प्राप्तांक" value={marks['monthly-obtained'] || ''} onChange={handleMarksChange}/>
+                        <Input id="monthly-obtained" type="number" placeholder="प्राप्तांक" value={monthlyObtained} onChange={(e) => setMonthlyObtained(e.target.value)}/>
                          <Label htmlFor="monthly-total" className="font-semibold">पूर्णांक</Label>
-                        <Input id="monthly-total" type="number" value={marks['monthly-total'] || '100'} onChange={handleMarksChange} />
+                        <Input id="monthly-total" type="number" value={monthlyTotal} onChange={(e) => setMonthlyTotal(e.target.value)} />
                       </div>
                       <Button onClick={handleAddResult}>टेस्ट परिणाम सहेजें</Button>
                     </div>
