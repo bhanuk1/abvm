@@ -1003,19 +1003,24 @@ export default function SchoolManagementPage() {
                         </SelectContent>
                     </Select>
                 </div>
-                <Button onClick={handleAddResult} disabled={!selectedResultClass || !selectedResultStudent || !selectedExamType}>
-                  परिणाम जोड़ें
-                </Button>
+                {selectedExamType !== 'monthly' && (
+                  <Button onClick={handleAddResult} disabled={!selectedResultClass || !selectedResultStudent || !selectedExamType}>
+                    परिणाम जोड़ें
+                  </Button>
+                )}
               </div>
 
               {selectedExamType && selectedResultStudent && (
                 <div className="border rounded-lg p-4 space-y-4">
                   {selectedExamType === 'monthly' ? (
-                    <div className="grid grid-cols-2 gap-4 items-center max-w-sm">
-                      <Label htmlFor="monthly-obtained" className="font-semibold">प्राप्तांक</Label>
-                      <Input id="monthly-obtained" type="number" placeholder="प्राप्तांक" value={marks['monthly-obtained'] || ''} onChange={handleMarksChange}/>
-                       <Label htmlFor="monthly-total" className="font-semibold">पूर्णांक</Label>
-                      <Input id="monthly-total" type="number" value={marks['monthly-total'] || '100'} onChange={handleMarksChange} />
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4 items-center max-w-sm">
+                        <Label htmlFor="monthly-obtained" className="font-semibold">प्राप्तांक</Label>
+                        <Input id="monthly-obtained" type="number" placeholder="प्राप्तांक" value={marks['monthly-obtained'] || ''} onChange={handleMarksChange}/>
+                         <Label htmlFor="monthly-total" className="font-semibold">पूर्णांक</Label>
+                        <Input id="monthly-total" type="number" value={marks['monthly-total'] || '100'} onChange={handleMarksChange} />
+                      </div>
+                      <Button onClick={handleAddResult}>टेस्ट परिणाम सहेजें</Button>
                     </div>
                   ) : (
                     <div>
