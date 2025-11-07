@@ -33,7 +33,7 @@ service cloud.firestore {
     /**
      * @description Controls access to notices.
      * - Anyone can read notices.
-     * - Authenticated users can create notices (UI restricts this to admins).
+     * - Admins can create notices.
      * - Admins can update or delete notices.
      */
     match /notices/{noticeId} {
