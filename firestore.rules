@@ -82,10 +82,7 @@ service cloud.firestore {
      */
     match /fees/{feeId} {
       allow write: if isSignedIn() && getUserData(request.auth.uid).role in ['admin', 'teacher'];
-      allow read: if isSignedIn() && (getUserData(request.auth.uid).role in ['admin', 'teacher'] || isOwner(resource.data.studentId));
-      allow list: if isSignedIn() && getUserData(request.auth.uid).role in ['admin', 'teacher'];
+      allow read, list: if isSignedIn() && (getUserData(request.auth.uid).role in ['admin', 'teacher'] || isOwner(resource.data.studentId));
     }
   }
 }
-
-    
