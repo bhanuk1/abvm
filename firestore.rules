@@ -26,7 +26,8 @@ service cloud.firestore {
      */
     match /users/{userId} {
       allow read: if isSignedIn() && (isOwner(userId) || getUserData(request.auth.uid).role in ['admin', 'teacher']);
-      allow write: if isSignedIn() && (isOwner(userId) || getUserData(request.auth.uid).role in ['admin', 'teacher']);
+      allow update, delete: if isSignedIn() && (isOwner(userId) || getUserData(request.auth.uid).role in ['admin', 'teacher']);
+      allow create: if isSignedIn() && getUserData(request.auth.uid).role in ['admin', 'teacher'];
       allow list: if isSignedIn();
     }
 
