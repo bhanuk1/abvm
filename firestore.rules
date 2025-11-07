@@ -14,15 +14,15 @@ service cloud.firestore {
       return request.auth.uid == userId;
     }
 
-    function getRole(uid) {
-      return get(/databases/$(database)/documents/users/$(uid)).data.role;
+    function getRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
     }
 
     function canManageUsers() {
       if (!isSignedIn()) {
         return false;
       }
-      let userRole = getRole(request.auth.uid);
+      let userRole = getRole();
       return userRole == 'admin' || userRole == 'teacher';
     }
 
@@ -46,7 +46,7 @@ service cloud.firestore {
     match /notices/{noticeId} {
       allow read: if true;
       allow create: if isSignedIn();
-      allow update, delete: if canManageUsers() && getRole(request.auth.uid) == 'admin';
+      allow update, delete: if canManageUsers() && getRole() == 'admin';
     }
 
     /**
