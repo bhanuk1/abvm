@@ -57,7 +57,7 @@ import {
   attendance as initialAttendance,
   type Attendance,
 } from '@/lib/school-data';
-import { useCollection, useFirestore, useUser, useMemoFirebase, useAuth } from '@/firebase';
+import { useCollection, useFirestore, useUser, useMemoFirebase, useAuth, errorEmitter, FirestorePermissionError } from '@/firebase';
 import { addDoc, collection, serverTimestamp, setDoc, doc, query, where } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 
@@ -162,7 +162,14 @@ export default function SchoolManagementPage() {
       createdAt: serverTimestamp(),
     };
 
-    addDoc(noticesCol, noticeToAdd);
+    addDoc(noticesCol, noticeToAdd).catch(error => {
+        const contextualError = new FirestorePermissionError({
+            operation: 'create',
+            path: noticesCol.path,
+            requestResourceData: noticeToAdd,
+        });
+        errorEmitter.emit('permission-error', contextualError);
+    });
     
     setNewNotice({ title: '', content: '', role: 'All' });
     setIsNoticeDialogOpen(false);
@@ -178,6 +185,8 @@ export default function SchoolManagementPage() {
       const email = `${newUser.userId}@vidyalaya.com`;
       const userCredential = await createUserWithEmailAndPassword(auth, email, newUser.password);
       const user = userCredential.user;
+      
+      const userDocRef = doc(firestore, 'users', user.uid);
 
       let userData: any = {
         id: user.uid,
@@ -205,11 +214,12 @@ export default function SchoolManagementPage() {
             toast({ variant: 'destructive', title: 'त्रुटि', description: 'अभिभावक बनाते समय कृपया छात्र का यूजर आईडी और पासवर्ड भरें।' });
             return;
         }
-
+        
         try {
             const studentEmail = `${newUser.studentUserId}@vidyalaya.com`;
             const studentUserCredential = await createUserWithEmailAndPassword(auth, studentEmail, newUser.studentPassword);
             const studentUser = studentUserCredential.user;
+            const studentDocRef = doc(firestore, 'users', studentUser.uid);
             const studentData = {
               id: studentUser.uid,
               username: newUser.studentName,
@@ -227,10 +237,18 @@ export default function SchoolManagementPage() {
               rollNo: newUser.rollNo,
               parentId: user.uid,
             };
-            await setDoc(doc(firestore, 'users', studentUser.uid), studentData);
+            setDoc(studentDocRef, studentData).catch(error => {
+                const contextualError = new FirestorePermissionError({
+                    operation: 'create',
+                    path: studentDocRef.path,
+                    requestResourceData: studentData,
+                });
+                errorEmitter.emit('permission-error', contextualError);
+            });
         } catch (studentError: any) {
            console.error("Error creating student user:", studentError);
            toast({ variant: 'destructive', title: 'त्रुटि', description: `मुख्य उपयोगकर्ता बनाया गया, लेकिन छात्र बनाने में विफल: ${studentError.message}` });
+           // We might need to handle cleanup of the parent user here
         }
       } else if (newUser.role === 'student') {
          userData = {
@@ -249,18 +267,25 @@ export default function SchoolManagementPage() {
           rollNo: newUser.rollNo,
         };
       }
-
-      await setDoc(doc(firestore, 'users', user.uid), userData);
+      
+      setDoc(userDocRef, userData).catch(error => {
+          const contextualError = new FirestorePermissionError({
+              operation: 'create',
+              path: userDocRef.path,
+              requestResourceData: userData,
+          });
+          errorEmitter.emit('permission-error', contextualError);
+      });
 
       toast({ title: 'सफलता!', description: 'नया उपयोगकर्ता सफलतापूर्वक बनाया गया।' });
       setNewUser(initialNewUserState);
       setIsUserDialogOpen(false);
 
     } catch (error: any) {
-      console.error("Error creating user:", error);
       if (error.code === 'auth/email-already-in-use') {
         toast({ variant: 'destructive', title: 'त्रुटि', description: 'यह यूजर आईडी पहले से मौजूद है।' });
-      } else {
+      } else if (error.code !== 'auth/user-not-found' && error.code !== 'auth/wrong-password' && error.code !== 'auth/invalid-credential') {
+        // We don't toast for permission errors, as they are handled globally
         toast({ variant: 'destructive', title: 'त्रुटि', description: `उपयोगकर्ता बनाने में विफल: ${error.message}` });
       }
     }
@@ -325,20 +350,21 @@ export default function SchoolManagementPage() {
       marks: resultMarks,
     };
 
-    try {
-      const resultsCol = collection(firestore, 'results');
-      await addDoc(resultsCol, newResult);
-      
-      toast({ title: 'सफलता!', description: 'परिणाम सफलतापूर्वक जोड़ा गया!' });
-
-      setSelectedResultClass('');
-      setSelectedResultStudent('');
-      setSelectedExamType('');
-      setMarks({});
-    } catch (error) {
-      console.error("Error adding result:", error);
-      toast({ variant: 'destructive', title: 'त्रुटि', description: 'परिणाम जोड़ने में विफल।' });
-    }
+    const resultsCol = collection(firestore, 'results');
+    addDoc(resultsCol, newResult).then(() => {
+        toast({ title: 'सफलता!', description: 'परिणाम सफलतापूर्वक जोड़ा गया!' });
+        setSelectedResultClass('');
+        setSelectedResultStudent('');
+        setSelectedExamType('');
+        setMarks({});
+    }).catch(error => {
+        const contextualError = new FirestorePermissionError({
+            operation: 'create',
+            path: resultsCol.path,
+            requestResourceData: newResult,
+        });
+        errorEmitter.emit('permission-error', contextualError);
+    });
   };
   
   const handleMarksChange = (e: React.ChangeEvent<HTMLInputElement>) => {
