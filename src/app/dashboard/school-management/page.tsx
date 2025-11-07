@@ -214,126 +214,79 @@ export default function SchoolManagementPage() {
 
   const handleCreateUser = async () => {
     if (!newUser.role || !newUser.username || !auth || !firestore) {
-        toast({ variant: 'destructive', title: 'त्रुटि', description: 'कृपया सभी आवश्यक फ़ील्ड भरें।' });
-        return;
+      toast({ variant: 'destructive', title: 'त्रुटि', description: 'कृपया सभी आवश्यक फ़ील्ड भरें।' });
+      return;
     }
-
+  
     const generatePassword = () => Math.random().toString(36).slice(-8);
-
     const mainUserPassword = generatePassword();
     const mainUserId = `${newUser.role}_${Date.now()}`;
     const mainUserEmail = `${mainUserId}@vidyalaya.com`;
-
+  
     let userCredential;
     try {
-        userCredential = await createUserWithEmailAndPassword(auth, mainUserEmail, mainUserPassword);
+      userCredential = await createUserWithEmailAndPassword(auth, mainUserEmail, mainUserPassword);
     } catch (error: any) {
-        console.error("Error creating auth user:", error);
-        toast({ variant: 'destructive', title: 'प्रमाणीकरण त्रुटि', description: 'उपयोगकर्ता प्रमाणीकरण बनाने में विफल: ' + error.message });
-        return;
+      console.error("Error creating auth user:", error);
+      toast({ variant: 'destructive', title: 'प्रमाणीकरण त्रुटि', description: 'उपयोगकर्ता प्रमाणीकरण बनाने में विफल: ' + error.message });
+      return;
     }
-    
+  
     const user = userCredential.user;
-
     let userData: any = {
-        id: user.uid,
-        userId: mainUserId,
-        password: mainUserPassword,
-        username: newUser.username,
-        role: newUser.role,
+      id: user.uid,
+      userId: mainUserId,
+      password: mainUserPassword,
+      username: newUser.username,
+      role: newUser.role,
     };
-
-    let studentData: any = null;
-    let studentUser: any = null;
-
+  
     if (newUser.role === 'teacher') {
-        userData = {
-            ...userData,
-            mobile: newUser.teacherMobile,
-            classSubject: `${newUser.teacherClass} - ${newUser.teacherSubject}`,
-        };
+      userData = { ...userData, mobile: newUser.teacherMobile, classSubject: `${newUser.teacherClass} - ${newUser.teacherSubject}` };
     } else if (newUser.role === 'parent') {
-        if (!newUser.studentName) {
-            toast({ variant: 'destructive', title: 'त्रुटि', description: 'अभिभावक बनाते समय कृपया छात्र का नाम भरें।' });
-            return;
-        }
-        userData = {
-            ...userData,
-            fatherName: newUser.username,
-            motherName: newUser.motherName,
-            address: newUser.address,
-            mobile: newUser.studentMobile,
+      if (!newUser.studentName) {
+        toast({ variant: 'destructive', title: 'त्रुटि', description: 'अभिभावक बनाते समय कृपया छात्र का नाम भरें।' });
+        return;
+      }
+      userData = { ...userData, fatherName: newUser.username, motherName: newUser.motherName, address: newUser.address, mobile: newUser.studentMobile };
+  
+      const studentPassword = generatePassword();
+      const studentUserId = `student_${Date.now()}`;
+      const studentEmail = `${studentUserId}@vidyalaya.com`;
+  
+      try {
+        const studentUserCredential = await createUserWithEmailAndPassword(auth, studentEmail, studentPassword);
+        const studentUser = studentUserCredential.user;
+        const studentData = {
+          id: studentUser.uid, userId: studentUserId, password: studentPassword, username: newUser.studentName, role: 'student',
+          class: newUser.studentClass, subjects: newUser.studentSubjects, fatherName: newUser.username, motherName: newUser.motherName,
+          address: newUser.address, dob: newUser.dob ? format(newUser.dob, 'yyyy-MM-dd') : null, admissionDate: newUser.admissionDate ? format(newUser.admissionDate, 'yyyy-MM-dd') : null,
+          aadhaar: newUser.aadhaar, pen: newUser.pen, mobile: newUser.studentMobile, rollNo: newUser.rollNo, parentId: user.uid,
         };
-
-        const studentPassword = generatePassword();
-        const studentUserId = `student_${Date.now()}`;
-        const studentEmail = `${studentUserId}@vidyalaya.com`;
-
-        try {
-            const studentUserCredential = await createUserWithEmailAndPassword(auth, studentEmail, studentPassword);
-            studentUser = studentUserCredential.user;
-
-            studentData = {
-                id: studentUser.uid,
-                userId: studentUserId,
-                password: studentPassword,
-                username: newUser.studentName,
-                role: 'student',
-                class: newUser.studentClass,
-                subjects: newUser.studentSubjects,
-                fatherName: newUser.username,
-                motherName: newUser.motherName,
-                address: newUser.address,
-                dob: newUser.dob ? format(newUser.dob, 'yyyy-MM-dd') : null,
-                admissionDate: newUser.admissionDate ? format(newUser.admissionDate, 'yyyy-MM-dd') : null,
-                aadhaar: newUser.aadhaar,
-                pen: newUser.pen,
-                mobile: newUser.studentMobile,
-                rollNo: newUser.rollNo,
-                parentId: user.uid,
-            };
-            const studentDocRef = doc(firestore, 'users', studentUser.uid);
-            setDoc(studentDocRef, studentData).catch(error => {
-                const contextualError = new FirestorePermissionError({
-                    operation: 'create',
-                    path: studentDocRef.path,
-                    requestResourceData: studentData,
-                });
-                errorEmitter.emit('permission-error', contextualError);
-            });
-        } catch (error: any) {
-            console.error("Error creating student auth user:", error);
-            toast({ variant: 'destructive', title: 'छात्र त्रुटि', description: 'संबद्ध छात्र बनाने में विफल: ' + error.message });
-            // Here you might want to delete the parent user that was just created.
-            return;
-        }
+        const studentDocRef = doc(firestore, 'users', studentUser.uid);
+        setDoc(studentDocRef, studentData).catch(error => {
+          const contextualError = new FirestorePermissionError({ operation: 'create', path: studentDocRef.path, requestResourceData: studentData });
+          errorEmitter.emit('permission-error', contextualError);
+        });
+      } catch (error: any) {
+        console.error("Error creating student auth user:", error);
+        toast({ variant: 'destructive', title: 'छात्र त्रुटि', description: 'संबद्ध छात्र बनाने में विफल: ' + error.message });
+        return;
+      }
     } else if (newUser.role === 'student') {
-        userData = {
-            ...userData,
-            class: newUser.studentClass,
-            subjects: newUser.studentSubjects,
-            fatherName: newUser.parentName,
-            motherName: newUser.motherName,
-            address: newUser.address,
-            dob: newUser.dob ? format(newUser.dob, 'yyyy-MM-dd') : null,
-            admissionDate: newUser.admissionDate ? format(newUser.admissionDate, 'yyyy-MM-dd') : null,
-            aadhaar: newUser.aadhaar,
-            pen: newUser.pen,
-            mobile: newUser.studentMobile,
-            rollNo: newUser.rollNo,
-        };
+      userData = {
+        ...userData, class: newUser.studentClass, subjects: newUser.studentSubjects, fatherName: newUser.parentName, motherName: newUser.motherName,
+        address: newUser.address, dob: newUser.dob ? format(newUser.dob, 'yyyy-MM-dd') : null, admissionDate: newUser.admissionDate ? format(newUser.admissionDate, 'yyyy-MM-dd') : null,
+        aadhaar: newUser.aadhaar, pen: newUser.pen, mobile: newUser.studentMobile, rollNo: newUser.rollNo,
+      };
     }
-    
+  
     const userDocRef = doc(firestore, 'users', user.uid);
     setDoc(userDocRef, userData).catch(error => {
-        const contextualError = new FirestorePermissionError({
-            operation: 'create',
-            path: userDocRef.path,
-            requestResourceData: userData,
-        });
-        errorEmitter.emit('permission-error', contextualError);
+      const contextualError = new FirestorePermissionError({ operation: 'create', path: userDocRef.path, requestResourceData: userData });
+      errorEmitter.emit('permission-error', contextualError);
     });
-
+  
     toast({ title: 'सफलता!', description: 'नया उपयोगकर्ता सफलतापूर्वक बनाया गया।' });
     setNewUser(initialNewUserState);
     setIsUserDialogOpen(false);
@@ -626,38 +579,50 @@ export default function SchoolManagementPage() {
       : { status: 'अदत्त' };
   };
 
-  const handlePayFee = async (quarterId: string, amount: number) => {
+  const handlePayFee = (quarterId: string, amount: number) => {
     if (!firestore || !feeStudent || !feeClass || !students) return;
-    
+  
     const student = students.find(s => s.id === feeStudent);
     if (!student) return;
-
+  
     const quarterData = getFeeStatusForQuarter(quarterId);
-
-    try {
-      if (quarterData.id) {
-        // Update existing fee record
-        const feeDocRef = doc(firestore, 'fees', quarterData.id);
-        await updateDoc(feeDocRef, {
-          status: 'जमा',
-          paymentDate: serverTimestamp()
+  
+    if (quarterData.id) {
+      // Update existing fee record
+      const feeDocRef = doc(firestore, 'fees', quarterData.id);
+      const updatedData = { status: 'जमा', paymentDate: serverTimestamp() };
+      updateDoc(feeDocRef, updatedData)
+        .then(() => toast({ title: 'सफलता!', description: 'फीस सफलतापूर्वक जमा हो गई है।' }))
+        .catch(error => {
+          const contextualError = new FirestorePermissionError({
+            path: feeDocRef.path,
+            operation: 'update',
+            requestResourceData: updatedData,
+          });
+          errorEmitter.emit('permission-error', contextualError);
         });
-      } else {
-        // Create new fee record
-        const feeColRef = collection(firestore, 'fees');
-        await addDoc(feeColRef, {
-          studentId: feeStudent,
-          studentName: student.username,
-          class: feeClass,
-          quarter: quarterId,
-          amount: amount,
-          status: 'जमा',
-          paymentDate: serverTimestamp()
+    } else {
+      // Create new fee record
+      const feeColRef = collection(firestore, 'fees');
+      const newData = {
+        studentId: feeStudent,
+        studentName: student.username,
+        class: feeClass,
+        quarter: quarterId,
+        amount: amount,
+        status: 'जमा',
+        paymentDate: serverTimestamp()
+      };
+      addDoc(feeColRef, newData)
+        .then(() => toast({ title: 'सफलता!', description: 'फीस सफलतापूर्वक जमा हो गई है।' }))
+        .catch(error => {
+          const contextualError = new FirestorePermissionError({
+            path: feeColRef.path,
+            operation: 'create',
+            requestResourceData: newData,
+          });
+          errorEmitter.emit('permission-error', contextualError);
         });
-      }
-      toast({ title: 'सफलता!', description: 'फीस सफलतापूर्वक जमा हो गई है।' });
-    } catch(e) {
-        toast({ variant: 'destructive', title: 'त्रुटि', description: 'फीस जमा करने में विफल।'});
     }
   };
 
@@ -1674,6 +1639,3 @@ export default function SchoolManagementPage() {
     </div>
   );
 }
-
-    
-    
