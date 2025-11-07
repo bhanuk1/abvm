@@ -339,10 +339,10 @@ export default function SchoolManagementPage() {
         if (
             marks['monthly-obtained'] === undefined ||
             marks['monthly-obtained'] === null ||
-            marks['monthly-obtained'].toString().trim() === '' ||
+            String(marks['monthly-obtained']).trim() === '' ||
             marks['monthly-total'] === undefined ||
             marks['monthly-total'] === null ||
-            marks['monthly-total'].toString().trim() === ''
+            String(marks['monthly-total']).trim() === ''
         ) {
             toast({ variant: 'destructive', title: 'त्रुटि', description: 'कृपया मासिक परीक्षा के अंक भरें।' });
             return;
