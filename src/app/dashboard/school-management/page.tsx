@@ -65,7 +65,7 @@ import { useToast } from '@/hooks/use-toast';
 export default function SchoolManagementPage() {
   const firestore = useFirestore();
   const auth = useAuth();
-  const { user: currentUser } = useUser();
+  const { user: currentUser, isUserLoading } = useUser();
   const { toast } = useToast();
 
   const usersQuery = useMemoFirebase(() => firestore ? collection(firestore, 'users') : null, [firestore]);
@@ -98,11 +98,12 @@ export default function SchoolManagementPage() {
   const [selectedResultClass, setSelectedResultClass] = React.useState('');
   const [selectedResultStudent, setSelectedResultStudent] = React.useState('');
   const [selectedExamType, setSelectedExamType] = React.useState('');
-  const [marks, setMarks] = React.useState<any>({});
   
   // Separate state for monthly test marks for clarity and robustness
   const [monthlyObtained, setMonthlyObtained] = React.useState('');
   const [monthlyTotal, setMonthlyTotal] = React.useState('100');
+  const [marks, setMarks] = React.useState<any>({});
+
 
   const [selectedReportClass, setSelectedReportClass] = React.useState('');
   const [selectedReportStudent, setSelectedReportStudent] = React.useState('');
@@ -591,6 +592,14 @@ export default function SchoolManagementPage() {
     h.subject === homeworkReportSubject &&
     homeworkReportDate && h.date === format(homeworkReportDate, 'yyyy-MM-dd')
   );
+
+  if (isUserLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <p>डेटा लोड हो रहा है...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-8">
@@ -1318,5 +1327,7 @@ export default function SchoolManagementPage() {
     </div>
   );
 }
+
+    
 
     
