@@ -581,12 +581,12 @@ export default function SchoolManagementPage() {
 
   const handlePayFee = (quarterId: string, amount: number) => {
     if (!firestore || !feeStudent || !feeClass || !students) return;
-  
+
     const student = students.find(s => s.id === feeStudent);
     if (!student) return;
-  
+
     const quarterData = getFeeStatusForQuarter(quarterId);
-  
+
     if (quarterData.id) {
       // Update existing fee record
       const feeDocRef = doc(firestore, 'fees', quarterData.id);
@@ -594,12 +594,12 @@ export default function SchoolManagementPage() {
       updateDoc(feeDocRef, updatedData)
         .then(() => toast({ title: 'सफलता!', description: 'फीस सफलतापूर्वक जमा हो गई है।' }))
         .catch(error => {
-          const contextualError = new FirestorePermissionError({
-            path: feeDocRef.path,
-            operation: 'update',
-            requestResourceData: updatedData,
-          });
-          errorEmitter.emit('permission-error', contextualError);
+            const contextualError = new FirestorePermissionError({
+                path: feeDocRef.path,
+                operation: 'update',
+                requestResourceData: updatedData,
+            });
+            errorEmitter.emit('permission-error', contextualError);
         });
     } else {
       // Create new fee record
@@ -616,12 +616,12 @@ export default function SchoolManagementPage() {
       addDoc(feeColRef, newData)
         .then(() => toast({ title: 'सफलता!', description: 'फीस सफलतापूर्वक जमा हो गई है।' }))
         .catch(error => {
-          const contextualError = new FirestorePermissionError({
-            path: feeColRef.path,
-            operation: 'create',
-            requestResourceData: newData,
-          });
-          errorEmitter.emit('permission-error', contextualError);
+            const contextualError = new FirestorePermissionError({
+                path: feeColRef.path,
+                operation: 'create',
+                requestResourceData: newData,
+            });
+            errorEmitter.emit('permission-error', contextualError);
         });
     }
   };
