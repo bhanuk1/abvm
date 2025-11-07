@@ -3,13 +3,12 @@
 import { useState } from 'react';
 import { useFormStatus } from 'react-dom';
 import { LogIn } from 'lucide-react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { handleLogin } from '@/app/actions';
 import { useAuth } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
 
@@ -25,6 +24,7 @@ function LoginButton() {
 
 export function LoginForm() {
   const auth = useAuth();
+  const router = useRouter();
   const { toast } = useToast();
   const searchParams = useSearchParams();
   const role = searchParams.get('role') || 'student';
@@ -40,6 +40,26 @@ export function LoginForm() {
       case 'teacher': return 'शिक्षक';
       case 'admin': return 'प्रधानाचार्य';
       default: return '';
+    }
+  };
+
+  const handleRedirect = (role: string) => {
+    switch (role) {
+      case 'admin':
+        router.push('/dashboard');
+        break;
+      case 'teacher':
+        router.push('/teacher-dashboard');
+        break;
+      case 'parent':
+        router.push('/parent-dashboard');
+        break;
+      case 'student':
+        router.push('/student-dashboard');
+        break;
+      default:
+        router.push('/');
+        break;
     }
   };
 
@@ -63,7 +83,7 @@ export function LoginForm() {
             description: "आप सफलतापूर्वक लॉग इन हो गए हैं।",
             className: "bg-green-100 text-green-800",
         });
-        await handleLogin(role);
+        handleRedirect(role);
       }
     } catch (error: any) {
       console.error(error);
