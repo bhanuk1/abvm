@@ -206,47 +206,56 @@ export default function SchoolManagementPage() {
     const mainUserId = `${newUser.role}_${Date.now()}`;
     const mainUserEmail = `${mainUserId}@vidyalaya.com`;
 
+    let userCredential;
     try {
-        // Step 1: Create the main user in Firebase Auth
-        const userCredential = await createUserWithEmailAndPassword(auth, mainUserEmail, mainUserPassword);
-        const user = userCredential.user;
+        userCredential = await createUserWithEmailAndPassword(auth, mainUserEmail, mainUserPassword);
+    } catch (error: any) {
+        console.error("Error creating auth user:", error);
+        toast({ variant: 'destructive', title: 'प्रमाणीकरण त्रुटि', description: 'उपयोगकर्ता प्रमाणीकरण बनाने में विफल: ' + error.message });
+        return;
+    }
+    
+    const user = userCredential.user;
 
-        // Step 2: Prepare user data for Firestore
-        let userData: any = {
-            id: user.uid,
-            userId: mainUserId,
-            password: mainUserPassword,
-            username: newUser.username,
-            role: newUser.role,
+    let userData: any = {
+        id: user.uid,
+        userId: mainUserId,
+        password: mainUserPassword,
+        username: newUser.username,
+        role: newUser.role,
+    };
+
+    let studentData: any = null;
+    let studentUser: any = null;
+
+    if (newUser.role === 'teacher') {
+        userData = {
+            ...userData,
+            mobile: newUser.teacherMobile,
+            classSubject: `${newUser.teacherClass} - ${newUser.teacherSubject}`,
+        };
+    } else if (newUser.role === 'parent') {
+        if (!newUser.studentName) {
+            toast({ variant: 'destructive', title: 'त्रुटि', description: 'अभिभावक बनाते समय कृपया छात्र का नाम भरें।' });
+            return;
+        }
+        userData = {
+            ...userData,
+            fatherName: newUser.username,
+            motherName: newUser.motherName,
+            address: newUser.address,
+            mobile: newUser.studentMobile,
         };
 
-        if (newUser.role === 'teacher') {
-            userData = {
-                ...userData,
-                mobile: newUser.teacherMobile,
-                classSubject: `${newUser.teacherClass} - ${newUser.teacherSubject}`,
-            };
-        } else if (newUser.role === 'parent') {
-            if (!newUser.studentName) {
-                toast({ variant: 'destructive', title: 'त्रुटि', description: 'अभिभावक बनाते समय कृपया छात्र का नाम भरें।' });
-                return;
-            }
-            userData = {
-                ...userData,
-                fatherName: newUser.username,
-                motherName: newUser.motherName,
-                address: newUser.address,
-                mobile: newUser.studentMobile,
-            };
+        const studentPassword = generatePassword();
+        const studentUserId = `student_${Date.now()}`;
+        const studentEmail = `${studentUserId}@vidyalaya.com`;
 
-            // Step 2a: Create associated student
-            const studentPassword = generatePassword();
-            const studentUserId = `student_${Date.now()}`;
-            const studentEmail = `${studentUserId}@vidyalaya.com`;
+        try {
             const studentUserCredential = await createUserWithEmailAndPassword(auth, studentEmail, studentPassword);
-            const studentUser = studentUserCredential.user;
-            
-            const studentData = {
+            studentUser = studentUserCredential.user;
+
+            studentData = {
                 id: studentUser.uid,
                 userId: studentUserId,
                 password: studentPassword,
@@ -266,61 +275,60 @@ export default function SchoolManagementPage() {
                 parentId: user.uid,
             };
             const studentDocRef = doc(firestore, 'users', studentUser.uid);
-            await setDoc(studentDocRef, studentData);
-
-        } else if (newUser.role === 'student') {
-            userData = {
-                ...userData,
-                class: newUser.studentClass,
-                subjects: newUser.studentSubjects,
-                fatherName: newUser.parentName,
-                motherName: newUser.motherName,
-                address: newUser.address,
-                dob: newUser.dob ? format(newUser.dob, 'yyyy-MM-dd') : null,
-                admissionDate: newUser.admissionDate ? format(newUser.admissionDate, 'yyyy-MM-dd') : null,
-                aadhaar: newUser.aadhaar,
-                pen: newUser.pen,
-                mobile: newUser.studentMobile,
-                rollNo: newUser.rollNo,
-            };
-        }
-
-        // Step 3: Save main user data to Firestore
-        const userDocRef = doc(firestore, 'users', user.uid);
-        await setDoc(userDocRef, userData);
-
-        toast({ title: 'सफलता!', description: 'नया उपयोगकर्ता सफलतापूर्वक बनाया गया।' });
-        setNewUser(initialNewUserState);
-        setIsUserDialogOpen(false);
-        
-        // IMPORTANT: Sign back in as the admin user if needed
-        if (currentUser) {
-            const adminEmail = currentUser.email;
-            const adminPassword = prompt("कृपया व्यवस्थापक पासवर्ड फिर से दर्ज करें để सत्र को फिर से स्थापित करने के लिए:");
-            if (adminEmail && adminPassword) {
-                try {
-                    await signInWithEmailAndPassword(auth, adminEmail, adminPassword);
-                } catch (reauthError) {
-                    console.error("Failed to re-authenticate admin:", reauthError);
-                    toast({ variant: 'destructive', title: 'त्रुटि', description: 'व्यवस्थापक सत्र को फिर से स्थापित करने में विफल रहा। कृपया पुनः लॉग इन करें।' });
-                }
-            }
-        }
-
-    } catch (error: any) {
-        console.error("Error creating user:", error);
-         if (error.code === 'auth/email-already-exists') {
-            toast({ variant: 'destructive', title: 'त्रुटि', description: 'यह यूजर आईडी पहले से मौजूद है।' });
-        } else if (error.code === 'auth/requires-recent-login') {
-            toast({ variant: 'destructive', title: 'त्रुटि', description: 'इस क्रिया के लिए हाल ही में लॉगिन आवश्यक है। कृपया पुनः लॉग इन करें।' });
-        }
-        else {
-            const contextualError = new FirestorePermissionError({
-                operation: 'create',
-                path: `users/${mainUserId}`,
-                requestResourceData: newUser,
+            setDoc(studentDocRef, studentData).catch(error => {
+                const contextualError = new FirestorePermissionError({
+                    operation: 'create',
+                    path: studentDocRef.path,
+                    requestResourceData: studentData,
+                });
+                errorEmitter.emit('permission-error', contextualError);
             });
-            errorEmitter.emit('permission-error', contextualError);
+        } catch (error: any) {
+            console.error("Error creating student auth user:", error);
+            toast({ variant: 'destructive', title: 'छात्र त्रुटि', description: 'संबद्ध छात्र बनाने में विफल: ' + error.message });
+            return;
+        }
+    } else if (newUser.role === 'student') {
+        userData = {
+            ...userData,
+            class: newUser.studentClass,
+            subjects: newUser.studentSubjects,
+            fatherName: newUser.parentName,
+            motherName: newUser.motherName,
+            address: newUser.address,
+            dob: newUser.dob ? format(newUser.dob, 'yyyy-MM-dd') : null,
+            admissionDate: newUser.admissionDate ? format(newUser.admissionDate, 'yyyy-MM-dd') : null,
+            aadhaar: newUser.aadhaar,
+            pen: newUser.pen,
+            mobile: newUser.studentMobile,
+            rollNo: newUser.rollNo,
+        };
+    }
+    
+    const userDocRef = doc(firestore, 'users', user.uid);
+    setDoc(userDocRef, userData).catch(error => {
+        const contextualError = new FirestorePermissionError({
+            operation: 'create',
+            path: userDocRef.path,
+            requestResourceData: userData,
+        });
+        errorEmitter.emit('permission-error', contextualError);
+    });
+
+    toast({ title: 'सफलता!', description: 'नया उपयोगकर्ता सफलतापूर्वक बनाया गया।' });
+    setNewUser(initialNewUserState);
+    setIsUserDialogOpen(false);
+    
+    if (currentUser) {
+        const adminEmail = currentUser.email;
+        const adminPassword = prompt("कृपया व्यवस्थापक पासवर्ड फिर से दर्ज करें để सत्र को फिर से स्थापित करने के लिए:");
+        if (adminEmail && adminPassword) {
+            try {
+                await signInWithEmailAndPassword(auth, adminEmail, adminPassword);
+            } catch (reauthError) {
+                console.error("Failed to re-authenticate admin:", reauthError);
+                toast({ variant: 'destructive', title: 'त्रुटि', description: 'व्यवस्थापक सत्र को फिर से स्थापित करने में विफल रहा। कृपया पुनः लॉग इन करें।' });
+            }
         }
     }
   };
