@@ -14,8 +14,8 @@ service cloud.firestore {
       return request.auth.uid == userId;
     }
 
-    function getUserData() {
-        return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    function getUserData(userId) {
+        return get(/databases/$(database)/documents/users/$(userId)).data;
     }
 
     /**
@@ -25,21 +25,19 @@ service cloud.firestore {
      * - An admin or teacher can create a user profile.
      */
     match /users/{userId} {
-      allow read: if isSignedIn() && (isOwner(userId) || getUserData().role in ['admin', 'teacher']);
-      allow write: if isSignedIn() && (isOwner(userId) || getUserData().role in ['admin', 'teacher']);
+      allow read: if isSignedIn() && (isOwner(userId) || getUserData(request.auth.uid).role in ['admin', 'teacher']);
+      allow write: if isSignedIn() && (isOwner(userId) || getUserData(request.auth.uid).role in ['admin', 'teacher']);
       allow list: if isSignedIn();
     }
 
     /**
      * @description Controls access to notices.
      * - Anyone can read notices.
-     * - Admins can create notices.
-     * - Admins can update or delete notices.
+     * - Admins can create, update, or delete notices.
      */
     match /notices/{noticeId} {
       allow read: if true;
-      allow create: if isSignedIn() && getUserData().role == 'admin';
-      allow update, delete: if isSignedIn() && getUserData().role == 'admin';
+      allow write: if isSignedIn() && getUserData(request.auth.uid).role == 'admin';
     }
 
     /**
@@ -49,8 +47,8 @@ service cloud.firestore {
      * - List is open to signed in users, client will filter.
      */
     match /results/{resultId} {
-        allow create: if isSignedIn() && getUserData().role in ['admin', 'teacher'];
-        allow read, update, delete: if isSignedIn() && (getUserData().role in ['admin', 'teacher'] || isOwner(resource.data.studentId));
+        allow create: if isSignedIn() && getUserData(request.auth.uid).role in ['admin', 'teacher'];
+        allow read, update, delete: if isSignedIn() && (getUserData(request.auth.uid).role in ['admin', 'teacher'] || isOwner(resource.data.studentId));
         allow list: if isSignedIn();
     }
 
@@ -60,9 +58,8 @@ service cloud.firestore {
      * - Only Admins and Teachers can create or modify homework.
      */
     match /homeworks/{homeworkId} {
-        allow read: if isSignedIn();
-        allow list: if isSignedIn();
-        allow write: if isSignedIn() && getUserData().role in ['admin', 'teacher'];
+        allow read, list: if isSignedIn();
+        allow write: if isSignedIn() && getUserData(request.auth.uid).role in ['admin', 'teacher'];
     }
 
     /**
@@ -72,8 +69,8 @@ service cloud.firestore {
      * - List is open to signed in users, client will filter.
      */
      match /attendance/{attendanceId} {
-        allow write: if isSignedIn() && getUserData().role in ['admin', 'teacher'];
-        allow read: if isSignedIn() && (getUserData().role in ['admin', 'teacher'] || isOwner(resource.data.studentId));
+        allow write: if isSignedIn() && getUserData(request.auth.uid).role in ['admin', 'teacher'];
+        allow read: if isSignedIn() && (getUserData(request.auth.uid).role in ['admin', 'teacher'] || isOwner(resource.data.studentId));
         allow list: if isSignedIn();
      }
   }
