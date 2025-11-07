@@ -168,20 +168,14 @@ export default function SchoolManagementPage() {
     setIsNoticeDialogOpen(false);
   };
 
-  const handleCreateUser = async () => {
+ const handleCreateUser = async () => {
     if (!newUser.role || !newUser.userId || !newUser.password || !firestore || !auth) {
       toast({ variant: 'destructive', title: 'त्रुटि', description: 'कृपया सभी आवश्यक फ़ील्ड भरें।' });
       return;
     }
 
     try {
-      if (newUser.role === 'parent') {
-        if (!newUser.studentUserId || !newUser.studentPassword) {
-          toast({ variant: 'destructive', title: 'त्रुटि', description: 'अभिभावक बनाते समय कृपया छात्र का यूजर आईडी और पासवर्ड भरें।' });
-          return;
-        }
-      }
-
+      // Common user creation
       const email = `${newUser.userId}@vidyalaya.com`;
       const userCredential = await createUserWithEmailAndPassword(auth, email, newUser.password);
       const user = userCredential.user;
@@ -198,16 +192,56 @@ export default function SchoolManagementPage() {
           mobile: newUser.teacherMobile,
           classSubject: `${newUser.teacherClass} - ${newUser.teacherSubject}`,
         };
-      } else if (newUser.role === 'parent' || newUser.role === 'student') {
-        const studentName = newUser.role === 'student' ? newUser.username : newUser.studentName;
-        const parentName = newUser.role === 'parent' ? newUser.username : newUser.parentName;
-
+      } else if (newUser.role === 'parent') {
         userData = {
           ...userData,
-          username: newUser.role === 'student' ? studentName : parentName,
+          username: newUser.username, // Parent's name
+          fatherName: newUser.username,
+          motherName: newUser.motherName,
+          address: newUser.address,
+          mobile: newUser.studentMobile,
+        };
+        
+        // If parent role, create linked student
+        if (!newUser.studentUserId || !newUser.studentPassword) {
+            toast({ variant: 'destructive', title: 'त्रुटि', description: 'अभिभावक बनाते समय कृपया छात्र का यूजर आईडी और पासवर्ड भरें।' });
+            return;
+        }
+
+        try {
+            const studentEmail = `${newUser.studentUserId}@vidyalaya.com`;
+            const studentUserCredential = await createUserWithEmailAndPassword(auth, studentEmail, newUser.studentPassword);
+            const studentUser = studentUserCredential.user;
+            const studentData = {
+              id: studentUser.uid,
+              username: newUser.studentName,
+              role: 'student',
+              class: newUser.studentClass,
+              subjects: newUser.studentSubjects,
+              fatherName: newUser.username, // Parent's name from the main form
+              motherName: newUser.motherName,
+              address: newUser.address,
+              dob: newUser.dob ? format(newUser.dob, 'yyyy-MM-dd') : null,
+              admissionDate: newUser.admissionDate ? format(newUser.admissionDate, 'yyyy-MM-dd') : null,
+              aadhaar: newUser.aadhaar,
+              pen: newUser.pen,
+              mobile: newUser.studentMobile,
+              rollNo: newUser.rollNo,
+              parentId: user.uid, // Link to parent
+            };
+            await setDoc(doc(firestore, 'users', studentUser.uid), studentData);
+        } catch (studentError: any) {
+           console.error("Error creating student user:", studentError);
+           toast({ variant: 'destructive', title: 'त्रुटि', description: `मुख्य उपयोगकर्ता बनाया गया, लेकिन छात्र बनाने में विफल: ${studentError.message}` });
+           // Note: You might want to delete the parent user here if the student creation fails
+        }
+      } else if (newUser.role === 'student') {
+         userData = {
+          ...userData,
+          username: newUser.username, // Student's name
           class: newUser.studentClass,
           subjects: newUser.studentSubjects,
-          fatherName: parentName,
+          fatherName: newUser.parentName,
           motherName: newUser.motherName,
           address: newUser.address,
           dob: newUser.dob ? format(newUser.dob, 'yyyy-MM-dd') : null,
@@ -217,43 +251,9 @@ export default function SchoolManagementPage() {
           mobile: newUser.studentMobile,
           rollNo: newUser.rollNo,
         };
-        
-        if (newUser.role === 'student') {
-            userData.fatherName = newUser.parentName;
-        }
       }
 
       await setDoc(doc(firestore, 'users', user.uid), userData);
-
-      // If a parent was created, now create the student linked to them
-      if (newUser.role === 'parent' && newUser.studentUserId && newUser.studentPassword) {
-        try {
-          const studentEmail = `${newUser.studentUserId}@vidyalaya.com`;
-          const studentUserCredential = await createUserWithEmailAndPassword(auth, studentEmail, newUser.studentPassword);
-          const studentUser = studentUserCredential.user;
-          const studentData = {
-            id: studentUser.uid,
-            username: newUser.studentName,
-            role: 'student',
-            class: newUser.studentClass,
-            subjects: newUser.studentSubjects,
-            fatherName: newUser.username, // Parent's name from the main form
-            motherName: newUser.motherName,
-            address: newUser.address,
-            dob: newUser.dob ? format(newUser.dob, 'yyyy-MM-dd') : null,
-            admissionDate: newUser.admissionDate ? format(newUser.admissionDate, 'yyyy-MM-dd') : null,
-            aadhaar: newUser.aadhaar,
-            pen: newUser.pen,
-            mobile: newUser.studentMobile,
-            rollNo: newUser.rollNo,
-            parentId: user.uid, // Link to parent
-          };
-          await setDoc(doc(firestore, 'users', studentUser.uid), studentData);
-        } catch (studentError: any) {
-           console.error("Error creating student user:", studentError);
-           toast({ variant: 'destructive', title: 'त्रुटि', description: `मुख्य उपयोगकर्ता बनाया गया, लेकिन छात्र बनाने में विफल: ${studentError.message}` });
-        }
-      }
 
       toast({ title: 'सफलता!', description: 'नया उपयोगकर्ता सफलतापूर्वक बनाया गया।' });
       setNewUser(initialNewUserState);
@@ -615,40 +615,40 @@ export default function SchoolManagementPage() {
                     {(newUser.role === 'parent' || newUser.role === 'student') && (
                       <>
                         <h3 className="col-span-4 font-semibold text-lg border-b pb-2 mb-2">{newUser.role === 'parent' ? 'अभिभावक और छात्र विवरण' : 'छात्र विवरण'}</h3>
-                        {newUser.role === 'parent' && (
-                        <>
-                            <div className="grid grid-cols-4 items-center gap-4">
-                                <Label htmlFor="parentName" className="text-right">पिता का नाम</Label>
-                                <Input id="parentName" value={newUser.parentName || ''} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" />
-                            </div>
-                            <div className="grid grid-cols-4 items-center gap-4">
-                                <Label htmlFor="motherName" className="text-right">माता का नाम</Label>
-                                <Input id="motherName" value={newUser.motherName || ''} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" />
-                            </div>
-                        </>
+                        
+                        {newUser.role === 'student' && (
+                          <div className="grid grid-cols-4 items-center gap-4">
+                              <Label htmlFor="parentName" className="text-right">पिता का नाम</Label>
+                              <Input id="parentName" value={newUser.parentName || ''} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" />
+                          </div>
                         )}
+
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="motherName" className="text-right">माता का नाम</Label>
+                            <Input id="motherName" value={newUser.motherName || ''} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" />
+                        </div>
+                        
                         <div className="grid grid-cols-4 items-center gap-4">
                             <Label htmlFor="studentMobile" className="text-right">मोबाइल नंबर</Label>
                             <Input id="studentMobile" value={newUser.studentMobile || ''} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" />
                         </div>
+                        
                         {newUser.role === 'parent' && (
-                        <h4 className="col-span-4 font-semibold text-md border-b pb-2 mt-4 mb-2">छात्र लॉगिन विवरण</h4>
-                        )}
-                        <div className="grid grid-cols-4 items-center gap-4">
-                          <Label htmlFor="studentName" className="text-right">छात्र का नाम</Label>
-                          <Input id="studentName" value={newUser.studentName || ''} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" />
-                        </div>
-                        {newUser.role === 'parent' && (
-                            <>
-                            <div className="grid grid-cols-4 items-center gap-4">
-                                <Label htmlFor="studentUserId" className="text-right">छात्र यूजर आईडी</Label>
-                                <Input id="studentUserId" value={newUser.studentUserId || ''} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" />
-                            </div>
-                            <div className="grid grid-cols-4 items-center gap-4">
-                                <Label htmlFor="studentPassword" className="text-right">छात्र पासवर्ड</Label>
-                                <Input id="studentPassword" type="password" value={newUser.studentPassword || ''} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" />
-                            </div>
-                            </>
+                        <>
+                          <h4 className="col-span-4 font-semibold text-md border-b pb-2 mt-4 mb-2">छात्र लॉगिन विवरण</h4>
+                          <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="studentName" className="text-right">छात्र का नाम</Label>
+                            <Input id="studentName" value={newUser.studentName || ''} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" />
+                          </div>
+                          <div className="grid grid-cols-4 items-center gap-4">
+                              <Label htmlFor="studentUserId" className="text-right">छात्र यूजर आईडी</Label>
+                              <Input id="studentUserId" value={newUser.studentUserId || ''} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" />
+                          </div>
+                          <div className="grid grid-cols-4 items-center gap-4">
+                              <Label htmlFor="studentPassword" className="text-right">छात्र पासवर्ड</Label>
+                              <Input id="studentPassword" type="password" value={newUser.studentPassword || ''} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" />
+                          </div>
+                        </>
                         )}
                         <h4 className="col-span-4 font-semibold text-md border-b pb-2 mt-4 mb-2">छात्र अकादमिक विवरण</h4>
                         <div className="grid grid-cols-4 items-center gap-4">
