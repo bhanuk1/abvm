@@ -59,7 +59,7 @@ import {
 import { useCollection, useFirestore, useUser, useMemoFirebase, useAuth, errorEmitter, FirestorePermissionError } from '@/firebase';
 import { addDoc, collection, serverTimestamp, setDoc, doc, query, where, deleteDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
-import { createUserAction } from '@/app/actions';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 
 
 export default function SchoolManagementPage() {
@@ -81,7 +81,6 @@ export default function SchoolManagementPage() {
   const { data: resultsData, isLoading: resultsLoading } = useCollection<Result>(resultsQuery);
 
 
-  // const [students, setStudents] = React.useState(initialStudents);
   const [results, setResults] = React.useState<Result[]>(initialResults);
   const [homeworks, setHomeworks] = React.useState<Homework[]>(initialHomeworks);
   const [attendance, setAttendance] = React.useState<Attendance[]>(initialAttendance);
@@ -99,7 +98,6 @@ export default function SchoolManagementPage() {
   const [selectedResultStudent, setSelectedResultStudent] = React.useState('');
   const [selectedExamType, setSelectedExamType] = React.useState('');
   
-  // Separate state for monthly test marks for clarity and robustness
   const [monthlyObtained, setMonthlyObtained] = React.useState('');
   const [monthlyTotal, setMonthlyTotal] = React.useState('100');
   const [marks, setMarks] = React.useState<any>({});
@@ -167,7 +165,7 @@ export default function SchoolManagementPage() {
       ...newNotice,
       id: `NTC${Date.now()}`,
       authorId: currentUser.uid,
-      author: 'प्रधानाचार्य', // Or get current user's name
+      author: 'प्रधानाचार्य',
       createdAt: serverTimestamp(),
     };
 
@@ -197,32 +195,133 @@ export default function SchoolManagementPage() {
   };
 
   const handleCreateUser = async () => {
-    if (!newUser.role || !newUser.username) {
-      toast({ variant: 'destructive', title: 'त्रुटि', description: 'कृपया सभी आवश्यक फ़ील्ड भरें।' });
-      return;
+    if (!newUser.role || !newUser.username || !auth || !firestore) {
+        toast({ variant: 'destructive', title: 'त्रुटि', description: 'कृपया सभी आवश्यक फ़ील्ड भरें।' });
+        return;
     }
-  
-    // Prepare the data for the server action
-    const userData = {
-      ...newUser,
-      dob: newUser.dob ? format(newUser.dob, 'yyyy-MM-dd') : null,
-      admissionDate: newUser.admissionDate ? format(newUser.admissionDate, 'yyyy-MM-dd') : null,
-    };
-  
+
+    const generatePassword = () => Math.random().toString(36).slice(-8);
+
+    const mainUserPassword = generatePassword();
+    const mainUserId = `${newUser.role}_${Date.now()}`;
+    const mainUserEmail = `${mainUserId}@vidyalaya.com`;
+
     try {
-      const result = await createUserAction(userData);
-  
-      if (result.success) {
-        toast({ title: 'सफलता!', description: result.message });
+        // Step 1: Create the main user in Firebase Auth
+        const userCredential = await createUserWithEmailAndPassword(auth, mainUserEmail, mainUserPassword);
+        const user = userCredential.user;
+
+        // Step 2: Prepare user data for Firestore
+        let userData: any = {
+            id: user.uid,
+            userId: mainUserId,
+            password: mainUserPassword,
+            username: newUser.username,
+            role: newUser.role,
+        };
+
+        if (newUser.role === 'teacher') {
+            userData = {
+                ...userData,
+                mobile: newUser.teacherMobile,
+                classSubject: `${newUser.teacherClass} - ${newUser.teacherSubject}`,
+            };
+        } else if (newUser.role === 'parent') {
+            if (!newUser.studentName) {
+                toast({ variant: 'destructive', title: 'त्रुटि', description: 'अभिभावक बनाते समय कृपया छात्र का नाम भरें।' });
+                return;
+            }
+            userData = {
+                ...userData,
+                fatherName: newUser.username,
+                motherName: newUser.motherName,
+                address: newUser.address,
+                mobile: newUser.studentMobile,
+            };
+
+            // Step 2a: Create associated student
+            const studentPassword = generatePassword();
+            const studentUserId = `student_${Date.now()}`;
+            const studentEmail = `${studentUserId}@vidyalaya.com`;
+            const studentUserCredential = await createUserWithEmailAndPassword(auth, studentEmail, studentPassword);
+            const studentUser = studentUserCredential.user;
+            
+            const studentData = {
+                id: studentUser.uid,
+                userId: studentUserId,
+                password: studentPassword,
+                username: newUser.studentName,
+                role: 'student',
+                class: newUser.studentClass,
+                subjects: newUser.studentSubjects,
+                fatherName: newUser.username,
+                motherName: newUser.motherName,
+                address: newUser.address,
+                dob: newUser.dob ? format(newUser.dob, 'yyyy-MM-dd') : null,
+                admissionDate: newUser.admissionDate ? format(newUser.admissionDate, 'yyyy-MM-dd') : null,
+                aadhaar: newUser.aadhaar,
+                pen: newUser.pen,
+                mobile: newUser.studentMobile,
+                rollNo: newUser.rollNo,
+                parentId: user.uid,
+            };
+            const studentDocRef = doc(firestore, 'users', studentUser.uid);
+            await setDoc(studentDocRef, studentData);
+
+        } else if (newUser.role === 'student') {
+            userData = {
+                ...userData,
+                class: newUser.studentClass,
+                subjects: newUser.studentSubjects,
+                fatherName: newUser.parentName,
+                motherName: newUser.motherName,
+                address: newUser.address,
+                dob: newUser.dob ? format(newUser.dob, 'yyyy-MM-dd') : null,
+                admissionDate: newUser.admissionDate ? format(newUser.admissionDate, 'yyyy-MM-dd') : null,
+                aadhaar: newUser.aadhaar,
+                pen: newUser.pen,
+                mobile: newUser.studentMobile,
+                rollNo: newUser.rollNo,
+            };
+        }
+
+        // Step 3: Save main user data to Firestore
+        const userDocRef = doc(firestore, 'users', user.uid);
+        await setDoc(userDocRef, userData);
+
+        toast({ title: 'सफलता!', description: 'नया उपयोगकर्ता सफलतापूर्वक बनाया गया।' });
         setNewUser(initialNewUserState);
         setIsUserDialogOpen(false);
-      } else {
-        // The server action will return a specific error message
-        toast({ variant: 'destructive', title: 'त्रुटि', description: result.message });
-      }
+        
+        // IMPORTANT: Sign back in as the admin user if needed
+        if (currentUser) {
+            const adminEmail = currentUser.email;
+            const adminPassword = prompt("कृपया व्यवस्थापक पासवर्ड फिर से दर्ज करें để सत्र को फिर से स्थापित करने के लिए:");
+            if (adminEmail && adminPassword) {
+                try {
+                    await signInWithEmailAndPassword(auth, adminEmail, adminPassword);
+                } catch (reauthError) {
+                    console.error("Failed to re-authenticate admin:", reauthError);
+                    toast({ variant: 'destructive', title: 'त्रुटि', description: 'व्यवस्थापक सत्र को फिर से स्थापित करने में विफल रहा। कृपया पुनः लॉग इन करें।' });
+                }
+            }
+        }
+
     } catch (error: any) {
-      console.error("Error calling createUserAction:", error);
-      toast({ variant: 'destructive', title: 'त्रुटि', description: 'उपयोगकर्ता बनाने में एक अप्रत्याशित त्रुटि हुई।' });
+        console.error("Error creating user:", error);
+         if (error.code === 'auth/email-already-exists') {
+            toast({ variant: 'destructive', title: 'त्रुटि', description: 'यह यूजर आईडी पहले से मौजूद है।' });
+        } else if (error.code === 'auth/requires-recent-login') {
+            toast({ variant: 'destructive', title: 'त्रुटि', description: 'इस क्रिया के लिए हाल ही में लॉगिन आवश्यक है। कृपया पुनः लॉग इन करें।' });
+        }
+        else {
+            const contextualError = new FirestorePermissionError({
+                operation: 'create',
+                path: `users/${mainUserId}`,
+                requestResourceData: newUser,
+            });
+            errorEmitter.emit('permission-error', contextualError);
+        }
     }
   };
   
@@ -248,14 +347,7 @@ export default function SchoolManagementPage() {
     let resultMarks;
 
     if (selectedExamType === 'monthly') {
-        if (
-            monthlyObtained === undefined ||
-            monthlyObtained === null ||
-            String(monthlyObtained).trim() === '' ||
-            monthlyTotal === undefined ||
-            monthlyTotal === null ||
-            String(monthlyTotal).trim() === ''
-        ) {
+        if (!monthlyObtained || !monthlyTotal) {
             toast({ variant: 'destructive', title: 'त्रुटि', description: 'कृपया मासिक टेस्ट के अंक भरें।' });
             return;
         }
@@ -485,7 +577,7 @@ export default function SchoolManagementPage() {
       );
       return {
         ...student,
-        status: attendanceRecord ? attendanceRecord.status : 'अनुपस्थित', // Default to absent
+        status: attendanceRecord ? attendanceRecord.status : 'अनुपस्थित',
       };
     });
   }, [attendanceReportClass, attendanceReportDate, students, attendance]);
@@ -1230,7 +1322,3 @@ export default function SchoolManagementPage() {
     </div>
   );
 }
-
-    
-
-    
