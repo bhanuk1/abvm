@@ -2,7 +2,6 @@
 import React from 'react';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { Buffer } from 'buffer';
 
 import { Button } from '@/components/ui/button';
@@ -60,6 +59,7 @@ import {
 import { useCollection, useFirestore, useUser, useMemoFirebase, useAuth, errorEmitter, FirestorePermissionError } from '@/firebase';
 import { addDoc, collection, serverTimestamp, setDoc, doc, query, where, deleteDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
+import { createUserAction } from '@/app/actions';
 
 
 export default function SchoolManagementPage() {
@@ -196,130 +196,33 @@ export default function SchoolManagementPage() {
     });
   };
 
- const handleCreateUser = async () => {
-    if (!newUser.role || !newUser.username || !firestore || !auth) {
+  const handleCreateUser = async () => {
+    if (!newUser.role || !newUser.username) {
       toast({ variant: 'destructive', title: 'त्रुटि', description: 'कृपया सभी आवश्यक फ़ील्ड भरें।' });
       return;
     }
-    
-    const generatePassword = () => Math.random().toString(36).slice(-8);
-
+  
+    // Prepare the data for the server action
+    const userData = {
+      ...newUser,
+      dob: newUser.dob ? format(newUser.dob, 'yyyy-MM-dd') : null,
+      admissionDate: newUser.admissionDate ? format(newUser.admissionDate, 'yyyy-MM-dd') : null,
+    };
+  
     try {
-      const parentUserId = `${newUser.role}_${Date.now()}`;
-      const parentPassword = generatePassword();
-      const parentEmail = `${parentUserId}@vidyalaya.com`;
-
-      const userCredential = await createUserWithEmailAndPassword(auth, parentEmail, parentPassword);
-      const user = userCredential.user;
-      
-      const userDocRef = doc(firestore, 'users', user.uid);
-
-      let userData: any = {
-        id: user.uid,
-        userId: parentUserId,
-        password: parentPassword,
-        username: newUser.username,
-        role: newUser.role,
-      };
-
-      if (newUser.role === 'teacher') {
-        userData = {
-          ...userData,
-          mobile: newUser.teacherMobile,
-          classSubject: `${newUser.teacherClass} - ${newUser.teacherSubject}`,
-        };
-      } else if (newUser.role === 'parent') {
-        userData = {
-          ...userData,
-          username: newUser.username,
-          fatherName: newUser.username,
-          motherName: newUser.motherName,
-          address: newUser.address,
-          mobile: newUser.studentMobile,
-        };
-        
-        if (!newUser.studentName) {
-            toast({ variant: 'destructive', title: 'त्रुटि', description: 'अभिभावक बनाते समय कृपया छात्र का नाम भरें।' });
-            return;
-        }
-        
-        try {
-            const studentUserId = `student_${Date.now()}`;
-            const studentPassword = generatePassword();
-            const studentEmail = `${studentUserId}@vidyalaya.com`;
-            const studentUserCredential = await createUserWithEmailAndPassword(auth, studentEmail, studentPassword);
-            const studentUser = studentUserCredential.user;
-            const studentDocRef = doc(firestore, 'users', studentUser.uid);
-            const studentData = {
-              id: studentUser.uid,
-              userId: studentUserId,
-              password: studentPassword,
-              username: newUser.studentName,
-              role: 'student',
-              class: newUser.studentClass,
-              subjects: newUser.studentSubjects,
-              fatherName: newUser.username, // Parent's name from the main form
-              motherName: newUser.motherName,
-              address: newUser.address,
-              dob: newUser.dob ? format(newUser.dob, 'yyyy-MM-dd') : null,
-              admissionDate: newUser.admissionDate ? format(newUser.admissionDate, 'yyyy-MM-dd') : null,
-              aadhaar: newUser.aadhaar,
-              pen: newUser.pen,
-              mobile: newUser.studentMobile,
-              rollNo: newUser.rollNo,
-              parentId: user.uid,
-            };
-            setDoc(studentDocRef, studentData).catch(error => {
-                const contextualError = new FirestorePermissionError({
-                    operation: 'create',
-                    path: studentDocRef.path,
-                    requestResourceData: studentData,
-                });
-                errorEmitter.emit('permission-error', contextualError);
-            });
-        } catch (studentError: any) {
-           console.error("Error creating student user:", studentError);
-           toast({ variant: 'destructive', title: 'त्रुटि', description: `मुख्य उपयोगकर्ता बनाया गया, लेकिन छात्र बनाने में विफल: ${studentError.message}` });
-           // We might need to handle cleanup of the parent user here
-        }
-      } else if (newUser.role === 'student') {
-         userData = {
-          ...userData,
-          username: newUser.username,
-          class: newUser.studentClass,
-          subjects: newUser.studentSubjects,
-          fatherName: newUser.parentName,
-          motherName: newUser.motherName,
-          address: newUser.address,
-          dob: newUser.dob ? format(newUser.dob, 'yyyy-MM-dd') : null,
-          admissionDate: newUser.admissionDate ? format(newUser.admissionDate, 'yyyy-MM-dd') : null,
-          aadhaar: newUser.aadhaar,
-          pen: newUser.pen,
-          mobile: newUser.studentMobile,
-          rollNo: newUser.rollNo,
-        };
+      const result = await createUserAction(userData);
+  
+      if (result.success) {
+        toast({ title: 'सफलता!', description: result.message });
+        setNewUser(initialNewUserState);
+        setIsUserDialogOpen(false);
+      } else {
+        // The server action will return a specific error message
+        toast({ variant: 'destructive', title: 'त्रुटि', description: result.message });
       }
-      
-      setDoc(userDocRef, userData).catch(error => {
-          const contextualError = new FirestorePermissionError({
-              operation: 'create',
-              path: userDocRef.path,
-              requestResourceData: userData,
-          });
-          errorEmitter.emit('permission-error', contextualError);
-      });
-
-      toast({ title: 'सफलता!', description: 'नया उपयोगकर्ता सफलतापूर्वक बनाया गया।' });
-      setNewUser(initialNewUserState);
-      setIsUserDialogOpen(false);
-
     } catch (error: any) {
-      if (error.code === 'auth/email-already-in-use') {
-        toast({ variant: 'destructive', title: 'त्रुटि', description: 'यह यूजर आईडी पहले से मौजूद है।' });
-      } else if (error.code !== 'auth/user-not-found' && error.code !== 'auth/wrong-password' && error.code !== 'auth/invalid-credential') {
-        // We don't toast for permission errors, as they are handled globally
-        toast({ variant: 'destructive', title: 'त्रुटि', description: `उपयोगकर्ता बनाने में विफल: ${error.message}` });
-      }
+      console.error("Error calling createUserAction:", error);
+      toast({ variant: 'destructive', title: 'त्रुटि', description: 'उपयोगकर्ता बनाने में एक अप्रत्याशित त्रुटि हुई।' });
     }
   };
   
