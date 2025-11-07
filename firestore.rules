@@ -36,7 +36,7 @@ service cloud.firestore {
      */
     match /notices/{noticeId} {
       allow read: if true;
-      allow write: if isSignedIn() && getRole(request.auth.uid) == 'admin';
+      allow create, update, delete: if isSignedIn() && getRole(request.auth.uid) == 'admin';
     }
     
     /**
