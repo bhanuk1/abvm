@@ -1,7 +1,7 @@
 'use server';
 
 import { redirect } from 'next/navigation';
-import { getApps, initializeApp, cert } from 'firebase-admin/app';
+import { getApps, initializeApp, cert, App } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import { getFirestore } from 'firebase-admin/firestore';
 
@@ -11,16 +11,21 @@ const serviceAccount = {
   "projectId": "studio-4261181557-cfba9",
   "privateKey": process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
   "clientEmail": "firebase-adminsdk-yl2in@studio-4261181557-cfba9.iam.gserviceaccount.com"
+};
+
+let app: App;
+if (getApps().length === 0) {
+  if (serviceAccount.privateKey) {
+    app = initializeApp({
+      credential: cert(serviceAccount),
+    });
+  } else {
+    console.error("Firebase Admin initialization failed: private_key is not available.");
+  }
+} else {
+  app = getApps()[0];
 }
 
-const app = !getApps().length
-  ? initializeApp({
-      credential: cert(serviceAccount),
-    })
-  : getApps()[0];
-
-const auth = getAuth(app);
-const firestore = getFirestore(app);
 
 export async function handleLogin(role: string) {
     if (role === 'admin') {
@@ -40,6 +45,14 @@ export async function handleLogin(role: string) {
 
 export async function createUserAction(userData: any) {
     'use server';
+
+    if (!app) {
+        const message = 'सर्वर एक्शन कॉन्फ़िगर नहीं है। फायरबेस एडमिन प्रारंभ करने में विफल।';
+        console.error(message);
+        return { success: false, message: message };
+    }
+    const auth = getAuth(app);
+    const firestore = getFirestore(app);
     
     const generatePassword = () => Math.random().toString(36).slice(-8);
 
