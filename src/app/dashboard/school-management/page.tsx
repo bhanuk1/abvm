@@ -336,7 +336,7 @@ export default function SchoolManagementPage() {
 
     let resultMarks;
     if (selectedExamType === 'monthly') {
-        if (!marks.hasOwnProperty('monthly-obtained') || !marks.hasOwnProperty('monthly-total')) {
+        if (!marks['monthly-obtained'] || !marks['monthly-total']) {
             toast({ variant: 'destructive', title: 'त्रुटि', description: 'कृपया मासिक परीक्षा के अंक भरें।' });
             return;
         }
