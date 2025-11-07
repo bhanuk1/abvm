@@ -65,6 +65,48 @@
         "createdAt",
         "role"
       ]
+    },
+    "Fee": {
+      "title": "Fee",
+      "type": "object",
+      "description": "Represents a quarterly fee payment for a student.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Fee entity."
+        },
+        "studentId": {
+          "type": "string",
+          "description": "The ID of the student."
+        },
+        "studentName": {
+            "type": "string",
+            "description": "The name of the student."
+        },
+        "class": {
+            "type": "string",
+            "description": "The class of the student."
+        },
+        "quarter": {
+          "type": "string",
+          "description": "The quarter for which the fee is for (e.g., q1, q2, q3, q4)."
+        },
+        "amount": {
+          "type": "number",
+          "description": "The amount of the fee."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["Paid", "Unpaid"],
+          "description": "The payment status of the fee."
+        },
+        "paymentDate": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The date the fee was paid."
+        }
+      },
+      "required": ["id", "studentId", "class", "quarter", "amount", "status"]
     }
   },
   "auth": {
@@ -106,8 +148,26 @@
             }
           ]
         }
+      },
+      {
+        "path": "/fees/{feeId}",
+        "definition": {
+          "entityName": "Fee",
+          "schema": {
+            "$ref": "#/backend/entities/Fee"
+          },
+          "description": "Stores student fee payment records.",
+          "params": [
+            {
+              "name": "feeId",
+              "description": "The unique identifier of the fee record."
+            }
+          ]
+        }
       }
     ],
-    "reasoning": "The Firestore structure is designed to securely manage users and notices for the Vidyalaya Connect application, prioritizing authorization independence and clear security rules. User data is stored in a dedicated collection (`/users/{userId}`) with path-based ownership, ensuring only the user can access their own data. Notices are stored in a top-level `notices` collection for easy querying across the app. Security rules will filter notices based on the logged-in user's role and the `role` property on the notice document itself, ensuring users only see relevant announcements."
+    "reasoning": "The Firestore structure is designed to securely manage users and notices for the Vidyalaya Connect application, prioritizing authorization independence and clear security rules. User data is stored in a dedicated collection (`/users/{userId}`) with path-based ownership, ensuring only the user can access their own data. Notices are stored in a top-level `notices` collection for easy querying across the app. Security rules will filter notices based on the logged-in user's role and the `role` property on the notice document itself, ensuring users only see relevant announcements. A new 'fees' collection is added to manage student fee payments."
   }
 }
+
+    

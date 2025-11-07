@@ -23,7 +23,7 @@ import {
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Eye, EyeOff, UserPlus, Calendar as CalendarIcon, PlusCircle, FileDown, Printer, GraduationCap, Phone, Home, User as UserIcon } from 'lucide-react';
+import { Eye, EyeOff, UserPlus, Calendar as CalendarIcon, PlusCircle, FileDown, Printer, GraduationCap, Phone, Home, User as UserIcon, DollarSign } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -57,9 +57,10 @@ import {
   classSubjects,
   attendance as initialAttendance,
   type Attendance,
+  type Fee,
 } from '@/lib/school-data';
 import { useCollection, useFirestore, useUser, useMemoFirebase, useAuth, errorEmitter, FirestorePermissionError } from '@/firebase';
-import { addDoc, collection, serverTimestamp, setDoc, doc, query, where, deleteDoc, getDocs } from 'firebase/firestore';
+import { addDoc, collection, serverTimestamp, setDoc, doc, query, where, deleteDoc, getDocs, updateDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 
@@ -122,6 +123,16 @@ export default function SchoolManagementPage() {
   const [marksheetClass, setMarksheetClass] = React.useState('');
   const [marksheetExam, setMarksheetExam] = React.useState('');
   const [classMarksheets, setClassMarksheets] = React.useState<any[]>([]);
+
+  const [feeClass, setFeeClass] = React.useState('');
+  const [feeStudent, setFeeStudent] = React.useState('');
+
+  const feesQuery = useMemoFirebase(
+    () => firestore && feeStudent ? query(collection(firestore, 'fees'), where('studentId', '==', feeStudent)) : null,
+    [firestore, feeStudent]
+  );
+  const { data: studentFees } = useCollection<Fee>(feesQuery);
+
 
   React.useEffect(() => {
     // Set date on client-side only to avoid hydration mismatch
@@ -600,6 +611,56 @@ export default function SchoolManagementPage() {
     window.print();
   };
 
+  const academicYearQuarters = [
+    { id: 'q1', label: 'अप्रैल - जून', amount: 1200 },
+    { id: 'q2', label: 'जुलाई - सितंबर', amount: 1200 },
+    { id: 'q3', label: 'अक्टूबर - दिसंबर', amount: 1200 },
+    { id: 'q4', label: 'जनवरी - मार्च', amount: 1200 },
+  ];
+
+  const getFeeStatusForQuarter = (quarterId: string) => {
+    if (!studentFees) return { status: 'अदत्त' };
+    const feeRecord = studentFees.find(f => f.quarter === quarterId);
+    return feeRecord
+      ? { status: feeRecord.status, paymentDate: feeRecord.paymentDate, id: feeRecord.id }
+      : { status: 'अदत्त' };
+  };
+
+  const handlePayFee = async (quarterId: string, amount: number) => {
+    if (!firestore || !feeStudent || !feeClass || !students) return;
+    
+    const student = students.find(s => s.id === feeStudent);
+    if (!student) return;
+
+    const quarterData = getFeeStatusForQuarter(quarterId);
+
+    try {
+      if (quarterData.id) {
+        // Update existing fee record
+        const feeDocRef = doc(firestore, 'fees', quarterData.id);
+        await updateDoc(feeDocRef, {
+          status: 'जमा',
+          paymentDate: serverTimestamp()
+        });
+      } else {
+        // Create new fee record
+        const feeColRef = collection(firestore, 'fees');
+        await addDoc(feeColRef, {
+          studentId: feeStudent,
+          studentName: student.username,
+          class: feeClass,
+          quarter: quarterId,
+          amount: amount,
+          status: 'जमा',
+          paymentDate: serverTimestamp()
+        });
+      }
+      toast({ title: 'सफलता!', description: 'फीस सफलतापूर्वक जमा हो गई है।' });
+    } catch(e) {
+        toast({ variant: 'destructive', title: 'त्रुटि', description: 'फीस जमा करने में विफल।'});
+    }
+  };
+
 
   const classes = ['Nursery', 'KG', ...Array.from({length: 12}, (_, i) => (i + 1).toString())];
   const examTypes = [
@@ -673,11 +734,12 @@ export default function SchoolManagementPage() {
       <Card>
         <Tabs defaultValue="user-management">
           <CardHeader className="p-2 md:p-4">
-            <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-9">
+            <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-10">
               <TabsTrigger value="user-management">उपयोगकर्ता</TabsTrigger>
               <TabsTrigger value="student-management">छात्र</TabsTrigger>
               <TabsTrigger value="notice-management">सूचना</TabsTrigger>
               <TabsTrigger value="result-management">परिणाम</TabsTrigger>
+              <TabsTrigger value="fee-management">फीस प्रबंधन</TabsTrigger>
               <TabsTrigger value="id-cards">आई-कार्ड</TabsTrigger>
               <TabsTrigger value="marksheets">मार्कशीट</TabsTrigger>
               <TabsTrigger value="reports">छात्र रिपोर्ट</TabsTrigger>
@@ -1160,6 +1222,82 @@ export default function SchoolManagementPage() {
               </div>
             </CardContent>
           </TabsContent>
+          <TabsContent value="fee-management">
+            <CardHeader>
+              <CardTitle>फीस प्रबंधन</CardTitle>
+              <CardDescription>त्रैमासिक छात्र फीस जमा करें और ट्रैक करें।</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
+                <div className="space-y-2">
+                  <Label htmlFor="fee-class">कक्षा</Label>
+                  <Select value={feeClass} onValueChange={(value) => { setFeeClass(value); setFeeStudent(''); }}>
+                    <SelectTrigger id="fee-class">
+                      <SelectValue placeholder="कक्षा चुनें" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {classes.map(c => <SelectItem key={c} value={c}>कक्षा {c}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="fee-student">छात्र</Label>
+                  <Select value={feeStudent} onValueChange={setFeeStudent} disabled={!feeClass}>
+                    <SelectTrigger id="fee-student">
+                      <SelectValue placeholder="छात्र चुनें" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {students && students.filter(s => s.class === feeClass).map(s => <SelectItem key={s.id} value={s.id}>{s.username} (रोल नं. {s.rollNo})</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              {feeStudent && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>शुल्क स्थिति</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>तिमाही</TableHead>
+                          <TableHead>राशि (₹)</TableHead>
+                          <TableHead>स्थिति</TableHead>
+                          <TableHead>भुगतान तिथि</TableHead>
+                          <TableHead className="text-right">कार्य</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {academicYearQuarters.map(q => {
+                          const feeInfo = getFeeStatusForQuarter(q.id);
+                          const isPaid = feeInfo.status === 'जमा';
+                          return (
+                            <TableRow key={q.id}>
+                              <TableCell className="font-medium">{q.label}</TableCell>
+                              <TableCell>{q.amount}</TableCell>
+                              <TableCell>
+                                <Badge variant={isPaid ? 'default' : 'destructive'} className={isPaid ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}>
+                                  {feeInfo.status}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>{feeInfo.paymentDate ? format(feeInfo.paymentDate.toDate(), 'dd/MM/yyyy') : '-'}</TableCell>
+                              <TableCell className="text-right">
+                                <Button size="sm" disabled={isPaid} onClick={() => handlePayFee(q.id, q.amount)}>
+                                  <DollarSign className="mr-2 h-4 w-4" />
+                                  फीस जमा करें
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          )
+                        })}
+                      </TableBody>
+                    </Table>
+                  </CardContent>
+                </Card>
+              )}
+            </CardContent>
+          </TabsContent>
           <TabsContent value="id-cards">
             <CardHeader>
               <CardTitle>आई-कार्ड जेनरेटर</CardTitle>
@@ -1537,4 +1675,5 @@ export default function SchoolManagementPage() {
   );
 }
 
+    
     

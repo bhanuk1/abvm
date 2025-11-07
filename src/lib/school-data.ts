@@ -1,4 +1,5 @@
 import type { Notice } from './placeholder-data';
+import type { Timestamp } from 'firebase/firestore';
 
 export const initialStudents = [];
 
@@ -13,6 +14,17 @@ export interface Result {
 }
 
 export const results: Result[] = [];
+
+export interface Fee {
+  id: string;
+  studentId: string;
+  studentName: string;
+  class: string;
+  quarter: string;
+  amount: number;
+  status: 'जमा' | 'अदत्त';
+  paymentDate?: Timestamp;
+}
 
 export const initialNewUserState = {
     role: '',
@@ -112,3 +124,5 @@ export interface Attendance {
 export const attendance: Attendance[] = [];
 
 export const allNotices: Notice[] = [];
+
+    

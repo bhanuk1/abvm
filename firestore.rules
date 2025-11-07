@@ -74,5 +74,18 @@ service cloud.firestore {
         allow read: if isSignedIn() && (getUserData(request.auth.uid).role in ['admin', 'teacher'] || isOwner(resource.data.studentId));
         allow list: if isSignedIn();
      }
+
+    /**
+     * @description Controls access to fee records.
+     * - Admins and Teachers can read/write all fee records.
+     * - Parents and Students can only read fee records linked to their own ID.
+     */
+    match /fees/{feeId} {
+      allow write: if isSignedIn() && getUserData(request.auth.uid).role in ['admin', 'teacher'];
+      allow read: if isSignedIn() && (getUserData(request.auth.uid).role in ['admin', 'teacher'] || isOwner(resource.data.studentId));
+      allow list: if isSignedIn() && getUserData(request.auth.uid).role in ['admin', 'teacher'];
+    }
   }
 }
+
+    
