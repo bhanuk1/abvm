@@ -51,12 +51,13 @@ service cloud.firestore {
 
     /**
      * @description Controls access to student results.
-     * - Admins and Teachers can read/write all results.
-     * - Parents and Students can only read results where their ID matches the studentId.
+     * - Admins and Teachers can create results.
+     * - Admins, Teachers, Parents and Students can only read/update/delete results where their ID matches the studentId.
      * - List is open to signed in users, client will filter.
      */
     match /results/{resultId} {
-        allow read, write: if isSignedIn() && (canManageUsers() || isOwner(resource.data.studentId));
+        allow create: if isSignedIn() && canManageUsers();
+        allow read, update, delete: if isSignedIn() && (canManageUsers() || isOwner(resource.data.studentId));
         allow list: if isSignedIn();
     }
 
