@@ -58,7 +58,7 @@ import {
   type Attendance,
 } from '@/lib/school-data';
 import { useCollection, useFirestore, useUser, useMemoFirebase, useAuth, errorEmitter, FirestorePermissionError } from '@/firebase';
-import { addDoc, collection, serverTimestamp, setDoc, doc, query, where } from 'firebase/firestore';
+import { addDoc, collection, serverTimestamp, setDoc, doc, query, where, deleteDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 
 
@@ -173,6 +173,18 @@ export default function SchoolManagementPage() {
     
     setNewNotice({ title: '', content: '', role: 'All' });
     setIsNoticeDialogOpen(false);
+  };
+
+  const handleDeleteNotice = (noticeId: string) => {
+    if (!firestore) return;
+    const noticeDoc = doc(firestore, 'notices', noticeId);
+    deleteDoc(noticeDoc).catch(error => {
+        const contextualError = new FirestorePermissionError({
+            operation: 'delete',
+            path: noticeDoc.path
+        });
+        errorEmitter.emit('permission-error', contextualError);
+    });
   };
 
  const handleCreateUser = async () => {
@@ -745,6 +757,9 @@ export default function SchoolManagementPage() {
                                     mode="single"
                                     selected={newUser.admissionDate}
                                     onSelect={(date) => handleDateChange('admissionDate', date)}
+                                    captionLayout="dropdown-nav"
+                                    fromYear={new Date().getFullYear() - 10}
+                                    toYear={new Date().getFullYear()}
                                     initialFocus
                                 />
                                 </PopoverContent>
@@ -927,8 +942,8 @@ export default function SchoolManagementPage() {
                       <p className="text-xs text-muted-foreground mt-2">{notice.createdAt ? format(notice.createdAt.toDate(), 'dd/MM/yyyy') : ''} - {notice.author}</p>
                     </div>
                     <div className="flex items-center gap-2 absolute top-4 right-4">
-                        <Button variant="outline" size="sm" className="bg-amber-100 text-amber-800">उच्च</Button>
-                        <Button variant="destructive" size="sm">हटाएं</Button>
+                        <Button variant="outline" size="sm" className="bg-amber-100 text-amber-800">संपादित करें</Button>
+                        <Button variant="destructive" size="sm" onClick={() => handleDeleteNotice(notice.id)}>हटाएं</Button>
                     </div>
                   </div>
                 </div>
@@ -1286,3 +1301,5 @@ export default function SchoolManagementPage() {
     </div>
   );
 }
+
+    
