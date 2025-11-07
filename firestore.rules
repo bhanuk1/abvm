@@ -25,7 +25,7 @@ service cloud.firestore {
      * - An admin or teacher can create a user profile.
      */
     match /users/{userId} {
-      allow read: if isSignedIn() && (isOwner(userId) || getUserData(request.auth.uid).role in ['admin', 'teacher']);
+      allow read: if isSignedIn();
       allow update, delete: if isSignedIn() && (isOwner(userId) || getUserData(request.auth.uid).role in ['admin', 'teacher']);
       allow create: if isSignedIn() && getUserData(request.auth.uid).role in ['admin', 'teacher'];
       allow list: if isSignedIn();
