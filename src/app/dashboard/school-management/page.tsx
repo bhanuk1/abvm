@@ -338,7 +338,11 @@ export default function SchoolManagementPage() {
     if (selectedExamType === 'monthly') {
         if (
             marks['monthly-obtained'] === undefined ||
-            marks['monthly-total'] === undefined
+            marks['monthly-obtained'] === null ||
+            marks['monthly-obtained'].trim() === '' ||
+            marks['monthly-total'] === undefined ||
+            marks['monthly-total'] === null ||
+            marks['monthly-total'].trim() === ''
         ) {
             toast({ variant: 'destructive', title: 'त्रुटि', description: 'कृपया मासिक परीक्षा के अंक भरें।' });
             return;
