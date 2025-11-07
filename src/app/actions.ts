@@ -13,17 +13,18 @@ const serviceAccount = {
   "clientEmail": "firebase-adminsdk-yl2in@studio-4261181557-cfba9.iam.gserviceaccount.com"
 };
 
-let app: App;
-if (getApps().length === 0) {
-  if (serviceAccount.privateKey) {
-    app = initializeApp({
-      credential: cert(serviceAccount),
-    });
-  } else {
-    console.error("Firebase Admin initialization failed: private_key is not available.");
-  }
-} else {
-  app = getApps()[0];
+function getAdminApp(): App {
+    if (getApps().length > 0) {
+        return getApps()[0];
+    }
+
+    if (serviceAccount.privateKey) {
+        return initializeApp({
+            credential: cert(serviceAccount),
+        });
+    }
+
+    throw new Error("Firebase Admin initialization failed: private_key is not available.");
 }
 
 
@@ -45,12 +46,16 @@ export async function handleLogin(role: string) {
 
 export async function createUserAction(userData: any) {
     'use server';
-
-    if (!app) {
+    
+    let app: App;
+    try {
+        app = getAdminApp();
+    } catch (error: any) {
         const message = 'सर्वर एक्शन कॉन्फ़िगर नहीं है। फायरबेस एडमिन प्रारंभ करने में विफल।';
-        console.error(message);
+        console.error(message, error.message);
         return { success: false, message: message };
     }
+
     const auth = getAuth(app);
     const firestore = getFirestore(app);
     
