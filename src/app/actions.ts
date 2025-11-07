@@ -9,7 +9,7 @@ import { getFirestore } from 'firebase-admin/firestore';
 // This is a service account and should only be used in server environments.
 const serviceAccount = {
   "projectId": "studio-4261181557-cfba9",
-  "privateKey": process.env.FIREBASE_PRIVATE_KEY,
+  "privateKey": process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
   "clientEmail": "firebase-adminsdk-yl2in@studio-4261181557-cfba9.iam.gserviceaccount.com"
 }
 
