@@ -758,7 +758,7 @@ export default function SchoolManagementPage() {
                                     selected={newUser.admissionDate}
                                     onSelect={(date) => handleDateChange('admissionDate', date)}
                                     captionLayout="dropdown-nav"
-                                    fromYear={new Date().getFullYear() - 10}
+                                    fromYear={new Date().getFullYear() - 20}
                                     toYear={new Date().getFullYear()}
                                     initialFocus
                                 />
