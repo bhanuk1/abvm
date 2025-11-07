@@ -91,7 +91,6 @@ export default function SchoolManagementPage() {
   const [isNoticeDialogOpen, setIsNoticeDialogOpen] = React.useState(false);
 
   const [passwordVisibility, setPasswordVisibility] = React.useState<{[key: string]: boolean}>({});
-  const [studentPasswordVisibility, setStudentPasswordVisibility] = React.useState<{[key: string]: boolean}>({});
 
   const [newUser, setNewUser] = React.useState<any>(initialNewUserState);
   const [newNotice, setNewNotice] = React.useState({ title: '', content: '', role: 'All' as Notice['role'] });
@@ -197,20 +196,27 @@ export default function SchoolManagementPage() {
   };
 
  const handleCreateUser = async () => {
-    if (!newUser.role || !newUser.userId || !newUser.password || !firestore || !auth) {
+    if (!newUser.role || !newUser.username || !firestore || !auth) {
       toast({ variant: 'destructive', title: 'त्रुटि', description: 'कृपया सभी आवश्यक फ़ील्ड भरें।' });
       return;
     }
+    
+    const generatePassword = () => Math.random().toString(36).slice(-8);
 
     try {
-      const email = `${newUser.userId}@vidyalaya.com`;
-      const userCredential = await createUserWithEmailAndPassword(auth, email, newUser.password);
+      const parentUserId = `${newUser.role}_${Date.now()}`;
+      const parentPassword = generatePassword();
+      const parentEmail = `${parentUserId}@vidyalaya.com`;
+
+      const userCredential = await createUserWithEmailAndPassword(auth, parentEmail, parentPassword);
       const user = userCredential.user;
       
       const userDocRef = doc(firestore, 'users', user.uid);
 
       let userData: any = {
         id: user.uid,
+        userId: parentUserId,
+        password: parentPassword,
         username: newUser.username,
         role: newUser.role,
       };
@@ -231,18 +237,22 @@ export default function SchoolManagementPage() {
           mobile: newUser.studentMobile,
         };
         
-        if (!newUser.studentUserId || !newUser.studentPassword) {
-            toast({ variant: 'destructive', title: 'त्रुटि', description: 'अभिभावक बनाते समय कृपया छात्र का यूजर आईडी और पासवर्ड भरें।' });
+        if (!newUser.studentName) {
+            toast({ variant: 'destructive', title: 'त्रुटि', description: 'अभिभावक बनाते समय कृपया छात्र का नाम भरें।' });
             return;
         }
         
         try {
-            const studentEmail = `${newUser.studentUserId}@vidyalaya.com`;
-            const studentUserCredential = await createUserWithEmailAndPassword(auth, studentEmail, newUser.studentPassword);
+            const studentUserId = `student_${Date.now()}`;
+            const studentPassword = generatePassword();
+            const studentEmail = `${studentUserId}@vidyalaya.com`;
+            const studentUserCredential = await createUserWithEmailAndPassword(auth, studentEmail, studentPassword);
             const studentUser = studentUserCredential.user;
             const studentDocRef = doc(firestore, 'users', studentUser.uid);
             const studentData = {
               id: studentUser.uid,
+              userId: studentUserId,
+              password: studentPassword,
               username: newUser.studentName,
               role: 'student',
               class: newUser.studentClass,
@@ -318,13 +328,6 @@ export default function SchoolManagementPage() {
         [id]: !prev[id]
     }));
   };
-
-  const toggleStudentPasswordVisibility = (id: string) => {
-    setStudentPasswordVisibility(prev => ({
-        ...prev,
-        [id]: !prev[id]
-    }));
-  };
   
   const handleAddResult = async () => {
     if (!selectedResultClass || !selectedResultStudent || !selectedExamType || !students || !firestore) {
@@ -341,7 +344,6 @@ export default function SchoolManagementPage() {
     let resultMarks;
 
     if (selectedExamType === 'monthly') {
-        // New robust validation for monthly test
         if (
             monthlyObtained === undefined ||
             monthlyObtained === null ||
@@ -641,14 +643,6 @@ export default function SchoolManagementPage() {
                       <Label htmlFor="username" className="text-right">नाम</Label>
                       <Input id="username" value={newUser.username || ''} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" />
                     </div>
-                     <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="userId" className="text-right">यूजर आईडी</Label>
-                      <Input id="userId" value={newUser.userId || ''} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" placeholder="जैसे: teacher01, parent01" />
-                    </div>
-                     <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="password" className="text-right">पासवर्ड</Label>
-                      <Input id="password" type="password" value={newUser.password || ''} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" />
-                    </div>
 
                     {newUser.role === 'teacher' && (
                       <>
@@ -695,20 +689,12 @@ export default function SchoolManagementPage() {
                             <Label htmlFor="studentName" className="text-right">छात्र का नाम</Label>
                             <Input id="studentName" value={newUser.studentName || ''} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" />
                           </div>
-                          <div className="grid grid-cols-4 items-center gap-4">
-                              <Label htmlFor="studentUserId" className="text-right">छात्र यूजर आईडी</Label>
-                              <Input id="studentUserId" value={newUser.studentUserId || ''} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" />
-                          </div>
-                          <div className="grid grid-cols-4 items-center gap-4">
-                              <Label htmlFor="studentPassword" className="text-right">छात्र पासवर्ड</Label>
-                              <Input id="studentPassword" type="password" value={newUser.studentPassword || ''} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" />
-                          </div>
                         </>
                         )}
                         <h4 className="col-span-4 font-semibold text-md border-b pb-2 mt-4 mb-2">छात्र अकादमिक विवरण</h4>
                         <div className="grid grid-cols-4 items-center gap-4">
                           <Label htmlFor="rollNo" className="text-right">रोल नंबर</Label>
-                          <Input id="rollNo" value={newUser.rollNo || ''} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" readOnly />
+                          <Input id="rollNo" value={newUser.rollNo || ''} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" readOnly placeholder="कक्षा चुनने पर ऑटो-जेनरेट होगा" />
                         </div>
                         <div className="grid grid-cols-4 items-center gap-4">
                           <Label htmlFor="studentClass" className="text-right">कक्षा</Label>
@@ -809,43 +795,45 @@ export default function SchoolManagementPage() {
                   <TableRow>
                     <TableHead>नाम</TableHead>
                     <TableHead>भूमिका</TableHead>
+                    <TableHead>यूजर आईडी</TableHead>
+                    <TableHead>पासवर्ड</TableHead>
                     <TableHead>मोबाइल</TableHead>
                     <TableHead>कक्षा/विषय</TableHead>
-                    <TableHead>यूज़र आईडी</TableHead>
                     <TableHead>कार्य</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {usersLoading && <TableRow><TableCell colSpan={6} className="text-center">Loading...</TableCell></TableRow>}
-                  {users && users.filter(u => u.role !== 'student').map((user) => (
+                  {usersLoading && <TableRow><TableCell colSpan={7} className="text-center">Loading...</TableCell></TableRow>}
+                  {users && users.filter(u => u.role !== 'student' && u.role !== 'admin').map((user) => (
                     <TableRow key={user.id}>
                       <TableCell className="font-medium">{user.username}</TableCell>
                       <TableCell>
                         <Badge
                           variant={
-                            user.role === 'teacher' ? 'secondary' : user.role === 'admin' ? 'default' : 'outline'
+                            user.role === 'teacher' ? 'secondary' : 'outline'
                           }
                           className={
                             user.role === 'teacher'
                               ? 'bg-blue-100 text-blue-800'
-                              : user.role === 'admin'
-                              ? 'bg-primary/10 text-primary'
                               : 'bg-amber-100 text-amber-800'
                           }
                         >
                           {user.role}
                         </Badge>
                       </TableCell>
+                      <TableCell>{user.userId}</TableCell>
+                      <TableCell className="flex items-center gap-2">
+                        <span>{passwordVisibility[user.id] ? user.password : '••••••••'}</span>
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => togglePasswordVisibility(user.id)}>
+                            {passwordVisibility[user.id] ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}
+                        </Button>
+                      </TableCell>
                       <TableCell>{user.mobile || '-'}</TableCell>
                       <TableCell>{user.classSubject || '-'}</TableCell>
-                      <TableCell>{user.id.substring(0, 10)}...</TableCell>
                       <TableCell>
-                        <Button variant="link" className="p-0 h-auto text-primary">
-                          पासवर्ड रीसेट
-                        </Button>
                         <Button
                           variant="link"
-                          className="p-0 h-auto text-destructive ml-4"
+                          className="p-0 h-auto text-destructive"
                         >
                           हटाएं
                         </Button>
@@ -868,28 +856,32 @@ export default function SchoolManagementPage() {
                     <TableHead>नाम</TableHead>
                     <TableHead>कक्षा</TableHead>
                     <TableHead>पिता का नाम</TableHead>
+                    <TableHead>यूजर आईडी</TableHead>
+                    <TableHead>पासवर्ड</TableHead>
                     <TableHead>मोबाइल</TableHead>
-                    <TableHead>लॉगिन आईडी</TableHead>
                     <TableHead>कार्य</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {studentsLoading && <TableRow><TableCell colSpan={7} className="text-center">Loading...</TableCell></TableRow>}
+                  {studentsLoading && <TableRow><TableCell colSpan={8} className="text-center">Loading...</TableCell></TableRow>}
                   {students && students.map((student) => (
                     <TableRow key={student.id}>
                       <TableCell className="font-medium">{student.rollNo}</TableCell>
                       <TableCell>{student.username}</TableCell>
                       <TableCell>{student.class}</TableCell>
                       <TableCell>{student.fatherName}</TableCell>
-                      <TableCell>{student.mobile}</TableCell>
-                      <TableCell>{student.id.substring(0,10)}...</TableCell>
-                       <TableCell>
-                        <Button variant="link" className="p-0 h-auto text-primary">
-                          पासवर्ड रीसेट
+                      <TableCell>{student.userId}</TableCell>
+                       <TableCell className="flex items-center gap-2">
+                        <span>{passwordVisibility[student.id] ? student.password : '••••••••'}</span>
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => togglePasswordVisibility(student.id)}>
+                            {passwordVisibility[student.id] ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}
                         </Button>
+                      </TableCell>
+                      <TableCell>{student.mobile}</TableCell>
+                       <TableCell>
                         <Button
                           variant="link"
-                          className="p-0 h-auto text-destructive ml-4"
+                          className="p-0 h-auto text-destructive"
                         >
                           हटाएं
                         </Button>
@@ -1326,3 +1318,5 @@ export default function SchoolManagementPage() {
     </div>
   );
 }
+
+    
