@@ -350,7 +350,14 @@ export default function SchoolManagementPage() {
     let resultMarks;
 
     if (selectedExamType === 'monthly') {
-        if (!monthlyObtained || !monthlyTotal) {
+        if (
+            monthlyObtained === undefined ||
+            monthlyObtained === null ||
+            String(monthlyObtained).trim() === '' ||
+            monthlyTotal === undefined ||
+            monthlyTotal === null ||
+            String(monthlyTotal).trim() === ''
+        ) {
             toast({ variant: 'destructive', title: 'त्रुटि', description: 'कृपया मासिक टेस्ट के अंक भरें।' });
             return;
         }
@@ -586,6 +593,10 @@ export default function SchoolManagementPage() {
   };
   
   const handlePrintIdCards = () => {
+    if (!idCardClass) {
+        alert('कृपया पहले प्रिंट करने के लिए एक कक्षा चुनें।');
+        return;
+    }
     window.print();
   };
 
@@ -1167,7 +1178,7 @@ export default function SchoolManagementPage() {
                     </SelectContent>
                   </Select>
                 </div>
-                <Button onClick={handlePrintIdCards} disabled={!idCardClass}>
+                <Button onClick={handlePrintIdCards}>
                   <Printer className="mr-2" /> प्रिंट करें
                 </Button>
               </div>
