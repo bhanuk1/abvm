@@ -729,7 +729,7 @@ export default function SchoolManagementPage() {
                                     mode="single"
                                     selected={newUser.dob}
                                     onSelect={(date) => handleDateChange('dob', date)}
-                                    captionLayout="dropdown-nav"
+                                    captionLayout="dropdown"
                                     fromYear={1980}
                                     toYear={new Date().getFullYear()}
                                     initialFocus
@@ -757,7 +757,7 @@ export default function SchoolManagementPage() {
                                     mode="single"
                                     selected={newUser.admissionDate}
                                     onSelect={(date) => handleDateChange('admissionDate', date)}
-                                    captionLayout="dropdown-nav"
+                                    captionLayout="dropdown"
                                     fromYear={new Date().getFullYear() - 20}
                                     toYear={new Date().getFullYear()}
                                     initialFocus
