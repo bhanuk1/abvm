@@ -344,7 +344,7 @@ export default function SchoolManagementPage() {
             marks['monthly-total'] === null ||
             String(marks['monthly-total']).trim() === ''
         ) {
-            toast({ variant: 'destructive', title: 'त्रुटि', description: 'कृपया मासिक परीक्षा के अंक भरें।' });
+            toast({ variant: 'destructive', title: 'त्रुटि', description: 'कृपया मासिक टेस्ट के अंक भरें।' });
             return;
         }
         resultMarks = {
@@ -552,7 +552,7 @@ export default function SchoolManagementPage() {
 
   const classes = ['Nursery', 'KG', ...Array.from({length: 12}, (_, i) => (i + 1).toString())];
   const examTypes = [
-    { value: 'monthly', label: 'मासिक परीक्षा' },
+    { value: 'monthly', label: 'मासिक टेस्ट' },
     { value: 'quarterly', label: 'त्रैमासिक परीक्षा' },
     { value: 'half-yearly', label: 'अर्धवार्षिक परीक्षा' },
     { value: 'final', label: 'वार्षिक परीक्षा' },
