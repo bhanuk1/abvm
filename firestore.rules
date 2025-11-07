@@ -18,18 +18,22 @@ service cloud.firestore {
       return get(/databases/$(database)/documents/users/$(uid)).data.role;
     }
 
-    function isAdmin() {
-      return isSignedIn() && getRole(request.auth.uid) == 'admin';
+    function canManageUsers() {
+      if (!isSignedIn()) {
+        return false;
+      }
+      let userRole = getRole(request.auth.uid);
+      return userRole == 'admin' || userRole == 'teacher';
     }
 
     /**
      * @description Controls access to user profiles.
      * - A user can read/write their own profile.
-     * - An admin can read/write any profile.
+     * - An admin or teacher can create/read/write any profile.
      * - Any authenticated user can list users (client-side filters apply).
      */
     match /users/{userId} {
-      allow read, write: if isSignedIn() && (isOwner(userId) || isAdmin());
+      allow read, write: if isSignedIn() && (isOwner(userId) || canManageUsers());
       allow list: if isSignedIn();
     }
 
@@ -42,7 +46,7 @@ service cloud.firestore {
     match /notices/{noticeId} {
       allow read: if true;
       allow create: if isSignedIn();
-      allow update, delete: if isAdmin();
+      allow update, delete: if canManageUsers() && getRole(request.auth.uid) == 'admin';
     }
 
     /**
@@ -52,7 +56,7 @@ service cloud.firestore {
      * - List is open to signed in users, client will filter.
      */
     match /results/{resultId} {
-        allow read, write: if isSignedIn() && (isAdmin() || getRole(request.auth.uid) == 'teacher' || isOwner(resource.data.studentId));
+        allow read, write: if isSignedIn() && (canManageUsers() || isOwner(resource.data.studentId));
         allow list: if isSignedIn();
     }
 
@@ -64,7 +68,7 @@ service cloud.firestore {
     match /homeworks/{homeworkId} {
         allow read: if isSignedIn();
         allow list: if isSignedIn();
-        allow write: if isSignedIn() && (isAdmin() || getRole(request.auth.uid) == 'teacher');
+        allow write: if isSignedIn() && canManageUsers();
     }
 
     /**
@@ -74,7 +78,7 @@ service cloud.firestore {
      * - List is open to signed in users, client will filter.
      */
      match /attendance/{attendanceId} {
-        allow read, write: if isSignedIn() && (isAdmin() || getRole(request.auth.uid) == 'teacher' || isOwner(resource.data.studentId));
+        allow read, write: if isSignedIn() && (canManageUsers() || isOwner(resource.data.studentId));
         allow list: if isSignedIn();
      }
   }
