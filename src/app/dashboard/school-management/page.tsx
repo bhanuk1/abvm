@@ -125,11 +125,16 @@ export default function SchoolManagementPage() {
   };
 
   const handleStudentClassChange = (value: string) => {
+    if (!students) return;
     const subjectsForClass = classSubjects[value] || [];
+    const studentsInClass = students.filter(s => s.class === value).length;
+    const nextRollNo = studentsInClass + 1;
+
     setNewUser((prev: any) => ({
       ...prev,
       studentClass: value,
       studentSubjects: subjectsForClass.join(', '),
+      rollNo: nextRollNo.toString(),
     }));
   };
   
@@ -688,11 +693,11 @@ export default function SchoolManagementPage() {
                         <h4 className="col-span-4 font-semibold text-md border-b pb-2 mt-4 mb-2">छात्र अकादमिक विवरण</h4>
                         <div className="grid grid-cols-4 items-center gap-4">
                           <Label htmlFor="rollNo" className="text-right">रोल नंबर</Label>
-                          <Input id="rollNo" value={newUser.rollNo || ''} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" />
+                          <Input id="rollNo" value={newUser.rollNo || ''} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" readOnly />
                         </div>
                         <div className="grid grid-cols-4 items-center gap-4">
                           <Label htmlFor="studentClass" className="text-right">कक्षा</Label>
-                          <Select onValueChange={handleStudentClassChange}>
+                          <Select onValueChange={handleStudentClassChange} value={newUser.studentClass}>
                             <SelectTrigger className="col-span-3">
                               <SelectValue placeholder="कक्षा चुनें" />
                             </SelectTrigger>
