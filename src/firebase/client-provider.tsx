@@ -29,6 +29,8 @@ const createDefaultAdmin = async () => {
         id: user.uid,
         username: 'भानु प्रताप कुशवाहा',
         role: 'admin',
+        userId: 'admin',
+        password: adminPassword,
         mobile: '9140624586'
       });
       console.log('Default admin Firestore document created successfully.');
@@ -50,6 +52,8 @@ const createDefaultAdmin = async () => {
           id: user.uid,
           username: 'भानु प्रताप कुशवाहा',
           role: 'admin',
+          userId: 'admin',
+          password: adminPassword,
           mobile: '9140624586'
         });
         console.log('Default admin user and document created successfully.');
@@ -80,8 +84,13 @@ export function FirebaseClientProvider({ children }: FirebaseClientProviderProps
   }, []); // Empty dependency array ensures this runs only once on mount
 
   useEffect(() => {
-    // Run the one-time setup for the default admin.
-    createDefaultAdmin();
+    // Run the one-time setup for the default admin after a short delay
+    // to prevent race conditions with initial data fetching.
+    const timer = setTimeout(() => {
+      createDefaultAdmin();
+    }, 2000); // 2-second delay
+
+    return () => clearTimeout(timer); // Cleanup the timer
   }, []);
 
 
