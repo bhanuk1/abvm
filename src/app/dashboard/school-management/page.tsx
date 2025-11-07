@@ -3,6 +3,7 @@ import React from 'react';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { Buffer } from 'buffer';
+import Image from 'next/image';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -10,6 +11,7 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
+  CardDescription
 } from '@/components/ui/card';
 import {
   Table,
@@ -21,7 +23,7 @@ import {
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Eye, EyeOff, UserPlus, Calendar as CalendarIcon, PlusCircle, FileDown } from 'lucide-react';
+import { Eye, EyeOff, UserPlus, Calendar as CalendarIcon, PlusCircle, FileDown, Printer, GraduationCap, Phone, Home, User as UserIcon } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -57,9 +59,9 @@ import {
   type Attendance,
 } from '@/lib/school-data';
 import { useCollection, useFirestore, useUser, useMemoFirebase, useAuth, errorEmitter, FirestorePermissionError } from '@/firebase';
-import { addDoc, collection, serverTimestamp, setDoc, doc, query, where, deleteDoc } from 'firebase/firestore';
+import { addDoc, collection, serverTimestamp, setDoc, doc, query, where, deleteDoc, getDocs } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
 
 
 export default function SchoolManagementPage() {
@@ -115,6 +117,11 @@ export default function SchoolManagementPage() {
   const [homeworkReportClass, setHomeworkReportClass] = React.useState('');
   const [homeworkReportSubject, setHomeworkReportSubject] = React.useState('');
   const [homeworkReportDate, setHomeworkReportDate] = React.useState<Date | undefined>();
+
+  const [idCardClass, setIdCardClass] = React.useState('');
+  const [marksheetClass, setMarksheetClass] = React.useState('');
+  const [marksheetExam, setMarksheetExam] = React.useState('');
+  const [classMarksheets, setClassMarksheets] = React.useState<any[]>([]);
 
   React.useEffect(() => {
     // Set date on client-side only to avoid hydration mismatch
@@ -286,6 +293,7 @@ export default function SchoolManagementPage() {
         } catch (error: any) {
             console.error("Error creating student auth user:", error);
             toast({ variant: 'destructive', title: 'छात्र त्रुटि', description: 'संबद्ध छात्र बनाने में विफल: ' + error.message });
+            // Here you might want to delete the parent user that was just created.
             return;
         }
     } else if (newUser.role === 'student') {
@@ -318,19 +326,6 @@ export default function SchoolManagementPage() {
     toast({ title: 'सफलता!', description: 'नया उपयोगकर्ता सफलतापूर्वक बनाया गया।' });
     setNewUser(initialNewUserState);
     setIsUserDialogOpen(false);
-    
-    if (currentUser) {
-        const adminEmail = currentUser.email;
-        const adminPassword = prompt("कृपया व्यवस्थापक पासवर्ड फिर से दर्ज करें để सत्र को फिर से स्थापित करने के लिए:");
-        if (adminEmail && adminPassword) {
-            try {
-                await signInWithEmailAndPassword(auth, adminEmail, adminPassword);
-            } catch (reauthError) {
-                console.error("Failed to re-authenticate admin:", reauthError);
-                toast({ variant: 'destructive', title: 'त्रुटि', description: 'व्यवस्थापक सत्र को फिर से स्थापित करने में विफल रहा। कृपया पुनः लॉग इन करें।' });
-            }
-        }
-    }
   };
   
   const togglePasswordVisibility = (id: string) => {
@@ -564,6 +559,37 @@ export default function SchoolManagementPage() {
     doc.save(`कक्षा-${selectedClassReportClass}_${examLabel}_रिपोर्ट.pdf`);
   };
 
+  const handleShowMarksheets = async () => {
+    if (!marksheetClass || !marksheetExam || !firestore) {
+      toast({ variant: 'destructive', title: 'त्रुटि', description: 'कृपया कक्षा और परीक्षा का प्रकार चुनें।' });
+      return;
+    }
+    const examLabel = examTypes.find(e => e.value === marksheetExam)?.label || '';
+  
+    const studentsQuery = query(collection(firestore, 'users'), where('role', '==', 'student'), where('class', '==', marksheetClass));
+    const resultsQuery = query(collection(firestore, 'results'), where('class', '==', marksheetClass), where('examType', '==', examLabel));
+  
+    const [studentsSnapshot, resultsSnapshot] = await Promise.all([getDocs(studentsQuery), getDocs(resultsQuery)]);
+  
+    const studentsData = studentsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const resultsData = resultsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  
+    const combinedData = studentsData.map(student => {
+      const studentResult = resultsData.find(r => r.studentId === student.id);
+      return {
+        ...student,
+        result: studentResult || null
+      };
+    });
+  
+    setClassMarksheets(combinedData);
+  };
+  
+  const handlePrintIdCards = () => {
+    window.print();
+  };
+
+
   const classes = ['Nursery', 'KG', ...Array.from({length: 12}, (_, i) => (i + 1).toString())];
   const examTypes = [
     { value: 'monthly', label: 'मासिक टेस्ट' },
@@ -596,6 +622,11 @@ export default function SchoolManagementPage() {
     homeworkReportDate && h.date === format(homeworkReportDate, 'yyyy-MM-dd')
   );
 
+  const idCardFilteredStudents = React.useMemo(() => {
+    if (!idCardClass || !students) return [];
+    return students.filter(s => s.class === idCardClass);
+  }, [idCardClass, students]);
+
   if (isUserLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
@@ -606,15 +637,38 @@ export default function SchoolManagementPage() {
 
   return (
     <div className="flex flex-col gap-8">
+      <style>
+        {`
+          @media print {
+            body * {
+              visibility: hidden;
+            }
+            #printable-id-cards, #printable-id-cards * {
+              visibility: visible;
+            }
+            #printable-id-cards {
+              position: absolute;
+              left: 0;
+              top: 0;
+              width: 100%;
+            }
+            .id-card-print-wrapper {
+              page-break-inside: avoid;
+            }
+          }
+        `}
+      </style>
       <h1 className="text-3xl font-bold">प्रधानाचार्य डैशबोर्ड</h1>
       <Card>
         <Tabs defaultValue="user-management">
           <CardHeader className="p-2 md:p-4">
-            <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7">
+            <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-9">
               <TabsTrigger value="user-management">उपयोगकर्ता</TabsTrigger>
               <TabsTrigger value="student-management">छात्र</TabsTrigger>
               <TabsTrigger value="notice-management">सूचना</TabsTrigger>
               <TabsTrigger value="result-management">परिणाम</TabsTrigger>
+              <TabsTrigger value="id-cards">आई-कार्ड</TabsTrigger>
+              <TabsTrigger value="marksheets">मार्कशीट</TabsTrigger>
               <TabsTrigger value="reports">छात्र रिपोर्ट</TabsTrigger>
               <TabsTrigger value="attendance-report">उपस्थिति रिपोर्ट</TabsTrigger>
               <TabsTrigger value="homework-report">होमवर्क रिपोर्ट</TabsTrigger>
@@ -1095,6 +1149,147 @@ export default function SchoolManagementPage() {
               </div>
             </CardContent>
           </TabsContent>
+          <TabsContent value="id-cards">
+            <CardHeader>
+              <CardTitle>आई-कार्ड जेनरेटर</CardTitle>
+              <CardDescription>कक्षा चुनें और सभी छात्रों के आई-कार्ड देखें।</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-4 p-4 border rounded-lg mb-6">
+                <div className="space-y-2">
+                  <Label htmlFor="id-card-class">कक्षा चुनें</Label>
+                  <Select value={idCardClass} onValueChange={setIdCardClass}>
+                    <SelectTrigger id="id-card-class" className="w-[180px]">
+                      <SelectValue placeholder="कक्षा चुनें" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {classes.map(c => <SelectItem key={c} value={c}>कक्षा {c}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Button onClick={handlePrintIdCards} disabled={!idCardClass}>
+                  <Printer className="mr-2" /> प्रिंट करें
+                </Button>
+              </div>
+
+              {idCardClass && (
+                <div id="printable-id-cards" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {idCardFilteredStudents.map(student => (
+                    <div key={student.id} className="id-card-print-wrapper">
+                      <Card className="overflow-hidden shadow-lg border-primary border-2">
+                        <CardHeader className="bg-primary text-primary-foreground p-2 text-center">
+                          <h2 className="text-sm font-bold">आदर्श बाल विद्या मन्दिर</h2>
+                          <p className="text-xs">पहचान पत्र (सत्र 2024-25)</p>
+                        </CardHeader>
+                        <CardContent className="p-3">
+                          <div className="flex gap-3">
+                            <div className="w-20 h-24 bg-gray-200 rounded-md flex items-center justify-center">
+                                <Image src={`https://picsum.photos/seed/${student.id}/200/300`} alt="Student Photo" width={80} height={96} className="rounded-md object-cover w-full h-full" data-ai-hint="student portrait" />
+                            </div>
+                            <div className="space-y-1 text-xs">
+                              <p><strong>नाम:</strong> {student.username}</p>
+                              <p><strong>कक्षा:</strong> {student.class}</p>
+                              <p><strong>रोल नं:</strong> {student.rollNo}</p>
+                              <p><strong>पिता:</strong> {student.fatherName}</p>
+                            </div>
+                          </div>
+                          <div className="text-xs space-y-1 mt-2">
+                            <div className="flex items-start gap-2">
+                              <Home className="w-3 h-3 mt-0.5 shrink-0" />
+                              <p>{student.address}</p>
+                            </div>
+                             <div className="flex items-center gap-2">
+                              <Phone className="w-3 h-3 shrink-0" />
+                              <p>{student.mobile}</p>
+                            </div>
+                          </div>
+                        </CardContent>
+                        <div className="bg-primary text-primary-foreground text-center p-1 text-xs">
+                            <p><strong>प्रधानाचार्य</strong></p>
+                        </div>
+                      </Card>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </TabsContent>
+          <TabsContent value="marksheets">
+            <CardHeader>
+              <CardTitle>कक्षा-वार मार्कशीट</CardTitle>
+              <CardDescription>पूरी कक्षा की मार्कशीट एक साथ देखें।</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-end gap-4 p-4 border rounded-lg mb-6">
+                <div className="space-y-2">
+                  <Label htmlFor="marksheet-class">कक्षा चुनें</Label>
+                  <Select value={marksheetClass} onValueChange={setMarksheetClass}>
+                    <SelectTrigger id="marksheet-class" className="w-[180px]">
+                      <SelectValue placeholder="कक्षा चुनें" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {classes.map(c => <SelectItem key={c} value={c}>कक्षा {c}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="marksheet-exam">परीक्षा चुनें</Label>
+                  <Select value={marksheetExam} onValueChange={setMarksheetExam}>
+                    <SelectTrigger id="marksheet-exam" className="w-[180px]">
+                      <SelectValue placeholder="परीक्षा चुनें" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {examTypes.map(type => (
+                        <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Button onClick={handleShowMarksheets}>मार्कशीट देखें</Button>
+              </div>
+
+              {classMarksheets.length > 0 && (
+                <div className="space-y-6">
+                  {classMarksheets.map(student => (
+                    <Card key={student.id}>
+                      <CardHeader>
+                        <CardTitle>{student.username}</CardTitle>
+                        <CardDescription>रोल नंबर: {student.rollNo}</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        {student.result ? (
+                          Array.isArray(student.result.marks) ? (
+                            <Table>
+                              <TableHeader>
+                                <TableRow>
+                                  <TableHead>विषय</TableHead>
+                                  <TableHead>प्राप्तांक</TableHead>
+                                  <TableHead>पूर्णांक</TableHead>
+                                </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                {student.result.marks.map((mark: any, i: number) => (
+                                  <TableRow key={i}>
+                                    <TableCell>{mark.subject}</TableCell>
+                                    <TableCell>{mark.obtained}</TableCell>
+                                    <TableCell>{mark.total}</TableCell>
+                                  </TableRow>
+                                ))}
+                              </TableBody>
+                            </Table>
+                          ) : (
+                             <p>प्राप्तांक: {student.result.marks.obtained}/{student.result.marks.total}</p>
+                          )
+                        ) : (
+                          <p className="text-muted-foreground">इस छात्र के लिए परिणाम उपलब्ध नहीं है।</p>
+                        )}
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </TabsContent>
           <TabsContent value="reports">
             <CardHeader>
               <CardTitle>रिपोर्ट्स</CardTitle>
@@ -1330,3 +1525,5 @@ export default function SchoolManagementPage() {
     </div>
   );
 }
+
+    
