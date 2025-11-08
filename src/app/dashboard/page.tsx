@@ -24,7 +24,7 @@ import {
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Eye, EyeOff, UserPlus, Calendar as CalendarIcon, PlusCircle, FileDown, Printer, GraduationCap, Phone, Home, User as UserIcon, DollarSign, Barcode, BookOpen, Bus, Users, ChevronsRight, FolderKanban, Newspaper, BarChart2, Banknote, CreditCard, UserSquare, BookCopy, FileText, BusFront, Library, FileSignature } from 'lucide-react';
+import { Eye, EyeOff, UserPlus, Calendar as CalendarIcon, PlusCircle, FileDown, Printer, GraduationCap, Phone, Home, User as UserIcon, DollarSign, Barcode, BookOpen, Bus, Users, ChevronsRight, FolderKanban, Newspaper, BarChart2, Banknote, CreditCard, UserSquare, BookCopy, FileText, BusFront, Library, FileSignature, CalendarCheck, CalendarClock } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -58,6 +58,7 @@ import {
   classSubjects,
   type Attendance,
   type Fee,
+  type LeaveApplication,
 } from '@/lib/school-data';
 import { useCollection, useDoc, useFirestore, useUser, useMemoFirebase, errorEmitter, FirestorePermissionError } from '@/firebase';
 import { addDoc, collection, serverTimestamp, setDoc, doc, query, where, deleteDoc, getDocs, updateDoc, Timestamp, writeBatch, getDoc } from 'firebase/firestore';
@@ -78,7 +79,8 @@ const managementOptions = [
     { value: "reports", label: "Student Reports", icon: FolderKanban, color: "bg-purple-500 hover:bg-purple-600" },
     { value: "library-management", label: "Library", icon: Library, color: "bg-violet-500 hover:bg-violet-600" },
     { value: "transport-management", label: "Transport", icon: BusFront, color: "bg-indigo-500 hover:bg-indigo-600" },
-    { value: "event-calendar", label: "Event Calendar", icon: CalendarIcon, color: "bg-stone-500 hover:bg-stone-600" },
+    { value: "leave-applications", label: "Leave Applications", icon: CalendarCheck, color: "bg-sky-500 hover:bg-sky-600" },
+    { value: "timetable-management", label: "Timetable", icon: CalendarClock, color: "bg-stone-500 hover:bg-stone-600" },
     { value: "attendance-report", label: "Attendance", icon: Users, color: "bg-red-500 hover:bg-red-600" },
     { value: "homework-report", label: "Homework", icon: BookOpen, color: "bg-sky-500 hover:bg-sky-600" },
     { value: "tc-generator", label: "TC Generator", icon: FileSignature, color: "bg-fuchsia-500 hover:bg-fuchsia-600" },
@@ -104,6 +106,9 @@ function DashboardPageContent() {
   
   const resultsQuery = useMemoFirebase(() => firestore ? collection(firestore, 'results') : null, [firestore]);
   const { data: resultsData, isLoading: resultsLoading } = useCollection<Result>(resultsQuery);
+
+  const leaveQuery = useMemoFirebase(() => firestore ? collection(firestore, 'leave-applications') : null, [firestore]);
+  const { data: leaveApplications, isLoading: leaveApplicationsLoading } = useCollection<LeaveApplication>(leaveQuery);
 
 
   const [results, setResults] = React.useState<Result[]>(initialResults);
@@ -1097,6 +1102,31 @@ function DashboardPageContent() {
     doc.line(doc.internal.pageSize.width - 70, signatureY - 2, doc.internal.pageSize.width - 10, signatureY - 2);
   
     doc.save(`TC_${student.username}.pdf`);
+  };
+
+  const handleUpdateLeaveStatus = (id: string, status: 'Approved' | 'Rejected') => {
+    if (!firestore) return;
+    const docRef = doc(firestore, 'leave-applications', id);
+    updateDoc(docRef, { status })
+      .then(() => {
+        toast({
+          title: 'Success!',
+          description: `Application has been ${status}.`,
+        });
+      })
+      .catch((error) => {
+        const contextualError = new FirestorePermissionError({
+            path: docRef.path,
+            operation: 'update',
+            requestResourceData: { status }
+        });
+        errorEmitter.emit('permission-error', contextualError);
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Could not update the application status.',
+        });
+      });
   };
 
   const classes = ['Nursery', 'KG', ...Array.from({length: 12}, (_, i) => (i + 1).toString())];
@@ -2218,18 +2248,104 @@ function DashboardPageContent() {
               </div>
             </CardContent>
           </TabsContent>
-          <TabsContent value="event-calendar">
-            <CardHeader>
-                <CardTitle>School Event Calendar</CardTitle>
-                <CardDescription>View upcoming school events, holidays, and examination dates.</CardDescription>
+          <TabsContent value="leave-applications">
+             <CardHeader>
+                <CardTitle>Leave Applications</CardTitle>
+                <CardDescription>Review and take action on student leave requests.</CardDescription>
+            </CardHeader>
+             <CardContent>
+                <Table>
+                <TableHeader>
+                    <TableRow>
+                    <TableHead>Student Name</TableHead>
+                    <TableHead>Class</TableHead>
+                    <TableHead>Dates</TableHead>
+                    <TableHead>Reason</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {leaveApplicationsLoading && (
+                    <TableRow>
+                        <TableCell colSpan={6} className="h-24 text-center">
+                        Loading applications...
+                        </TableCell>
+                    </TableRow>
+                    )}
+                    {!leaveApplicationsLoading && leaveApplications && leaveApplications.length > 0 ? (
+                    leaveApplications.map((app) => (
+                        <TableRow key={app.id}>
+                        <TableCell className="font-medium">{app.studentName}</TableCell>
+                        <TableCell>{app.class}</TableCell>
+                        <TableCell>
+                            {app.startDate ? format(new Date(app.startDate), 'MMM dd') : ''} - {app.endDate ? format(new Date(app.endDate), 'MMM dd, yyyy') : ''}
+                        </TableCell>
+                        <TableCell className="max-w-xs truncate">{app.reason}</TableCell>
+                        <TableCell>
+                            <Badge
+                            variant={
+                                app.status === 'Approved'
+                                ? 'default'
+                                : app.status === 'Rejected'
+                                ? 'destructive'
+                                : 'secondary'
+                            }
+                            className={
+                                app.status === 'Approved' ? 'bg-green-100 text-green-800'
+                                : app.status === 'Rejected' ? 'bg-red-100 text-red-800'
+                                : 'bg-yellow-100 text-yellow-800'
+                            }
+                            >
+                            {app.status}
+                            </Badge>
+                        </TableCell>
+                        <TableCell className="text-right space-x-2">
+                            {app.status === 'Pending' && (
+                            <>
+                                <Button
+                                variant="outline"
+                                size="sm"
+                                className="text-green-600 border-green-600 hover:bg-green-50 hover:text-green-700"
+                                onClick={() => handleUpdateLeaveStatus(app.id, 'Approved')}
+                                >
+                                Approve
+                                </Button>
+                                <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => handleUpdateLeaveStatus(app.id, 'Rejected')}
+                                >
+                                Reject
+                                </Button>
+                            </>
+                            )}
+                        </TableCell>
+                        </TableRow>
+                    ))
+                    ) : !leaveApplicationsLoading && (
+                    <TableRow>
+                        <TableCell colSpan={6} className="h-24 text-center">
+                        No leave applications found.
+                        </TableCell>
+                    </TableRow>
+                    )}
+                </TableBody>
+                </Table>
+            </CardContent>
+          </TabsContent>
+          <TabsContent value="timetable-management">
+             <CardHeader>
+                <CardTitle>Timetable Management</CardTitle>
+                <CardDescription>Create and manage the school's timetable.</CardDescription>
             </CardHeader>
             <CardContent>
-                <Calendar
-                    mode="month"
-                    className="rounded-md border"
-                 />
+                <div className="text-center text-muted-foreground p-8 border rounded-lg">
+                    <CalendarClock className="mx-auto h-12 w-12"/>
+                    <p className="mt-4">Timetable management feature is coming soon.</p>
+                </div>
             </CardContent>
-           </TabsContent>
+          </TabsContent>
            <TabsContent value="library-management">
               <CardHeader>
                 <CardTitle>Library Management</CardTitle>

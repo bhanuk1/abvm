@@ -19,12 +19,18 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { useCollection, useFirestore, useUser, useDoc, useMemoFirebase } from '@/firebase';
-import { collection, query, where, doc } from 'firebase/firestore';
+import { useCollection, useFirestore, useUser, useDoc, useMemoFirebase, errorEmitter, FirestorePermissionError } from '@/firebase';
+import { collection, query, where, doc, addDoc } from 'firebase/firestore';
 import type { Notice } from '@/lib/placeholder-data';
 import { type Fee } from '@/lib/school-data';
 import { Calendar } from '@/components/ui/calendar';
-import { GraduationCap, UserCircle, DollarSign, BookMarked, CheckCircle, Award, Bell, CalendarDays } from 'lucide-react';
+import { GraduationCap, UserCircle, DollarSign, BookMarked, CheckCircle, Award, Bell, CalendarDays, Send } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { DateRange } from 'react-day-picker';
+import { useToast } from '@/hooks/use-toast';
+import { Label } from '@/components/ui/label';
 
 function DetailRow({ label, value }: { label: string; value?: string | null }) {
     return (
@@ -38,6 +44,7 @@ function DetailRow({ label, value }: { label: string; value?: string | null }) {
 export default function StudentDashboardPage() {
   const firestore = useFirestore();
   const { user: currentUser, isUserLoading } = useUser();
+  const { toast } = useToast();
 
   const loggedInStudentDocRef = useMemoFirebase(
     () => (firestore && currentUser ? doc(firestore, 'users', currentUser.uid) : null),
@@ -100,6 +107,9 @@ export default function StudentDashboardPage() {
   );
   const { data: studentFees } = useCollection<Fee>(feesQuery);
 
+  const [leaveDate, setLeaveDate] = React.useState<DateRange | undefined>();
+  const [leaveReason, setLeaveReason] = React.useState('');
+
 
   const academicYearQuarters = [
     { id: 'q1', label: 'April - June' },
@@ -123,6 +133,43 @@ export default function StudentDashboardPage() {
     return feeRecord
       ? { status: feeRecord.status, paymentDate: feeRecord.paymentDate }
       : { status: 'Unpaid' };
+  };
+
+  const handleApplyForLeave = () => {
+    if (!leaveDate?.from || !leaveReason || !firestore || !loggedInStudent) {
+        toast({
+            variant: 'destructive',
+            title: 'Error',
+            description: 'Please select leave dates and provide a reason.'
+        });
+        return;
+    }
+    const leaveCol = collection(firestore, 'leave-applications');
+    const newLeaveApplication = {
+        studentId: loggedInStudent.id,
+        studentName: loggedInStudent.username,
+        class: loggedInStudent.class,
+        startDate: format(leaveDate.from, 'yyyy-MM-dd'),
+        endDate: leaveDate.to ? format(leaveDate.to, 'yyyy-MM-dd') : format(leaveDate.from, 'yyyy-MM-dd'),
+        reason: leaveReason,
+        status: 'Pending',
+        submittedAt: new Date(),
+    };
+    addDoc(leaveCol, newLeaveApplication)
+    .then(() => {
+        toast({ title: 'Success!', description: 'Your leave application has been submitted.'});
+        setLeaveDate(undefined);
+        setLeaveReason('');
+    })
+    .catch((error) => {
+        const contextualError = new FirestorePermissionError({
+            operation: 'create',
+            path: leaveCol.path,
+            requestResourceData: newLeaveApplication,
+        });
+        errorEmitter.emit('permission-error', contextualError);
+        toast({ variant: 'destructive', title: 'Error', description: 'Could not submit your application.'});
+    });
   };
 
   if (isUserLoading || studentLoading) {
@@ -162,14 +209,15 @@ export default function StudentDashboardPage() {
       <Card>
         <CardContent className="pt-6">
           <Tabs defaultValue="profile">
-            <TabsList className="grid w-full grid-cols-7">
+            <TabsList className="grid w-full grid-cols-8">
               <TabsTrigger value="profile"><UserCircle className="mr-2 h-5 w-5" />Profile</TabsTrigger>
               <TabsTrigger value="fees"><DollarSign className="mr-2 h-5 w-5" />Fees</TabsTrigger>
               <TabsTrigger value="homework"><BookMarked className="mr-2 h-5 w-5" />Homework</TabsTrigger>
               <TabsTrigger value="attendance"><CheckCircle className="mr-2 h-5 w-5" />Attendance</TabsTrigger>
               <TabsTrigger value="results"><Award className="mr-2 h-5 w-5" />Results</TabsTrigger>
               <TabsTrigger value="notices"><Bell className="mr-2 h-5 w-5" />Notices</TabsTrigger>
-              <TabsTrigger value="calendar"><CalendarDays className="mr-2 h-5 w-5" />Calendar</TabsTrigger>
+              <TabsTrigger value="calendar"><CalendarDays className="mr-2 h-5 w-5" />Timetable</TabsTrigger>
+              <TabsTrigger value="leave"><Send className="mr-2 h-5 w-5" />Apply for Leave</TabsTrigger>
             </TabsList>
             <TabsContent value="profile">
                <Card>
@@ -387,6 +435,68 @@ export default function StudentDashboardPage() {
                         />
                     </CardContent>
                 </Card>
+           </TabsContent>
+           <TabsContent value="leave">
+              <Card>
+                <CardHeader>
+                    <CardTitle>Apply for Leave</CardTitle>
+                    <CardDescription>Submit a leave application for the principal's approval.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4 max-w-lg">
+                    <div className="space-y-2">
+                        <Label>Leave Dates</Label>
+                        <Popover>
+                        <PopoverTrigger asChild>
+                            <Button
+                            id="date"
+                            variant={"outline"}
+                            className={cn(
+                                "w-full justify-start text-left font-normal",
+                                !leaveDate && "text-muted-foreground"
+                            )}
+                            >
+                            <CalendarDays className="mr-2 h-4 w-4" />
+                            {leaveDate?.from ? (
+                                leaveDate.to ? (
+                                <>
+                                    {format(leaveDate.from, "LLL dd, y")} -{" "}
+                                    {format(leaveDate.to, "LLL dd, y")}
+                                </>
+                                ) : (
+                                format(leaveDate.from, "LLL dd, y")
+                                )
+                            ) : (
+                                <span>Pick a date range</span>
+                            )}
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                            initialFocus
+                            mode="range"
+                            defaultMonth={leaveDate?.from}
+                            selected={leaveDate}
+                            onSelect={setLeaveDate}
+                            numberOfMonths={1}
+                            />
+                        </PopoverContent>
+                        </Popover>
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="leave-reason">Reason for Leave</Label>
+                        <Textarea 
+                            id="leave-reason"
+                            placeholder="Please provide a brief reason for your absence."
+                            value={leaveReason}
+                            onChange={(e) => setLeaveReason(e.target.value)}
+                        />
+                    </div>
+                    <Button onClick={handleApplyForLeave}>
+                        <Send className="mr-2" />
+                        Submit Application
+                    </Button>
+                </CardContent>
+              </Card>
            </TabsContent>
           </Tabs>
         </CardContent>

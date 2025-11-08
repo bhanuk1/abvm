@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { BookOpenCheck, LayoutGrid, BookMarked, BarChart2, CalendarCheck, CalendarClock } from 'lucide-react';
+import { BookOpenCheck, LayoutGrid, BookMarked, BarChart2, CalendarClock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useUser, useDoc, useFirestore, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
@@ -34,13 +34,8 @@ export function TeacherAppHeader() {
       icon: BarChart2,
     },
     {
-        href: '/teacher-dashboard/leave-applications',
-        label: 'Leave Applications',
-        icon: CalendarCheck
-    },
-    {
         href: '/teacher-dashboard/timetable',
-        label: 'Timetable',
+        label: 'My Timetable',
         icon: CalendarClock
     }
   ];

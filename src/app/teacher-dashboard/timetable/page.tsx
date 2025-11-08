@@ -22,7 +22,24 @@ const timetableData = {
     { time: '09:20 - 10:00', class: '5', subject: 'Hindi' },
     { time: '10:20 - 11:00', class: '6', subject: 'Hindi' },
   ],
-  // Add other days as needed
+  'Thursday': [
+    { time: '08:00 - 08:40', class: '6', subject: 'Hindi' },
+    { time: '08:40 - 09:20', class: '5', subject: 'Hindi' },
+    { time: '09:20 - 10:00', class: '7', subject: 'English' },
+    { time: '10:20 - 11:00', class: '8', subject: 'Math' },
+  ],
+    'Friday': [
+    { time: '08:00 - 08:40', class: '5', subject: 'Hindi' },
+    { time: '08:40 - 09:20', class: '6', subject: 'Hindi' },
+    { time: '09:20 - 10:00', class: '8', subject: 'Math' },
+    { time: '10:20 - 11:00', class: '7', subject: 'English' },
+  ],
+    'Saturday': [
+    { time: '08:00 - 08:40', class: '7', subject: 'English' },
+    { time: '08:40 - 09:20', class: '8', subject: 'Math' },
+    { time: '09:20 - 10:00', class: '5', subject: 'Hindi' },
+    { time: '10:20 - 11:00', class: '6', subject: 'Hindi' },
+  ],
 };
 
 

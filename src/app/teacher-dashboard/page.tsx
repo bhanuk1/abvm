@@ -7,7 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { User, Building, Book, Users } from 'lucide-react';
+import { User, Building, Book, Users, CalendarClock } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { useDoc, useFirestore, useUser, useMemoFirebase } from '@/firebase';
@@ -104,6 +104,19 @@ export default function TeacherDashboardPage() {
               </Card>
             )
           })}
+        </CardContent>
+      </Card>
+
+       <Card>
+        <CardHeader>
+          <CardTitle>My Timetable</CardTitle>
+        </CardHeader>
+        <CardContent>
+            <div className="text-center text-muted-foreground p-8 border rounded-lg">
+                <CalendarClock className="mx-auto h-12 w-12"/>
+                <p className="mt-4">Your timetable will be displayed here once set by the principal.</p>
+                 <Button variant="link" asChild><Link href="/teacher-dashboard/timetable">View Timetable</Link></Button>
+            </div>
         </CardContent>
       </Card>
     </div>

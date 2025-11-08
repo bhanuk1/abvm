@@ -124,4 +124,14 @@ export const attendance: Attendance[] = [];
 
 export const allNotices: Notice[] = [];
 
-    
+export type LeaveApplication = {
+    id: string;
+    studentId: string;
+    studentName: string;
+    class: string;
+    startDate: string;
+    endDate: string;
+    reason: string;
+    status: 'Pending' | 'Approved' | 'Rejected';
+    submittedAt: Date;
+};
