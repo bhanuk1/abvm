@@ -942,7 +942,7 @@ function SchoolManagementPageContent() {
               <CardTitle>User Management</CardTitle>
               <Dialog open={isUserDialogOpen} onOpenChange={setIsUserDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button onClick={() => { setNewUser(initialNewUserState); setIsUserDialogOpen(true); }}>
+                  <Button onClick={() => { setNewUser(initialNewUserState); setIsUserDialogOpen(true); }} className="bg-green-500 hover:bg-green-600 text-white">
                     <UserPlus className="mr-2" />
                     Create New User
                   </Button>
@@ -1276,7 +1276,7 @@ function SchoolManagementPageContent() {
             <CardContent className="space-y-4">
               {noticesLoading && <p>Loading notices...</p>}
               {notices && notices.map(notice => (
-                <div key={notice.id} className="rounded-lg border bg-card text-card-foreground shadow-sm p-4 relative">
+                <div key={notice.id} className="rounded-lg border bg-card text-card-foreground shadow-sm p-4 relative border-l-4 border-amber-400">
                   <div className="flex justify-between items-start">
                     <div>
                       <h3 className="font-semibold">{notice.title}</h3>
@@ -1334,7 +1334,7 @@ function SchoolManagementPageContent() {
                     </Select>
                 </div>
                 {selectedExamType !== 'monthly' && (
-                  <Button onClick={handleAddResult} disabled={!selectedResultClass || !selectedResultStudent || !selectedExamType}>
+                  <Button onClick={handleAddResult} disabled={!selectedResultClass || !selectedResultStudent || !selectedExamType} className="bg-green-600 hover:bg-green-700">
                     Add Result
                   </Button>
                 )}
@@ -1350,7 +1350,7 @@ function SchoolManagementPageContent() {
                          <Label htmlFor="monthly-total" className="font-semibold">Total Marks</Label>
                         <Input id="monthly-total" type="number" value={monthlyTotal} onChange={(e) => setMonthlyTotal(e.target.value)} />
                       </div>
-                      <Button onClick={handleAddResult}>Save Test Result</Button>
+                      <Button onClick={handleAddResult} className="bg-green-600 hover:bg-green-700">Save Test Result</Button>
                     </div>
                   ) : (
                     <div>
@@ -1478,7 +1478,7 @@ function SchoolManagementPageContent() {
                               </TableCell>
                               <TableCell>{feeInfo.paymentDate ? format(feeInfo.paymentDate.toDate(), 'dd/MM/yyyy') : '-'}</TableCell>
                               <TableCell className="text-right space-x-2">
-                                <Button size="sm" disabled={isPaid} onClick={() => handlePayFee(q.id, feeAmount)}>
+                                <Button size="sm" disabled={isPaid} onClick={() => handlePayFee(q.id, feeAmount)} className="bg-blue-600 hover:bg-blue-700">
                                   <DollarSign className="mr-2 h-4 w-4" />
                                   Pay Fee
                                 </Button>
@@ -1614,7 +1614,7 @@ function SchoolManagementPageContent() {
                                 </Select>
                             </div>
                         </div>
-                        <Button className="w-full" size="lg">
+                        <Button className="w-full bg-blue-500 hover:bg-blue-600" size="lg">
                             <GraduationCap className="mr-2"/>
                             Promote All Students
                         </Button>
@@ -1648,7 +1648,7 @@ function SchoolManagementPageContent() {
                                 <TableCell>₹ 25,000</TableCell>
                                 <TableCell><Badge className="bg-red-100 text-red-800">Unpaid</Badge></TableCell>
                                 <TableCell className="text-right">
-                                    <Button size="sm"><DollarSign className="mr-2"/>Pay Now</Button>
+                                    <Button size="sm" className="bg-green-600 hover:bg-green-700"><DollarSign className="mr-2"/>Pay Now</Button>
                                 </TableCell>
                             </TableRow>
                         ))}
@@ -1675,7 +1675,7 @@ function SchoolManagementPageContent() {
                     </SelectContent>
                   </Select>
                 </div>
-                <Button onClick={handlePrintIdCards}>
+                <Button onClick={handlePrintIdCards} className="bg-rose-500 hover:bg-rose-600">
                   <Printer className="mr-2" /> Print
                 </Button>
               </div>
@@ -1759,7 +1759,7 @@ function SchoolManagementPageContent() {
                     </SelectContent>
                   </Select>
                 </div>
-                <Button onClick={handleShowMarksheets}>View Marksheets</Button>
+                <Button onClick={handleShowMarksheets} className="bg-purple-600 hover:bg-purple-700">View Marksheets</Button>
               </div>
 
               {classMarksheets.length > 0 && (
