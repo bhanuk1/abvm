@@ -624,10 +624,52 @@ export default function SchoolManagementPage() {
   
   const handlePrintIdCards = () => {
     if (!idCardClass) {
-      toast({ variant: 'destructive', title: 'Selection Missing', description: 'Please select a class to print first.' });
-      return;
+        toast({ variant: 'destructive', title: 'Selection Missing', description: 'Please select a class to print first.' });
+        return;
     }
-    window.print();
+
+    const printContent = document.getElementById('printable-id-cards');
+    if (!printContent) {
+        toast({ variant: 'destructive', title: 'Error', description: 'Could not find printable content.' });
+        return;
+    }
+
+    const printWindow = window.open('', '', 'height=800,width=800');
+    if (!printWindow) {
+        toast({ variant: 'destructive', title: 'Error', description: 'Could not open print window. Please disable your pop-up blocker.' });
+        return;
+    }
+
+    const stylesheets = Array.from(document.styleSheets)
+        .map(s => s.href ? `<link rel="stylesheet" href="${s.href}">` : '')
+        .join('');
+    
+    const inlineStyles = `
+        @media print {
+            body { 
+                -webkit-print-color-adjust: exact; 
+                print-color-adjust: exact; 
+            }
+            .id-card-print-wrapper {
+                page-break-inside: avoid;
+            }
+        }
+    `;
+
+    printWindow.document.write('<html><head><title>Print ID Cards</title>');
+    printWindow.document.write(stylesheets);
+    printWindow.document.write(`<style>${document.documentElement.innerHTML.match(/<style jsx global>{\`[^`]*`}<\/style>/)?.[0] || ''}</style>`);
+    printWindow.document.write(`<style>${inlineStyles}</style>`);
+    printWindow.document.write('</head><body>');
+    printWindow.document.write(printContent.innerHTML);
+    printWindow.document.write('</body></html>');
+    printWindow.document.close();
+
+    printWindow.onload = () => {
+        printWindow.focus();
+        printWindow.print();
+        printWindow.close();
+    };
   };
 
   const getQuarterlyFee = (className: string) => {
@@ -847,27 +889,6 @@ export default function SchoolManagementPage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <style>
-        {`
-          @media print {
-            body * {
-              visibility: hidden;
-            }
-            #printable-id-cards, #printable-id-cards * {
-              visibility: visible;
-            }
-            #printable-id-cards {
-              position: absolute;
-              left: 0;
-              top: 0;
-              width: 100%;
-            }
-            .id-card-print-wrapper {
-              page-break-inside: avoid;
-            }
-          }
-        `}
-      </style>
       <h1 className="text-3xl font-bold">Principal Dashboard</h1>
       <Card>
         <Tabs defaultValue="user-management">
