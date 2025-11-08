@@ -878,7 +878,9 @@ export default function SchoolManagementPage() {
               <TabsTrigger value="student-management">Students</TabsTrigger>
               <TabsTrigger value="notice-management">Notices</TabsTrigger>
               <TabsTrigger value="result-management">Results</TabsTrigger>
-              <TabsTrigger value="fee-management">Fee Management</TabsTrigger>
+              {userRole && ['admin', 'teacher'].includes(userRole) && (
+                <TabsTrigger value="fee-management">Fee Management</TabsTrigger>
+              )}
               <TabsTrigger value="daily-fee-report">Daily Fee Report</TabsTrigger>
               <TabsTrigger value="id-cards">ID Cards</TabsTrigger>
               <TabsTrigger value="marksheets">Marksheets</TabsTrigger>
@@ -1363,6 +1365,7 @@ export default function SchoolManagementPage() {
               </div>
             </CardContent>
           </TabsContent>
+          {userRole && ['admin', 'teacher'].includes(userRole) && (
           <TabsContent value="fee-management">
             <CardHeader>
               <CardTitle>Fee Management</CardTitle>
@@ -1448,6 +1451,7 @@ export default function SchoolManagementPage() {
               )}
             </CardContent>
           </TabsContent>
+          )}
           <TabsContent value="daily-fee-report">
             <CardHeader>
                 <CardTitle>Daily Fee Collection Report</CardTitle>
