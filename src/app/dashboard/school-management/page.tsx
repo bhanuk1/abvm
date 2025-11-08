@@ -130,7 +130,11 @@ export default function SchoolManagementPage() {
   
   const [dailyReportDate, setDailyReportDate] = React.useState<Date | undefined>(new Date());
   
-  const { data: currentUserData } = useDoc<any>(currentUser ? doc(firestore, 'users', currentUser.uid) : null);
+  const currentUserDocRef = useMemoFirebase(
+    () => (firestore && currentUser ? doc(firestore, 'users', currentUser.uid) : null),
+    [firestore, currentUser]
+  );
+  const { data: currentUserData } = useDoc<any>(currentUserDocRef);
   const userRole = currentUserData?.role;
 
   const feesQuery = useMemoFirebase(
