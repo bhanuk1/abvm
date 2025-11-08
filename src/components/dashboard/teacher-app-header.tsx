@@ -4,14 +4,22 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { BookOpenCheck, LayoutGrid, BookMarked } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useUser } from '@/firebase';
+import { useUser, useDoc, useFirestore, useMemoFirebase } from '@/firebase';
+import { doc } from 'firebase/firestore';
 
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
 export function TeacherAppHeader() {
   const pathname = usePathname();
+  const firestore = useFirestore();
   const { user } = useUser();
+
+  const userDocRef = useMemoFirebase(
+    () => (firestore && user ? doc(firestore, 'users', user.uid) : null),
+    [firestore, user]
+  );
+  const { data: userData } = useDoc<any>(userDocRef);
 
   const navLinks = [
     { href: '/teacher-dashboard', label: 'Dashboard', icon: LayoutGrid },
@@ -31,7 +39,7 @@ export function TeacherAppHeader() {
             <div>
               <h1 className="text-xl font-bold">Adarsh Bal Vidya Mandir</h1>
               <p className="text-sm text-muted-foreground">
-                Welcome, {user?.displayName || 'Teacher'}
+                Welcome, {userData?.username || 'Teacher'}
               </p>
             </div>
           </div>
