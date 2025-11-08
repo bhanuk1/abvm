@@ -4,6 +4,7 @@ import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { Buffer } from 'buffer';
 import Image from 'next/image';
+import { useSearchParams } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -23,7 +24,7 @@ import {
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Eye, EyeOff, UserPlus, Calendar as CalendarIcon, PlusCircle, FileDown, Printer, GraduationCap, Phone, Home, User as UserIcon, DollarSign, Barcode } from 'lucide-react';
+import { Eye, EyeOff, UserPlus, Calendar as CalendarIcon, PlusCircle, FileDown, Printer, GraduationCap, Phone, Home, User as UserIcon, DollarSign, Barcode, BookOpen, Bus, Users, ChevronsRight } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -65,11 +66,13 @@ import { useToast } from '@/hooks/use-toast';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 
 
-export default function SchoolManagementPage() {
+function SchoolManagementPageContent() {
   const firestore = useFirestore();
   const auth = useAuth();
   const { user: currentUser, isUserLoading } = useUser();
   const { toast } = useToast();
+  const searchParams = useSearchParams();
+  const initialTab = searchParams.get('tab') || 'user-management';
 
   const usersQuery = useMemoFirebase(() => firestore ? collection(firestore, 'users') : null, [firestore]);
   const { data: users, isLoading: usersLoading } = useCollection<any>(usersQuery);
@@ -624,51 +627,67 @@ export default function SchoolManagementPage() {
   
   const handlePrintIdCards = () => {
     if (!idCardClass) {
-        toast({ variant: 'destructive', title: 'Selection Missing', description: 'Please select a class to print first.' });
-        return;
+      toast({ variant: 'destructive', title: 'Selection Missing', description: 'Please select a class to print first.' });
+      return;
     }
 
     const printContent = document.getElementById('printable-id-cards');
     if (!printContent) {
-        toast({ variant: 'destructive', title: 'Error', description: 'Could not find printable content.' });
-        return;
+      toast({ variant: 'destructive', title: 'Error', description: 'Could not find printable content.' });
+      return;
     }
 
     const printWindow = window.open('', '', 'height=800,width=800');
     if (!printWindow) {
-        toast({ variant: 'destructive', title: 'Error', description: 'Could not open print window. Please disable your pop-up blocker.' });
-        return;
+      toast({ variant: 'destructive', title: 'Error', description: 'Could not open print window. Please disable your pop-up blocker.' });
+      return;
     }
 
     const stylesheets = Array.from(document.styleSheets)
-        .map(s => s.href ? `<link rel="stylesheet" href="${s.href}">` : '')
-        .join('');
-    
-    const inlineStyles = `
-        @media print {
+      .map(s => s.href ? `<link rel="stylesheet" href="${s.href}">` : '')
+      .join('');
+
+    const pageStyles = `
+      <html>
+        <head>
+          <title>Print ID Cards</title>
+          ${stylesheets}
+          <style>
             body { 
-                -webkit-print-color-adjust: exact; 
-                print-color-adjust: exact; 
+              -webkit-print-color-adjust: exact; 
+              print-color-adjust: exact; 
+              font-family: 'PT Sans', sans-serif;
             }
             .id-card-print-wrapper {
-                page-break-inside: avoid;
+              page-break-inside: avoid;
+              break-inside: avoid;
             }
-        }
+             @media print {
+              body {
+                margin: 0;
+                padding: 0;
+              }
+              #printable-id-cards {
+                margin: 0;
+                padding: 0;
+                width: 100%;
+              }
+            }
+          </style>
+        </head>
+        <body>
+          ${printContent.innerHTML}
+        </body>
+      </html>
     `;
-
-    printWindow.document.write('<html><head><title>Print ID Cards</title>');
-    printWindow.document.write(stylesheets);
-    printWindow.document.write(`<style>${document.documentElement.innerHTML.match(/<style jsx global>{\`[^`]*`}<\/style>/)?.[0] || ''}</style>`);
-    printWindow.document.write(`<style>${inlineStyles}</style>`);
-    printWindow.document.write('</head><body>');
-    printWindow.document.write(printContent.innerHTML);
-    printWindow.document.write('</body></html>');
+    
+    printWindow.document.write(pageStyles);
     printWindow.document.close();
-
+    
     printWindow.onload = () => {
-        printWindow.focus();
-        printWindow.print();
-        printWindow.close();
+      printWindow.focus();
+      printWindow.print();
+      printWindow.close();
     };
   };
 
@@ -891,11 +910,12 @@ export default function SchoolManagementPage() {
     <div className="flex flex-col gap-8">
       <h1 className="text-3xl font-bold">Principal Dashboard</h1>
       <Card>
-        <Tabs defaultValue="user-management">
+        <Tabs defaultValue={initialTab}>
           <CardHeader className="p-2 md:p-4">
             <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-11">
               <TabsTrigger value="user-management">Users</TabsTrigger>
               <TabsTrigger value="student-management">Students</TabsTrigger>
+              <TabsTrigger value="student-promotion">Promotion</TabsTrigger>
               <TabsTrigger value="notice-management">Notices</TabsTrigger>
               <TabsTrigger value="result-management">Results</TabsTrigger>
               {userRole && ['admin', 'teacher'].includes(userRole) && (
@@ -904,11 +924,17 @@ export default function SchoolManagementPage() {
               {userRole && ['admin', 'teacher'].includes(userRole) && (
                 <TabsTrigger value="daily-fee-report">Daily Fee Report</TabsTrigger>
               )}
+               {userRole && ['admin'].includes(userRole) && (
+                <TabsTrigger value="salary-management">Salary</TabsTrigger>
+              )}
               <TabsTrigger value="id-cards">ID Cards</TabsTrigger>
               <TabsTrigger value="marksheets">Marksheets</TabsTrigger>
               <TabsTrigger value="reports">Student Reports</TabsTrigger>
-              <TabsTrigger value="attendance-report">Attendance Report</TabsTrigger>
-              <TabsTrigger value="homework-report">Homework Report</TabsTrigger>
+              <TabsTrigger value="event-calendar">Calendar</TabsTrigger>
+              <TabsTrigger value="library-management">Library</TabsTrigger>
+              <TabsTrigger value="transport-management">Transport</TabsTrigger>
+              <TabsTrigger value="attendance-report">Attendance</TabsTrigger>
+              <TabsTrigger value="homework-report">Homework</TabsTrigger>
             </TabsList>
           </CardHeader>
           <TabsContent value="user-management">
@@ -1560,6 +1586,77 @@ export default function SchoolManagementPage() {
             </CardContent>
           </TabsContent>
           )}
+          <TabsContent value="student-promotion">
+            <CardHeader>
+                <CardTitle>Student Promotion</CardTitle>
+                <CardDescription>Promote students from one class to the next for the new academic session.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <Card className="max-w-xl mx-auto">
+                    <CardHeader>
+                        <CardTitle>Promote Class</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                        <div className="flex items-center gap-4">
+                            <div className="flex-1 space-y-2">
+                                <Label>From Class</Label>
+                                <Select>
+                                    <SelectTrigger><SelectValue placeholder="Select current class" /></SelectTrigger>
+                                    <SelectContent>{classes.map(c => <SelectItem key={c} value={c}>Class {c}</SelectItem>)}</SelectContent>
+                                </Select>
+                            </div>
+                            <ChevronsRight className="mt-7 h-8 w-8 text-muted-foreground shrink-0"/>
+                            <div className="flex-1 space-y-2">
+                                <Label>To Class</Label>
+                                <Select>
+                                    <SelectTrigger><SelectValue placeholder="Select new class" /></SelectTrigger>
+                                    <SelectContent>{classes.map(c => <SelectItem key={c} value={c}>Class {c}</SelectItem>)}</SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+                        <Button className="w-full" size="lg">
+                            <GraduationCap className="mr-2"/>
+                            Promote All Students
+                        </Button>
+                        <p className="text-xs text-center text-muted-foreground">This action will promote all students from the selected class to the new class. This cannot be undone.</p>
+                    </CardContent>
+                </Card>
+            </CardContent>
+          </TabsContent>
+          {userRole && ['admin'].includes(userRole) && (
+          <TabsContent value="salary-management">
+             <CardHeader>
+                <CardTitle>Salary Management</CardTitle>
+                <CardDescription>Manage monthly salary payments for teachers.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                 <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Teacher Name</TableHead>
+                        <TableHead>Role</TableHead>
+                        <TableHead>Salary Amount</TableHead>
+                        <TableHead>Status</TableHead>
+                         <TableHead className="text-right">Action</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {users && users.filter(u => u.role === 'teacher').map(teacher => (
+                            <TableRow key={teacher.id}>
+                                <TableCell>{teacher.username}</TableCell>
+                                <TableCell><Badge variant="secondary" className="bg-blue-100 text-blue-800">Teacher</Badge></TableCell>
+                                <TableCell>₹ 25,000</TableCell>
+                                <TableCell><Badge className="bg-red-100 text-red-800">Unpaid</Badge></TableCell>
+                                <TableCell className="text-right">
+                                    <Button size="sm"><DollarSign className="mr-2"/>Pay Now</Button>
+                                </TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </CardContent>
+          </TabsContent>
+          )}
           <TabsContent value="id-cards">
             <CardHeader>
               <CardTitle>ID Card Generator</CardTitle>
@@ -1783,6 +1880,42 @@ export default function SchoolManagementPage() {
               </div>
             </CardContent>
           </TabsContent>
+          <TabsContent value="event-calendar">
+            <CardHeader>
+                <CardTitle>School Event Calendar</CardTitle>
+                <CardDescription>View upcoming school events, holidays, and examination dates.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <Calendar
+                    mode="month"
+                    className="rounded-md border"
+                 />
+            </CardContent>
+           </TabsContent>
+           <TabsContent value="library-management">
+              <CardHeader>
+                <CardTitle>Library Management</CardTitle>
+                <CardDescription>Manage book inventory and track issued books.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <div className="text-center text-muted-foreground p-8 border rounded-lg">
+                    <BookOpen className="mx-auto h-12 w-12"/>
+                    <p className="mt-4">Library management feature is coming soon.</p>
+                </div>
+            </CardContent>
+           </TabsContent>
+           <TabsContent value="transport-management">
+            <CardHeader>
+                <CardTitle>Transport Management</CardTitle>
+                <CardDescription>Manage bus routes and student transport details.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <div className="text-center text-muted-foreground p-8 border rounded-lg">
+                    <Bus className="mx-auto h-12 w-12"/>
+                    <p className="mt-4">Transport management feature is coming soon.</p>
+                </div>
+            </CardContent>
+           </TabsContent>
           <TabsContent value="attendance-report">
              <CardHeader>
               <CardTitle>Class-wise Attendance Report</CardTitle>
@@ -1941,4 +2074,12 @@ export default function SchoolManagementPage() {
       </Card>
     </div>
   );
+}
+
+export default function SchoolManagementPage() {
+    return (
+        <React.Suspense fallback={<div>Loading...</div>}>
+            <SchoolManagementPageContent />
+        </React.Suspense>
+    );
 }
