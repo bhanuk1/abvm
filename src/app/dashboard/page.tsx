@@ -24,7 +24,7 @@ import {
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Eye, EyeOff, UserPlus, Calendar as CalendarIcon, PlusCircle, FileDown, Printer, GraduationCap, Phone, Home, User as UserIcon, DollarSign, Barcode, BookOpen, Bus, Users, ChevronsRight, FolderKanban, Newspaper, BarChart2, Banknote, CreditCard, UserSquare, BookCopy, FileText, BusFront, Library } from 'lucide-react';
+import { Eye, EyeOff, UserPlus, Calendar as CalendarIcon, PlusCircle, FileDown, Printer, GraduationCap, Phone, Home, User as UserIcon, DollarSign, Barcode, BookOpen, Bus, Users, ChevronsRight, FolderKanban, Newspaper, BarChart2, Banknote, CreditCard, UserSquare, BookCopy, FileText, BusFront, Library, FileSignature } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -83,6 +83,7 @@ const managementOptions = [
     { value: "event-calendar", label: "Event Calendar", icon: CalendarIcon, color: "bg-stone-500 hover:bg-stone-600" },
     { value: "attendance-report", label: "Attendance", icon: Users, color: "bg-red-500 hover:bg-red-600" },
     { value: "homework-report", label: "Homework", icon: BookOpen, color: "bg-sky-500 hover:bg-sky-600" },
+    { value: "tc-generator", label: "TC Generator", icon: FileSignature, color: "bg-fuchsia-500 hover:bg-fuchsia-600" },
 ];
 
 
@@ -153,6 +154,9 @@ function DashboardPageContent() {
   const [feeQuarter, setFeeQuarter] = React.useState('');
   
   const [dailyReportDate, setDailyReportDate] = React.useState<Date | undefined>(new Date());
+
+  const [tcClass, setTcClass] = React.useState('');
+  const [tcStudent, setTcStudent] = React.useState('');
   
   const currentUserDocRef = useMemoFirebase(
     () => (firestore && currentUser ? doc(firestore, 'users', currentUser.uid) : null),
@@ -993,6 +997,87 @@ function DashboardPageContent() {
     doc.save(`Daily_Fee_Report_${format(dailyReportDate, 'yyyy-MM-dd')}.pdf`);
   };
 
+  const handleGenerateTC = () => {
+    if (!tcStudent || !students) {
+      toast({ variant: 'destructive', title: 'Error', description: 'Please select a student.' });
+      return;
+    }
+  
+    const student = students.find(s => s.id === tcStudent);
+    if (!student) {
+      toast({ variant: 'destructive', title: 'Error', description: 'Student not found.' });
+      return;
+    }
+  
+    const doc = new jsPDF();
+  
+    // Add border
+    doc.rect(5, 5, doc.internal.pageSize.width - 10, doc.internal.pageSize.height - 10);
+  
+    // Header
+    doc.setFontSize(22);
+    doc.setFont('times', 'bold');
+    doc.text('Adarsh Bal Vidya Mandir Inter College', doc.internal.pageSize.getWidth() / 2, 20, { align: 'center' });
+    doc.setFontSize(12);
+    doc.setFont('times', 'normal');
+    doc.text('Affiliated to U.P. Board, Prayagraj', doc.internal.pageSize.getWidth() / 2, 28, { align: 'center' });
+    doc.text('Pipari, Sonbhadra, Uttar Pradesh - 231222', doc.internal.pageSize.getWidth() / 2, 34, { align: 'center' });
+  
+    // Title
+    doc.setFontSize(18);
+    doc.setFont('helvetica', 'bold');
+    doc.text('TRANSFER CERTIFICATE', doc.internal.pageSize.getWidth() / 2, 50, { align: 'center' });
+  
+    // TC Details
+    doc.setFontSize(12);
+    doc.setFont('times', 'normal');
+    const tcNo = `TC/${new Date().getFullYear()}/${Math.floor(1000 + Math.random() * 9000)}`;
+    const issueDate = format(new Date(), 'dd/MM/yyyy');
+    doc.text(`Certificate No: ${tcNo}`, 14, 65);
+    doc.text(`Date of Issue: ${issueDate}`, doc.internal.pageSize.width - 14, 65, { align: 'right' });
+  
+    // Student Information
+    const studentInfo = [
+      ['1. Name of Student', student.username],
+      ['2. Father\'s Name', student.fatherName],
+      ["3. Mother's Name", student.motherName],
+      ['4. Date of Birth (in figures)', student.dob ? format(new Date(student.dob), 'dd/MM/yyyy') : 'N/A'],
+      // TODO: Convert DOB to words
+      ['5. Class in which admitted', student.class],
+      ['6. Date of Admission', student.admissionDate ? format(new Date(student.admissionDate), 'dd/MM/yyyy') : 'N/A'],
+    ];
+  
+    (doc as any).autoTable({
+      startY: 75,
+      body: studentInfo,
+      theme: 'plain',
+      styles: {
+        fontSize: 12,
+        font: 'times',
+        cellPadding: 2,
+      },
+      columnStyles: {
+        0: { fontStyle: 'bold', cellWidth: 70 },
+      },
+    });
+  
+    const lastY = (doc as any).lastAutoTable.finalY;
+  
+    // Declaration
+    doc.setFontSize(12);
+    doc.setFont('times', 'normal');
+    const declarationText = `This is to certify that the above-named student was on the rolls of this school. He/She has paid all school dues up to date. We wish him/her all the best for his/her future.`;
+    const splitText = doc.splitTextToSize(declarationText, doc.internal.pageSize.width - 28);
+    doc.text(splitText, 14, lastY + 15);
+  
+    // Signature
+    const signatureY = doc.internal.pageSize.height - 40;
+    doc.text('Principal\'s Signature', doc.internal.pageSize.width - 40, signatureY, { align: 'center' });
+    doc.line(doc.internal.pageSize.width - 70, signatureY - 2, doc.internal.pageSize.width - 10, signatureY - 2);
+  
+    doc.save(`TC_${student.username}.pdf`);
+  };
+
   const classes = ['Nursery', 'KG', ...Array.from({length: 12}, (_, i) => (i + 1).toString())];
   const examTypes = [
     { value: 'monthly', label: 'Monthly Test' },
@@ -1091,7 +1176,7 @@ function DashboardPageContent() {
             <CardTitle>School Management</CardTitle>
             <CardDescription>Select a module to manage school operations.</CardDescription>
             <ScrollArea className="w-full whitespace-nowrap">
-             <TabsList className="grid h-auto grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-8 gap-2 p-2 bg-transparent border-none">
+             <TabsList className="grid h-auto grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-9 gap-2 p-2 bg-transparent border-none">
                 {managementOptions.map(option => (
                     <TabsTrigger key={option.value} value={option.value} asChild>
                          <div className={cn(
@@ -2308,6 +2393,42 @@ function DashboardPageContent() {
                   </CardHeader>
                 </Card>
              </CardContent>
+          </TabsContent>
+          <TabsContent value="tc-generator">
+            <CardHeader>
+              <CardTitle>Transfer Certificate (TC) Generator</CardTitle>
+              <CardDescription>Generate a TC for a student leaving the school.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
+                <div className="space-y-2">
+                  <Label htmlFor="tc-class">Class</Label>
+                  <Select value={tcClass} onValueChange={(value) => { setTcClass(value); setTcStudent(''); }}>
+                    <SelectTrigger id="tc-class">
+                      <SelectValue placeholder="Select Class" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {classes.map(c => <SelectItem key={c} value={c}>Class {c}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="tc-student">Student</Label>
+                  <Select value={tcStudent} onValueChange={setTcStudent} disabled={!tcClass}>
+                    <SelectTrigger id="tc-student">
+                      <SelectValue placeholder="Select Student" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {students && students.filter(s => s.class === tcClass).map(s => <SelectItem key={s.id} value={s.id}>{s.username} (Roll No. {s.rollNo})</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Button onClick={handleGenerateTC} disabled={!tcStudent} className="bg-fuchsia-600 hover:bg-fuchsia-700">
+                  <FileSignature className="mr-2"/>
+                  Generate & Download TC
+                </Button>
+              </div>
+            </CardContent>
           </TabsContent>
         </Tabs>
       </Card>
