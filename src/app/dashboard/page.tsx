@@ -62,7 +62,7 @@ import {
   type Fee,
 } from '@/lib/school-data';
 import { useCollection, useDoc, useFirestore, useUser, useMemoFirebase, errorEmitter, FirestorePermissionError } from '@/firebase';
-import { addDoc, collection, serverTimestamp, setDoc, doc, query, where, deleteDoc, getDocs, updateDoc, Timestamp, writeBatch } from 'firebase/firestore';
+import { addDoc, collection, serverTimestamp, setDoc, doc, query, where, deleteDoc, getDocs, updateDoc, Timestamp, writeBatch, getDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
 
@@ -197,6 +197,65 @@ function DashboardPageContent() {
     setAttendanceReportDate(new Date());
     setHomeworkReportDate(new Date());
   }, []);
+
+  React.useEffect(() => {
+    const ensureAdminExists = async () => {
+      if (!firestore) return;
+
+      const adminQuery = query(collection(firestore, 'users'), where('role', '==', 'admin'));
+      const adminSnapshot = await getDocs(adminQuery);
+
+      if (adminSnapshot.empty) {
+        console.log('Admin user not found, creating one...');
+        const auth = getAuth();
+        const adminEmail = 'admin@vidyalaya.com';
+        const adminPassword = 'admin123';
+        const adminUserId = 'admin';
+
+        try {
+          // Check if the auth user already exists to avoid re-creating it
+          let userCredential;
+          try {
+             userCredential = await createUserWithEmailAndPassword(auth, adminEmail, adminPassword);
+          } catch(error: any) {
+             if (error.code === 'auth/email-already-in-use') {
+                console.log('Admin auth user already exists.');
+                // We still need the user object to get the UID.
+                // We can't get it directly, so we just proceed to try and create the firestore doc.
+                // This part is tricky without signing in. We assume if auth user exists, doc might too.
+             } else {
+                throw error;
+             }
+          }
+          
+          if (userCredential) {
+            const adminData = {
+              id: userCredential.user.uid,
+              userId: adminUserId,
+              username: 'Principal',
+              role: 'admin',
+              password: adminPassword
+            };
+            const userDocRef = doc(firestore, 'users', userCredential.user.uid);
+            await setDoc(userDocRef, adminData);
+            console.log('Admin user created successfully.');
+          }
+
+        } catch (error: any) {
+          console.error("Error creating admin user:", error);
+           if (error.code !== 'auth/email-already-in-use') {
+             toast({
+                variant: 'destructive',
+                title: 'Admin Creation Error',
+                description: 'Could not create the default admin user.',
+            });
+           }
+        }
+      }
+    };
+
+    ensureAdminExists();
+  }, [firestore, toast]);
   
   React.useEffect(() => {
     if (editingNotice) {
