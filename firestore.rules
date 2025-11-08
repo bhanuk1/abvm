@@ -22,12 +22,12 @@ service cloud.firestore {
      * @description Controls access to user profiles.
      * - A user can read/write their own profile.
      * - An admin or teacher can read any profile.
-     * - An admin or teacher can create a user profile.
+     * - Any signed-in user can create their own profile.
      */
     match /users/{userId} {
       allow read: if isSignedIn();
       allow update, delete: if isSignedIn() && (isOwner(userId) || getUserData(request.auth.uid).role in ['admin', 'teacher']);
-      allow create: if isSignedIn() && getUserData(request.auth.uid).role in ['admin', 'teacher'];
+      allow create: if isSignedIn();
       allow list: if isSignedIn();
     }
 
