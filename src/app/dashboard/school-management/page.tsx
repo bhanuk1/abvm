@@ -353,15 +353,7 @@ export default function SchoolManagementPage() {
     };
 
     const resultsCol = collection(firestore, 'results');
-    addDoc(resultsCol, newResult).then(() => {
-        toast({ title: 'सफलता!', description: 'परिणाम सफलतापूर्वक जोड़ा गया!' });
-        setSelectedResultClass('');
-        setSelectedResultStudent('');
-        setSelectedExamType('');
-        setMarks({});
-        setMonthlyObtained('');
-        setMonthlyTotal('100');
-    }).catch(error => {
+    addDoc(resultsCol, newResult).catch(error => {
         const contextualError = new FirestorePermissionError({
             operation: 'create',
             path: resultsCol.path,
@@ -369,6 +361,14 @@ export default function SchoolManagementPage() {
         });
         errorEmitter.emit('permission-error', contextualError);
     });
+    
+    toast({ title: 'सफलता!', description: 'परिणाम सफलतापूर्वक जोड़ा गया!' });
+    setSelectedResultClass('');
+    setSelectedResultStudent('');
+    setSelectedExamType('');
+    setMarks({});
+    setMonthlyObtained('');
+    setMonthlyTotal('100');
   };
   
   const handleMarksChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -592,7 +592,6 @@ export default function SchoolManagementPage() {
       const feeDocRef = doc(firestore, 'fees', quarterData.id);
       const updatedData = { status: 'जमा', paymentDate: serverTimestamp() };
       updateDoc(feeDocRef, updatedData)
-        .then(() => toast({ title: 'सफलता!', description: 'फीस सफलतापूर्वक जमा हो गई है।' }))
         .catch(error => {
             const contextualError = new FirestorePermissionError({
                 path: feeDocRef.path,
@@ -614,7 +613,6 @@ export default function SchoolManagementPage() {
         paymentDate: serverTimestamp()
       };
       addDoc(feeColRef, newData)
-        .then(() => toast({ title: 'सफलता!', description: 'फीस सफलतापूर्वक जमा हो गई है।' }))
         .catch(error => {
             const contextualError = new FirestorePermissionError({
                 path: feeColRef.path,
