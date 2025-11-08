@@ -1051,7 +1051,7 @@ function DashboardPageContent() {
     doc.setFontSize(12);
     doc.setFont('times', 'normal');
     doc.text('Affiliated to U.P. Board, Prayagraj', doc.internal.pageSize.getWidth() / 2, 33, { align: 'center' });
-    doc.text('Pipari, Sonbhadra, Uttar Pradesh - 231222', doc.internal.pageSize.getWidth() / 2, 39, { align: 'center' });
+    doc.text('Bilgram, Hardoi, Uttar Pradesh', doc.internal.pageSize.getWidth() / 2, 39, { align: 'center' });
   
     // Title
     doc.setFontSize(18);
