@@ -166,7 +166,7 @@ export default function ChildrenInformationPage() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {studentAttendance.map((att, index) => (
+                        {studentAttendance.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map((att, index) => (
                           <TableRow key={index}>
                             <TableCell>{format(new Date(att.date), 'PPP')}</TableCell>
                             <TableCell className="text-right">
@@ -207,7 +207,7 @@ export default function ChildrenInformationPage() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {studentHomeworks && parentStudent.subjects && studentHomeworks.filter(hw => parentStudent.subjects.includes(hw.subject)).map((hw) => (
+                      {studentHomeworks && parentStudent.subjects && studentHomeworks.filter(hw => parentStudent.subjects.includes(hw.subject)).sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map((hw) => (
                         <TableRow key={hw.id}>
                           <TableCell>{format(new Date(hw.date), 'dd/MM/yyyy')}</TableCell>
                           <TableCell>{hw.subject}</TableCell>

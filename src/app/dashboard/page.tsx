@@ -52,12 +52,10 @@ import { type Notice } from '@/lib/placeholder-data';
 import {
   initialNewUserState,
   type Result,
-  homeworks as initialHomeworks,
   type Homework,
   allSubjects,
   results as initialResults,
   classSubjects,
-  attendance as initialAttendance,
   type Attendance,
   type Fee,
 } from '@/lib/school-data';
@@ -109,9 +107,6 @@ function DashboardPageContent() {
 
 
   const [results, setResults] = React.useState<Result[]>(initialResults);
-  const [homeworks, setHomeworks] = React.useState<Homework[]>(initialHomeworks);
-  const [attendance, setAttendance] = React.useState<Attendance[]>(initialAttendance);
-
 
   const [isUserDialogOpen, setIsUserDialogOpen] = React.useState(false);
   const [isNoticeDialogOpen, setIsNoticeDialogOpen] = React.useState(false);
@@ -159,11 +154,11 @@ function DashboardPageContent() {
   const [tcStudent, setTcStudent] = React.useState('');
   
   const currentUserDocRef = useMemoFirebase(
-    () => (firestore && currentUser ? doc(firestore, 'users', currentUser.uid) : null),
+    () => (currentUser && firestore ? doc(firestore, 'users', currentUser.uid) : null),
     [firestore, currentUser]
   );
   const { data: currentUserData, isLoading: isCurrentUserLoading } = useDoc<any>(currentUserDocRef);
-  const userRole = React.useMemo(() => currentUserData?.role, [currentUserData]);
+  const userRole = currentUserData?.role;
 
   const feesQuery = useMemoFirebase(
     () => firestore && feeStudent ? query(collection(firestore, 'fees'), where('studentId', '==', feeStudent)) : null,
@@ -182,6 +177,32 @@ function DashboardPageContent() {
     );
   }, [firestore, dailyReportDate, userRole]);
   const { data: dailyFeeData, isLoading: dailyFeeLoading } = useCollection<Fee>(dailyFeesQuery);
+
+  const attendanceQuery = useMemoFirebase(() =>
+    firestore && attendanceReportClass && attendanceReportDate
+      ? query(
+          collection(firestore, 'attendance'),
+          where('class', '==', attendanceReportClass),
+          where('date', '==', format(attendanceReportDate, 'yyyy-MM-dd'))
+        )
+      : null,
+  [firestore, attendanceReportClass, attendanceReportDate]
+  );
+  const { data: attendance, isLoading: attendanceLoading } = useCollection<Attendance>(attendanceQuery);
+
+  const homeworkQuery = useMemoFirebase(() =>
+    firestore && homeworkReportClass && homeworkReportSubject && homeworkReportDate
+      ? query(
+          collection(firestore, 'homeworks'),
+          where('class', '==', homeworkReportClass),
+          where('subject', '==', homeworkReportSubject),
+          where('date', '==', format(homeworkReportDate, 'yyyy-MM-dd'))
+        )
+      : null,
+    [firestore, homeworkReportClass, homeworkReportSubject, homeworkReportDate]
+  );
+  const { data: homeworks, isLoading: homeworksLoading } = useCollection<Homework>(homeworkQuery);
+  const filteredHomework = homeworks?.[0];
 
   const dailyFeeReportData = React.useMemo(() => {
     if (!dailyFeeData) return {};
@@ -1089,13 +1110,12 @@ function DashboardPageContent() {
   
   const attendanceFilteredStudents = React.useMemo(() => {
     if (!attendanceReportClass || !attendanceReportDate || !students) return [];
-    
-    const reportDateStr = format(attendanceReportDate, 'yyyy-MM-dd');
+
     const studentsInClass = students.filter(s => s.class === attendanceReportClass);
 
     return studentsInClass.map(student => {
-      const attendanceRecord = attendance.find(
-        att => att.studentId === student.id && att.date === reportDateStr
+      const attendanceRecord = attendance?.find(
+        att => att.studentId === student.id
       );
       return {
         ...student,
@@ -1103,12 +1123,6 @@ function DashboardPageContent() {
       };
     });
   }, [attendanceReportClass, attendanceReportDate, students, attendance]);
-  
-  const filteredHomework = homeworks.find(h => 
-    h.class === homeworkReportClass &&
-    h.subject === homeworkReportSubject &&
-    homeworkReportDate && h.date === format(homeworkReportDate, 'yyyy-MM-dd')
-  );
 
   const idCardFilteredStudents = React.useMemo(() => {
     if (!idCardClass || !students) return [];
@@ -2293,7 +2307,8 @@ function DashboardPageContent() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {attendanceFilteredStudents.length > 0 ? (
+                    {attendanceLoading && <TableRow><TableCell colSpan={3} className="text-center h-24">Loading attendance...</TableCell></TableRow>}
+                    {!attendanceLoading && attendanceFilteredStudents.length > 0 ? (
                       attendanceFilteredStudents.map((student) => (
                         <TableRow key={student.id}>
                           <TableCell>{student.rollNo}</TableCell>
@@ -2311,13 +2326,13 @@ function DashboardPageContent() {
                           </TableCell>
                         </TableRow>
                       ))
-                    ) : (
+                    ) : !attendanceLoading ? (
                       <TableRow>
                         <TableCell colSpan={3} className="text-center h-24">
-                          No students found for this class or data not available.
+                          No students found for this class or data not available for this date.
                         </TableCell>
                       </TableRow>
-                    )}
+                    ): null}
                   </TableBody>
                 </Table>
              </CardContent>
@@ -2380,17 +2395,18 @@ function DashboardPageContent() {
                 <Card>
                   <CardHeader>
                     <CardTitle>Homework Details</CardTitle>
-                    <CardContent className="pt-4">
-                      {filteredHomework ? (
+                  </CardHeader>
+                  <CardContent className="pt-4">
+                    {homeworksLoading && <p>Loading homework...</p>}
+                      {!homeworksLoading && filteredHomework ? (
                         <div>
                           <p className="font-semibold">Teacher: {filteredHomework.teacherName}</p>
                           <p className="mt-2 text-muted-foreground">{filteredHomework.content}</p>
                         </div>
-                      ) : (
+                      ) : !homeworksLoading ? (
                          <p className="text-muted-foreground">No homework found for the selected class, subject, and date.</p>
-                      )}
+                      ) : null}
                     </CardContent>
-                  </CardHeader>
                 </Card>
              </CardContent>
           </TabsContent>
