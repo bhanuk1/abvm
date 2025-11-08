@@ -23,6 +23,14 @@ import { useCollection, useFirestore, useUser, useDoc, useMemoFirebase } from '@
 import { collection, query, where, doc } from 'firebase/firestore';
 import type { Notice } from '@/lib/placeholder-data';
 
+function DetailRow({ label, value }: { label: string; value?: string | null }) {
+    return (
+      <div className="grid grid-cols-3 items-center">
+        <dt className="text-sm font-medium text-muted-foreground">{label}</dt>
+        <dd className="col-span-2 text-sm">{value || '-'}</dd>
+      </div>
+    );
+  }
 
 export default function StudentDashboardPage() {
   const firestore = useFirestore();
@@ -108,13 +116,37 @@ export default function StudentDashboardPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="homework">
-            <TabsList className="grid w-full grid-cols-4">
+          <Tabs defaultValue="profile">
+            <TabsList className="grid w-full grid-cols-5">
+              <TabsTrigger value="profile">Profile</TabsTrigger>
               <TabsTrigger value="homework">Homework</TabsTrigger>
               <TabsTrigger value="attendance">Attendance</TabsTrigger>
               <TabsTrigger value="results">Results</TabsTrigger>
               <TabsTrigger value="notices">Notices</TabsTrigger>
             </TabsList>
+            <TabsContent value="profile">
+               <Card>
+                <CardHeader>
+                  <CardTitle>My Profile</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <dl className="grid gap-y-4 gap-x-8 md:grid-cols-2">
+                    <div className="space-y-4">
+                      <DetailRow label="Father's Name" value={loggedInStudent.fatherName} />
+                      <DetailRow label="Mother's Name" value={loggedInStudent.motherName} />
+                      <DetailRow label="Date of Birth" value={loggedInStudent.dob ? format(new Date(loggedInStudent.dob), 'dd/MM/yyyy') : '-'} />
+                      <DetailRow label="Mobile Number" value={loggedInStudent.mobile} />
+                    </div>
+                     <div className="space-y-4">
+                        <DetailRow label="Address" value={loggedInStudent.address} />
+                        <DetailRow label="Aadhaar Number" value={loggedInStudent.aadhaar} />
+                        <DetailRow label="Admission Date" value={loggedInStudent.admissionDate ? format(new Date(loggedInStudent.admissionDate), 'dd/MM/yyyy') : '-'} />
+                        <DetailRow label="Subjects" value={loggedInStudent.subjects} />
+                    </div>
+                  </dl>
+                </CardContent>
+              </Card>
+            </TabsContent>
             <TabsContent value="homework">
               <Card>
                 <CardHeader>
