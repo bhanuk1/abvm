@@ -292,6 +292,23 @@ function SchoolManagementPageContent() {
     });
   };
 
+  const handleDeleteUser = (userId: string) => {
+    if (!firestore) return;
+    const userDocRef = doc(firestore, 'users', userId);
+    deleteDoc(userDocRef)
+      .then(() => {
+        toast({ title: 'Success!', description: 'User deleted successfully.' });
+      })
+      .catch(error => {
+        const contextualError = new FirestorePermissionError({
+          operation: 'delete',
+          path: userDocRef.path,
+        });
+        errorEmitter.emit('permission-error', contextualError);
+        toast({ variant: 'destructive', title: 'Error', description: 'Could not delete user.' });
+      });
+  };
+
   const handleCreateUser = async () => {
     if (!newUser.role || !newUser.username || !firestore) {
       toast({ variant: 'destructive', title: 'Error', description: 'Please fill all required fields.' });
@@ -324,71 +341,70 @@ function SchoolManagementPageContent() {
         return;
       }
     } else if (newUser.role === 'parent') {
-      if (!newUser.studentName) {
-        toast({ variant: 'destructive', title: 'Error', description: 'Please fill in student name for parent.' });
-        return;
-      }
+        if (!newUser.studentName) {
+            toast({ variant: 'destructive', title: 'Error', description: 'Please fill in student name for parent.' });
+            return;
+        }
 
-      // Create Parent Auth & Firestore
-      const parentPassword = generatePassword();
-      const parentUserId = `parent_${Date.now()}`;
-      const parentEmail = `${parentUserId}@vidyalaya.com`;
-      let parentUser;
-      try {
-        const parentCredential = await createUserWithEmailAndPassword(auth, parentEmail, parentPassword);
-        parentUser = parentCredential.user;
-        const parentData = {
-          id: parentUser.uid,
-          userId: parentUserId,
-          password: parentPassword,
-          username: newUser.username,
-          role: 'parent',
-          fatherName: newUser.username,
-          motherName: newUser.motherName,
-          address: newUser.address,
-          mobile: newUser.studentMobile,
-        };
-        await setDoc(doc(firestore, 'users', parentUser.uid), parentData);
-      } catch (error: any) {
-        toast({ variant: 'destructive', title: 'Parent Creation Error', description: error.message });
-        return;
-      }
+        const parentPassword = generatePassword();
+        const parentUserId = `parent_${Date.now()}`;
+        const parentEmail = `${parentUserId}@vidyalaya.com`;
+        
+        const studentPassword = generatePassword();
+        const studentUserId = `student_${Date.now()}`;
+        const studentEmail = `${studentUserId}@vidyalaya.com`;
 
-      // Create Student Auth & Firestore, linked to parent
-      const studentPassword = generatePassword();
-      const studentUserId = `student_${Date.now()}`;
-      const studentEmail = `${studentUserId}@vidyalaya.com`;
-      try {
-        const studentCredential = await createUserWithEmailAndPassword(auth, studentEmail, studentPassword);
-        const studentUser = studentCredential.user;
-        const studentData = {
-          id: studentUser.uid,
-          userId: studentUserId,
-          password: studentPassword,
-          username: newUser.studentName,
-          role: 'student',
-          class: newUser.studentClass,
-          subjects: newUser.studentSubjects,
-          fatherName: newUser.username,
-          motherName: newUser.motherName,
-          address: newUser.address,
-          dob: newUser.dob ? format(newUser.dob, 'yyyy-MM-dd') : null,
-          admissionDate: newUser.admissionDate ? format(newUser.admissionDate, 'yyyy-MM-dd') : null,
-          aadhaar: newUser.aadhaar,
-          pen: newUser.pen,
-          mobile: newUser.studentMobile,
-          rollNo: newUser.rollNo,
-          parentId: parentUser.uid, // Link to parent
-        };
-        await setDoc(doc(firestore, 'users', studentUser.uid), studentData);
+        try {
+            // Create Parent Auth User
+            const parentCredential = await createUserWithEmailAndPassword(auth, parentEmail, parentPassword);
+            const parentUser = parentCredential.user;
 
-        // Update parent doc with studentId
-        await updateDoc(doc(firestore, 'users', parentUser.uid), { studentId: studentUser.uid });
+            // Create Student Auth User
+            const studentCredential = await createUserWithEmailAndPassword(auth, studentEmail, studentPassword);
+            const studentUser = studentCredential.user;
+            
+            // Parent Firestore Doc
+            const parentData = {
+                id: parentUser.uid,
+                userId: parentUserId,
+                password: parentPassword,
+                username: newUser.username,
+                role: 'parent',
+                fatherName: newUser.username,
+                motherName: newUser.motherName,
+                address: newUser.address,
+                mobile: newUser.studentMobile,
+                studentId: studentUser.uid, // Link to student
+            };
+            await setDoc(doc(firestore, 'users', parentUser.uid), parentData);
 
-      } catch (error: any) {
-        toast({ variant: 'destructive', title: 'Student Creation Error', description: error.message });
-        return;
-      }
+            // Student Firestore Doc
+            const studentData = {
+                id: studentUser.uid,
+                userId: studentUserId,
+                password: studentPassword,
+                username: newUser.studentName,
+                role: 'student',
+                class: newUser.studentClass,
+                subjects: newUser.studentSubjects,
+                fatherName: newUser.username,
+                motherName: newUser.motherName,
+                address: newUser.address,
+                dob: newUser.dob ? format(newUser.dob, 'yyyy-MM-dd') : null,
+                admissionDate: newUser.admissionDate ? format(newUser.admissionDate, 'yyyy-MM-dd') : null,
+                aadhaar: newUser.aadhaar,
+                pen: newUser.pen,
+                mobile: newUser.studentMobile,
+                rollNo: newUser.rollNo,
+                parentId: parentUser.uid, // Link to parent
+            };
+            await setDoc(doc(firestore, 'users', studentUser.uid), studentData);
+
+        } catch (error: any) {
+            toast({ variant: 'destructive', title: 'User Creation Error', description: error.message });
+            return;
+        }
+
     } else if (newUser.role === 'student') {
       const studentPassword = generatePassword();
       const studentUserId = `student_${Date.now()}`;
@@ -1215,6 +1231,7 @@ function SchoolManagementPageContent() {
                         <Button
                           variant="link"
                           className="p-0 h-auto text-destructive"
+                          onClick={() => handleDeleteUser(user.id)}
                         >
                           Delete
                         </Button>
@@ -1263,6 +1280,7 @@ function SchoolManagementPageContent() {
                         <Button
                           variant="link"
                           className="p-0 h-auto text-destructive"
+                          onClick={() => handleDeleteUser(student.id)}
                         >
                           Delete
                         </Button>
@@ -2136,5 +2154,3 @@ export default function SchoolManagementPage() {
         </React.Suspense>
     );
 }
-
-    
