@@ -1778,6 +1778,13 @@ function DashboardPageContent() {
                                 </TableCell>
                             </TableRow>
                         ))}
+                         {!usersLoading && (!users || users.filter(u => u.role === 'teacher').length === 0) && (
+                            <TableRow>
+                                <TableCell colSpan={5} className="h-24 text-center">
+                                    No teachers found.
+                                </TableCell>
+                            </TableRow>
+                        )}
                     </TableBody>
                 </Table>
             </CardContent>
