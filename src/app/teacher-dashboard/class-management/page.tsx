@@ -6,6 +6,7 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
+  CardDescription
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -33,7 +34,7 @@ import {
 } from '@/components/ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { Calendar as CalendarIcon, BookPlus, Send } from 'lucide-react';
+import { Calendar as CalendarIcon, BookPlus, Send, Eye } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
@@ -51,11 +52,29 @@ type Student = {
     username: string;
     class: string;
     parentId?: string;
+    fatherName?: string;
+    motherName?: string;
+    dob?: string;
+    mobile?: string;
+    address?: string;
+    aadhaar?: string;
+    admissionDate?: string;
+    subjects?: string;
 };
 
 const allClasses = ['Nursery', 'KG', ...Array.from({length: 12}, (_, i) => (i + 1).toString())];
 
 type AttendanceChanges = { [studentId: string]: 'Present' | 'Absent' };
+
+function DetailRow({ label, value }: { label: string; value?: string | null }) {
+  return (
+    <div className="grid grid-cols-3 items-center">
+      <dt className="text-sm font-medium text-muted-foreground">{label}</dt>
+      <dd className="col-span-2 text-sm">{value || '-'}</dd>
+    </div>
+  );
+}
+
 
 export default function TeacherClassManagementPage() {
   const firestore = useFirestore();
@@ -70,6 +89,8 @@ export default function TeacherClassManagementPage() {
   const [selectedClass, setSelectedClass] = React.useState('');
   const [selectedDate, setSelectedDate] = React.useState<Date | undefined>();
   const [attendanceChanges, setAttendanceChanges] = React.useState<AttendanceChanges>({});
+  const [selectedStudent, setSelectedStudent] = React.useState<Student | null>(null);
+  const [isProfileDialogOpen, setIsProfileDialogOpen] = React.useState(false);
 
   
   useEffect(() => {
@@ -135,7 +156,7 @@ export default function TeacherClassManagementPage() {
     }
 
     const batch = writeBatch(firestore);
-    const dateStr = format(selectedDate, 'yyyy-M-dd');
+    const dateStr = format(selectedDate, 'yyyy-MM-dd');
     const attendanceCol = collection(firestore, 'attendance');
 
     for (const studentId in attendanceChanges) {
@@ -276,6 +297,11 @@ export default function TeacherClassManagementPage() {
       })
       .filter(Boolean);
   }, [teacherData, selectedClass]);
+  
+  const handleViewProfile = (student: Student) => {
+    setSelectedStudent(student);
+    setIsProfileDialogOpen(true);
+  };
 
 
   return (
@@ -330,11 +356,12 @@ export default function TeacherClassManagementPage() {
               <TableRow>
                 <TableHead>Roll No.</TableHead>
                 <TableHead>Name</TableHead>
-                <TableHead className="text-right">Attendance</TableHead>
+                <TableHead>Attendance</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {(studentsLoading || attendanceLoading) && <TableRow><TableCell colSpan={3} className="text-center">Loading...</TableCell></TableRow>}
+              {(studentsLoading || attendanceLoading) && <TableRow><TableCell colSpan={4} className="text-center">Loading...</TableCell></TableRow>}
               {!(studentsLoading || attendanceLoading) && students && students.length > 0 ? (
                 students.map((student) => {
                   const status = getStudentStatus(student.id);
@@ -343,7 +370,7 @@ export default function TeacherClassManagementPage() {
                     <TableRow key={student.id}>
                       <TableCell>{student.rollNo}</TableCell>
                       <TableCell>{student.username}</TableCell>
-                      <TableCell className="flex justify-end items-center gap-4">
+                      <TableCell className="flex items-center gap-4">
                          <Badge 
                            variant={isPresent ? 'default' : 'destructive'}
                            className={cn(
@@ -359,12 +386,18 @@ export default function TeacherClassManagementPage() {
                             aria-label={`Mark ${student.username} as ${isPresent ? 'absent' : 'present'}`}
                          />
                       </TableCell>
+                       <TableCell className="text-right">
+                          <Button variant="outline" size="sm" onClick={() => handleViewProfile(student)}>
+                            <Eye className="mr-2 h-4 w-4" />
+                            View Profile
+                          </Button>
+                        </TableCell>
                     </TableRow>
                   )
                 })
               ) : (
                 <TableRow>
-                  <TableCell colSpan={3} className="text-center h-24">
+                  <TableCell colSpan={4} className="text-center h-24">
                     No students found in this class.
                   </TableCell>
                 </TableRow>
@@ -419,6 +452,38 @@ export default function TeacherClassManagementPage() {
           </div>
         </CardContent>
       </Card>
+      
+       <Dialog open={isProfileDialogOpen} onOpenChange={setIsProfileDialogOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Student Profile: {selectedStudent?.username}</DialogTitle>
+            <DialogDescription>
+                Class: {selectedStudent?.class} | Roll No: {selectedStudent?.rollNo}
+            </DialogDescription>
+          </DialogHeader>
+          {selectedStudent && (
+             <div className="py-4 space-y-4">
+                <dl className="grid gap-y-4 gap-x-8 md:grid-cols-2">
+                <div className="space-y-4">
+                    <DetailRow label="Father's Name" value={selectedStudent.fatherName} />
+                    <DetailRow label="Mother's Name" value={selectedStudent.motherName} />
+                    <DetailRow label="Date of Birth" value={selectedStudent.dob ? format(new Date(selectedStudent.dob), 'dd/MM/yyyy') : '-'} />
+                    <DetailRow label="Mobile Number" value={selectedStudent.mobile} />
+                </div>
+                <div className="space-y-4">
+                    <DetailRow label="Address" value={selectedStudent.address} />
+                    <DetailRow label="Aadhaar Number" value={selectedStudent.aadhaar} />
+                    <DetailRow label="Admission Date" value={selectedStudent.admissionDate ? format(new Date(selectedStudent.admissionDate), 'dd/MM/yyyy') : '-'} />
+                    <DetailRow label="Subjects" value={selectedStudent.subjects} />
+                </div>
+                </dl>
+          </div>
+          )}
+          <DialogFooter>
+            <Button onClick={() => setIsProfileDialogOpen(false)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
     </div>
   );

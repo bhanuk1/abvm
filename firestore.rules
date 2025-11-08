@@ -85,5 +85,10 @@ service cloud.firestore {
       allow read: if isSignedIn() && (getUserData(request.auth.uid).role in ['admin', 'teacher'] || isOwner(resource.data.studentId));
       allow list: if isSignedIn() && getUserData(request.auth.uid).role in ['admin', 'teacher'];
     }
+
+    match /leave-applications/{applicationId} {
+      allow read, list, write: if isSignedIn() && getUserData(request.auth.uid).role in ['admin', 'teacher'];
+      allow create: if isSignedIn() && getUserData(request.auth.uid).role in ['student', 'parent'];
+    }
   }
 }
