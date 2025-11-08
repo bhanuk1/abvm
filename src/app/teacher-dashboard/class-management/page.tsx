@@ -182,8 +182,15 @@ export default function TeacherClassManagementPage() {
     if (!teacherData?.classSubject || !selectedClass) return [];
     const classSubjectPairs = teacherData.classSubject.split(',');
     return classSubjectPairs
-        .filter((pair: string) => pair.split('-')[0].trim() === selectedClass)
-        .map((pair: string) => pair.split('-')[1].trim());
+      .filter((pair: string) => pair.split('-')[0].trim() === selectedClass)
+      .map((pair: string) => {
+        const parts = pair.split('-');
+        if (parts.length > 1) {
+          return parts[1].trim();
+        }
+        return null;
+      })
+      .filter(Boolean);
   }, [teacherData, selectedClass]);
 
 
