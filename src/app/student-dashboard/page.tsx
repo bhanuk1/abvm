@@ -24,7 +24,7 @@ import { collection, query, where, doc } from 'firebase/firestore';
 import type { Notice } from '@/lib/placeholder-data';
 import { type Fee } from '@/lib/school-data';
 import { Calendar } from '@/components/ui/calendar';
-import { GraduationCap } from 'lucide-react';
+import { GraduationCap, UserCircle, DollarSign, BookMarked, CheckCircle, Award, Bell, CalendarDays } from 'lucide-react';
 
 function DetailRow({ label, value }: { label: string; value?: string | null }) {
     return (
@@ -163,13 +163,13 @@ export default function StudentDashboardPage() {
         <CardContent className="pt-6">
           <Tabs defaultValue="profile">
             <TabsList className="grid w-full grid-cols-7">
-              <TabsTrigger value="profile">Profile</TabsTrigger>
-              <TabsTrigger value="fees">Fees</TabsTrigger>
-              <TabsTrigger value="homework">Homework</TabsTrigger>
-              <TabsTrigger value="attendance">Attendance</TabsTrigger>
-              <TabsTrigger value="results">Results</TabsTrigger>
-              <TabsTrigger value="notices">Notices</TabsTrigger>
-              <TabsTrigger value="calendar">Calendar</TabsTrigger>
+              <TabsTrigger value="profile"><UserCircle className="mr-2 h-5 w-5" />Profile</TabsTrigger>
+              <TabsTrigger value="fees"><DollarSign className="mr-2 h-5 w-5" />Fees</TabsTrigger>
+              <TabsTrigger value="homework"><BookMarked className="mr-2 h-5 w-5" />Homework</TabsTrigger>
+              <TabsTrigger value="attendance"><CheckCircle className="mr-2 h-5 w-5" />Attendance</TabsTrigger>
+              <TabsTrigger value="results"><Award className="mr-2 h-5 w-5" />Results</TabsTrigger>
+              <TabsTrigger value="notices"><Bell className="mr-2 h-5 w-5" />Notices</TabsTrigger>
+              <TabsTrigger value="calendar"><CalendarDays className="mr-2 h-5 w-5" />Calendar</TabsTrigger>
             </TabsList>
             <TabsContent value="profile">
                <Card>
