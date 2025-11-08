@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useFormStatus } from 'react-dom';
 import { LogIn } from 'lucide-react';
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -22,7 +22,7 @@ function LoginButton() {
   );
 }
 
-export function LoginForm() {
+function LoginFormContent() {
   const auth = useAuth();
   const router = useRouter();
   const { toast } = useToast();
@@ -66,6 +66,10 @@ export function LoginForm() {
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError(null);
+    if (!auth) {
+        setError('प्रमाणीकरण सेवा उपलब्ध नहीं है।');
+        return;
+    }
     if (!userId || !password) {
       setError('यूजर आईडी और पासवर्ड आवश्यक हैं।');
       return;
@@ -131,4 +135,20 @@ export function LoginForm() {
       )}
     </form>
   );
+}
+
+
+export function LoginForm() {
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  // Render a placeholder or nothing on the server, and the actual form on the client
+  if (!isClient) {
+    return null; // Or a loading skeleton
+  }
+
+  return <LoginFormContent />;
 }
