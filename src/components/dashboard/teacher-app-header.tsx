@@ -4,12 +4,14 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { BookOpenCheck, LayoutGrid, BookMarked } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useUser } from '@/firebase';
 
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
 export function TeacherAppHeader() {
   const pathname = usePathname();
+  const { user } = useUser();
 
   const navLinks = [
     { href: '/teacher-dashboard', label: 'Dashboard', icon: LayoutGrid },
@@ -29,7 +31,7 @@ export function TeacherAppHeader() {
             <div>
               <h1 className="text-xl font-bold">Adarsh Bal Vidya Mandir</h1>
               <p className="text-sm text-muted-foreground">
-                Welcome, Mrs. Sunita Gupta
+                Welcome, {user?.displayName || 'Teacher'}
               </p>
             </div>
           </div>

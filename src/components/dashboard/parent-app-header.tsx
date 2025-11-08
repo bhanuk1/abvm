@@ -4,12 +4,14 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { BookOpenCheck, LayoutGrid, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useUser } from '@/firebase';
 
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
 export function ParentAppHeader() {
   const pathname = usePathname();
+  const { user } = useUser();
 
   const navLinks = [
     { href: '/parent-dashboard', label: 'Dashboard', icon: LayoutGrid },
@@ -29,7 +31,7 @@ export function ParentAppHeader() {
             <div>
               <h1 className="text-xl font-bold">Adarsh Bal Vidya Mandir</h1>
               <p className="text-sm text-muted-foreground">
-                Welcome, Vikas Sharma
+                Welcome, {user?.displayName || 'Parent'}
               </p>
             </div>
           </div>

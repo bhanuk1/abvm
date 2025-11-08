@@ -4,14 +4,14 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { BookOpenCheck, LayoutGrid, ClipboardCheck } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useUser } from '@/firebase';
 
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { initialStudents } from '@/lib/school-data';
 
 export function StudentAppHeader() {
   const pathname = usePathname();
-  const student = initialStudents[0]; // Assuming first student is logged in
+  const { user } = useUser();
 
   const navLinks = [
     { href: '/student-dashboard', label: 'Dashboard', icon: LayoutGrid },
@@ -27,7 +27,7 @@ export function StudentAppHeader() {
             <div>
               <h1 className="text-xl font-bold">Adarsh Bal Vidya Mandir</h1>
               <p className="text-sm text-muted-foreground">
-                Welcome, {student.name}
+                Welcome, {user?.displayName || 'Student'}
               </p>
             </div>
           </div>
