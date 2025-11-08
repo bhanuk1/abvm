@@ -708,7 +708,7 @@ export default function SchoolManagementPage() {
             ['Class', student.class],
             ['Roll No.', student.rollNo],
             ['Quarter', quarterInfo?.label || ''],
-            ['Amount (₹)', feeData.amount.toString()],
+            ['Amount (INR)', feeData.amount.toString()],
             ['Status', feeData.status],
         ];
 
@@ -1336,7 +1336,7 @@ export default function SchoolManagementPage() {
                       <TableHeader>
                         <TableRow>
                           <TableHead>Quarter</TableHead>
-                          <TableHead>Amount (₹)</TableHead>
+                          <TableHead>Amount (INR)</TableHead>
                           <TableHead>Status</TableHead>
                           <TableHead>Payment Date</TableHead>
                           <TableHead className="text-right">Actions</TableHead>
