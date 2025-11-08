@@ -1293,7 +1293,7 @@ export default function SchoolManagementPage() {
                               </TableCell>
                               <TableCell>{feeInfo.paymentDate ? format(feeInfo.paymentDate.toDate(), 'dd/MM/yyyy') : '-'}</TableCell>
                               <TableCell className="text-right">
-                                <Button size="sm" disabled={isPaid} onClick={()={() => handlePayFee(q.id, q.amount)}}>
+                                <Button size="sm" disabled={isPaid} onClick={() => handlePayFee(q.id, q.amount)}>
                                   <DollarSign className="mr-2 h-4 w-4" />
                                   फीस जमा करें
                                 </Button>
