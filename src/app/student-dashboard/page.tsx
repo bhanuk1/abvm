@@ -165,7 +165,7 @@ export default function StudentDashboardPage() {
                     <TableBody>
                       {studentHomeworks && loggedInStudent.subjects && studentHomeworks.filter(hw => loggedInStudent.subjects.includes(hw.subject)).map((hw) => (
                         <TableRow key={hw.id}>
-                          <TableCell>{format(new Date(hw.date), 'dd/MM/yyyy')}</TableCell>
+                          <TableCell>{hw.date ? format(new Date(hw.date), 'dd/MM/yyyy') : ''}</TableCell>
                           <TableCell>{hw.subject}</TableCell>
                           <TableCell>{hw.teacherName}</TableCell>
                           <TableCell>{hw.content}</TableCell>
@@ -193,7 +193,7 @@ export default function StudentDashboardPage() {
                       <TableBody>
                         {studentAttendance.map((att, index) => (
                           <TableRow key={index}>
-                            <TableCell>{format(new Date(att.date), 'PPP')}</TableCell>
+                            <TableCell>{att.date ? format(new Date(att.date), 'PPP') : ''}</TableCell>
                             <TableCell className="text-right">
                               <Badge 
                                 variant={att.status === 'Present' ? 'default' : 'destructive'}
