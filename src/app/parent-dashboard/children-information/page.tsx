@@ -86,42 +86,42 @@ export default function ChildrenInformationPage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <h1 className="text-3xl font-bold">मेरे बच्चे की जानकारी</h1>
+      <h1 className="text-3xl font-bold">My Child's Information</h1>
 
       <Card>
         <CardHeader>
           <CardTitle>{parentStudent.name}</CardTitle>
           <CardDescription>
-            कक्षा: {parentStudent.class} | रोल नंबर: {parentStudent.rollNo}
+            Class: {parentStudent.class} | Roll No: {parentStudent.rollNo}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="profile">
             <TabsList className="grid w-full grid-cols-5">
-              <TabsTrigger value="profile">प्रोफ़ाइल</TabsTrigger>
-              <TabsTrigger value="attendance">उपस्थिति</TabsTrigger>
-              <TabsTrigger value="homework">होमवर्क</TabsTrigger>
-              <TabsTrigger value="results">परिणाम</TabsTrigger>
-              <TabsTrigger value="notices">सूचना</TabsTrigger>
+              <TabsTrigger value="profile">Profile</TabsTrigger>
+              <TabsTrigger value="attendance">Attendance</TabsTrigger>
+              <TabsTrigger value="homework">Homework</TabsTrigger>
+              <TabsTrigger value="results">Results</TabsTrigger>
+              <TabsTrigger value="notices">Notices</TabsTrigger>
             </TabsList>
             <TabsContent value="profile">
                <Card>
                 <CardHeader>
-                  <CardTitle>छात्र प्रोफ़ाइल</CardTitle>
+                  <CardTitle>Student Profile</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <dl className="grid gap-y-4 gap-x-8 md:grid-cols-2">
                     <div className="space-y-4">
-                      <DetailRow label="पिता का नाम" value={parentStudent.fatherName} />
-                      <DetailRow label="माता का नाम" value={parentStudent.motherName} />
-                      <DetailRow label="जन्म तिथि" value={parentStudent.dob ? format(new Date(parentStudent.dob), 'dd/MM/yyyy') : '-'} />
-                      <DetailRow label="मोबाइल नंबर" value={parentStudent.mobile} />
+                      <DetailRow label="Father's Name" value={parentStudent.fatherName} />
+                      <DetailRow label="Mother's Name" value={parentStudent.motherName} />
+                      <DetailRow label="Date of Birth" value={parentStudent.dob ? format(new Date(parentStudent.dob), 'dd/MM/yyyy') : '-'} />
+                      <DetailRow label="Mobile Number" value={parentStudent.mobile} />
                     </div>
                      <div className="space-y-4">
-                        <DetailRow label="पता" value={parentStudent.address} />
-                        <DetailRow label="आधार नंबर" value={parentStudent.aadhaar} />
-                        <DetailRow label="प्रवेश तिथि" value={parentStudent.admissionDate ? format(new Date(parentStudent.admissionDate), 'dd/MM/yyyy') : '-'} />
-                        <DetailRow label="विषय" value={parentStudent.subjects} />
+                        <DetailRow label="Address" value={parentStudent.address} />
+                        <DetailRow label="Aadhaar Number" value={parentStudent.aadhaar} />
+                        <DetailRow label="Admission Date" value={parentStudent.admissionDate ? format(new Date(parentStudent.admissionDate), 'dd/MM/yyyy') : '-'} />
+                        <DetailRow label="Subjects" value={parentStudent.subjects} />
                     </div>
                   </dl>
                 </CardContent>
@@ -130,15 +130,15 @@ export default function ChildrenInformationPage() {
             <TabsContent value="attendance">
               <Card>
                 <CardHeader>
-                  <CardTitle>मासिक उपस्थिति</CardTitle>
+                  <CardTitle>Monthly Attendance</CardTitle>
                 </CardHeader>
                 <CardContent>
                    {studentAttendance && studentAttendance.length > 0 ? (
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>तारीख</TableHead>
-                          <TableHead className="text-right">स्थिति</TableHead>
+                          <TableHead>Date</TableHead>
+                          <TableHead className="text-right">Status</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -147,9 +147,9 @@ export default function ChildrenInformationPage() {
                             <TableCell>{format(new Date(att.date), 'PPP')}</TableCell>
                             <TableCell className="text-right">
                               <Badge 
-                                variant={att.status === 'उपस्थित' ? 'default' : 'destructive'}
+                                variant={att.status === 'Present' ? 'default' : 'destructive'}
                                 className={cn(
-                                 att.status === 'उपस्थित' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                                 att.status === 'Present' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                                )}
                               >
                                {att.status}
@@ -161,7 +161,7 @@ export default function ChildrenInformationPage() {
                     </Table>
                    ) : (
                      <div className="p-4 min-h-[150px] flex items-center justify-center">
-                       <p className="text-muted-foreground">इस महीने का उपस्थिति डेटा जल्द ही उपलब्ध होगा।</p>
+                       <p className="text-muted-foreground">This month's attendance data will be available soon.</p>
                      </div>
                    )}
                 </CardContent>
@@ -170,16 +170,16 @@ export default function ChildrenInformationPage() {
             <TabsContent value="homework">
               <Card>
                 <CardHeader>
-                  <CardTitle>विषय-वार होमवर्क</CardTitle>
+                  <CardTitle>Subject-wise Homework</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>तारीख</TableHead>
-                        <TableHead>विषय</TableHead>
-                        <TableHead>शिक्षक</TableHead>
-                        <TableHead>विवरण</TableHead>
+                        <TableHead>Date</TableHead>
+                        <TableHead>Subject</TableHead>
+                        <TableHead>Teacher</TableHead>
+                        <TableHead>Details</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -199,7 +199,7 @@ export default function ChildrenInformationPage() {
             <TabsContent value="results">
               <Card>
                 <CardHeader>
-                  <CardTitle>परीक्षा परिणाम</CardTitle>
+                  <CardTitle>Exam Results</CardTitle>
                 </CardHeader>
                  <CardContent>
                    {studentResults && studentResults.length > 0 ? (
@@ -214,9 +214,9 @@ export default function ChildrenInformationPage() {
                                 <Table>
                                   <TableHeader>
                                     <TableRow>
-                                      <TableHead>विषय</TableHead>
-                                      <TableHead>प्राप्तांक</TableHead>
-                                      <TableHead>पूर्णांक</TableHead>
+                                      <TableHead>Subject</TableHead>
+                                      <TableHead>Obtained</TableHead>
+                                      <TableHead>Total</TableHead>
                                     </TableRow>
                                   </TableHeader>
                                   <TableBody>
@@ -231,8 +231,8 @@ export default function ChildrenInformationPage() {
                                 </Table>
                               ) : (
                                 <div className="flex gap-4">
-                                  <p><strong>प्राप्तांक:</strong> {result.marks.obtained}</p>
-                                  <p><strong>पूर्णांक:</strong> {result.marks.total}</p>
+                                  <p><strong>Marks Obtained:</strong> {result.marks.obtained}</p>
+                                  <p><strong>Total Marks:</strong> {result.marks.total}</p>
                                 </div>
                               )}
                           </CardContent>
@@ -241,7 +241,7 @@ export default function ChildrenInformationPage() {
                     </div>
                    ) : (
                      <div className="p-4 min-h-[150px] flex items-center justify-center">
-                       <p className="text-muted-foreground">कोई परिणाम उपलब्ध नहीं है।</p>
+                       <p className="text-muted-foreground">No results available.</p>
                      </div>
                    )}
                 </CardContent>
@@ -250,7 +250,7 @@ export default function ChildrenInformationPage() {
              <TabsContent value="notices">
               <Card>
                 <CardHeader>
-                  <CardTitle>स्कूल की सूचनाएं</CardTitle>
+                  <CardTitle>School Notices</CardTitle>
                 </CardHeader>
                  <CardContent className="space-y-4">
                     {studentNotices && studentNotices.map(notice => (

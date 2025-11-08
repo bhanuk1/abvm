@@ -27,7 +27,7 @@ const createDefaultAdmin = async () => {
       console.log('Admin auth user exists, but Firestore document is missing. Creating document...');
       await setDoc(userDocRef, {
         id: user.uid,
-        username: 'भानु प्रताप कुशवाहा',
+        username: 'Bhanu Pratap Kushwaha',
         role: 'admin',
         userId: 'admin',
         password: adminPassword,
@@ -50,7 +50,7 @@ const createDefaultAdmin = async () => {
         const userDocRef = doc(firestore, 'users', user.uid);
         await setDoc(userDocRef, {
           id: user.uid,
-          username: 'भानु प्रताप कुशवाहा',
+          username: 'Bhanu Pratap Kushwaha',
           role: 'admin',
           userId: 'admin',
           password: adminPassword,

@@ -103,8 +103,8 @@ export default function TeacherClassManagementPage() {
     // In a real app, this is where you'd send the `attendance` state to your backend.
     // For this mock app, the state is already updated, so we just show a confirmation.
     toast({
-        title: "सफलता!",
-        description: "उपस्थिति सफलतापूर्वक सेव हो गई है।",
+        title: "Success!",
+        description: "Attendance saved successfully.",
         className: "bg-green-100 text-green-800",
     });
   }
@@ -113,8 +113,8 @@ export default function TeacherClassManagementPage() {
     if (!homeworkContent || !homeworkSubject || !firestore || !currentUser) {
         toast({
             variant: 'destructive',
-            title: 'त्रुटि',
-            description: 'कृपया होमवर्क का विषय और विवरण भरें।',
+            title: 'Error',
+            description: 'Please fill in the subject and content for the homework.',
         });
         return;
     }
@@ -126,7 +126,7 @@ export default function TeacherClassManagementPage() {
         content: homeworkContent,
         date: format(new Date(), 'yyyy-MM-dd'),
         teacherId: currentUser.uid,
-        teacherName: currentUser.displayName || 'शिक्षक'
+        teacherName: currentUser.displayName || 'Teacher'
     };
     
     addDoc(homeworkCol, homeworkData).catch(error => {
@@ -139,8 +139,8 @@ export default function TeacherClassManagementPage() {
     });
 
     toast({
-        title: "सफलता!",
-        description: `कक्षा ${selectedClass} के लिए होमवर्क भेज दिया गया है।`,
+        title: "Success!",
+        description: `Homework for class ${selectedClass} has been sent.`,
         className: "bg-green-100 text-green-800",
     });
     setHomeworkContent('');
@@ -152,23 +152,23 @@ export default function TeacherClassManagementPage() {
     const attendanceRecord = attendance?.find(
       att => att.studentId === studentId
     );
-    return attendanceRecord?.status || 'अनुपस्थित'; // Default to absent
+    return attendanceRecord?.status || 'Absent'; // Default to absent
   };
 
   return (
     <div className="flex flex-col gap-8">
-      <h1 className="text-3xl font-bold">कक्षा प्रबंधन</h1>
+      <h1 className="text-3xl font-bold">Class Management</h1>
 
       <Card>
         <CardContent className="p-4 flex items-center gap-4">
-           <Label htmlFor="class-select" className="shrink-0">कक्षा चुनें:</Label>
+           <Label htmlFor="class-select" className="shrink-0">Select Class:</Label>
           <Select value={selectedClass} onValueChange={setSelectedClass}>
             <SelectTrigger id="class-select" className="w-[200px]">
-              <SelectValue placeholder="कक्षा चुनें" />
+              <SelectValue placeholder="Select Class" />
             </SelectTrigger>
             <SelectContent>
               {allClasses.map(c => (
-                <SelectItem key={c} value={c}>कक्षा {c}</SelectItem>
+                <SelectItem key={c} value={c}>Class {c}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -199,15 +199,15 @@ export default function TeacherClassManagementPage() {
       
       <Card>
         <CardHeader>
-            <CardTitle>छात्र सूची - कक्षा {selectedClass}</CardTitle>
+            <CardTitle>Student List - Class {selectedClass}</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>रोल नंबर</TableHead>
-                <TableHead>नाम</TableHead>
-                <TableHead className="text-right">उपस्थिति</TableHead>
+                <TableHead>Roll No.</TableHead>
+                <TableHead>Name</TableHead>
+                <TableHead className="text-right">Attendance</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -221,18 +221,18 @@ export default function TeacherClassManagementPage() {
                       <TableCell>{student.name}</TableCell>
                       <TableCell className="flex justify-end items-center gap-4">
                          <Badge 
-                           variant={status === 'उपस्थित' ? 'default' : 'destructive'}
+                           variant={status === 'Present' ? 'default' : 'destructive'}
                            className={cn(
-                             status === 'उपस्थित' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800',
+                             status === 'Present' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800',
                              'w-20 justify-center'
                            )}
                           >
                            {status}
                          </Badge>
                          <Switch
-                            checked={status === 'उपस्थित'}
+                            checked={status === 'Present'}
                             onCheckedChange={(isChecked) => handleAttendanceChange(student.id, isChecked)}
-                            aria-label={`Mark ${student.name} as ${status === 'उपस्थित' ? 'absent' : 'present'}`}
+                            aria-label={`Mark ${student.name} as ${status === 'Present' ? 'absent' : 'present'}`}
                          />
                       </TableCell>
                     </TableRow>
@@ -241,31 +241,31 @@ export default function TeacherClassManagementPage() {
               ) : (
                 <TableRow>
                   <TableCell colSpan={3} className="text-center h-24">
-                    इस कक्षा में कोई छात्र नहीं मिला।
+                    No students found in this class.
                   </TableCell>
                 </TableRow>
               )}
             </TableBody>
           </Table>
           <div className="flex justify-end gap-4 mt-6">
-            <Button onClick={handleSaveAttendance}>उपस्थिति सेव करें</Button>
+            <Button onClick={handleSaveAttendance}>Save Attendance</Button>
             <Dialog open={isHomeworkDialogOpen} onOpenChange={setIsHomeworkDialogOpen}>
               <DialogTrigger asChild>
                 <Button variant="secondary" className="bg-amber-500 hover:bg-amber-600 text-white">
                     <BookPlus className="mr-2"/>
-                    होमवर्क दें
+                    Give Homework
                 </Button>
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>कक्षा {selectedClass} के लिए नया होमवर्क</DialogTitle>
+                    <DialogTitle>New Homework for Class {selectedClass}</DialogTitle>
                 </DialogHeader>
                 <div className="py-4 space-y-4">
                     <div className="space-y-2">
-                        <Label htmlFor="homework-subject">विषय</Label>
+                        <Label htmlFor="homework-subject">Subject</Label>
                          <Select value={homeworkSubject} onValueChange={setHomeworkSubject}>
                             <SelectTrigger id="homework-subject">
-                                <SelectValue placeholder="विषय चुनें" />
+                                <SelectValue placeholder="Select Subject" />
                             </SelectTrigger>
                             <SelectContent>
                                 {teacherData.classes.find(c => c.name === selectedClass)?.subject.split(', ').map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
@@ -273,19 +273,19 @@ export default function TeacherClassManagementPage() {
                         </Select>
                     </div>
                     <div className="space-y-2">
-                        <Label htmlFor="homework-content">होमवर्क का विवरण</Label>
+                        <Label htmlFor="homework-content">Homework Details</Label>
                         <Textarea 
                             id="homework-content"
                             rows={5}
                             value={homeworkContent}
                             onChange={(e) => setHomeworkContent(e.target.value)}
-                            placeholder="जैसे: गणित की प्रश्नावली 5.2 के सभी प्रश्न हल करें।"
+                            placeholder="e.g., Solve all questions from exercise 5.2 in the math textbook."
                         />
                     </div>
                 </div>
                 <DialogFooter>
-                    <Button variant="outline" onClick={() => setIsHomeworkDialogOpen(false)}>रद्द करें</Button>
-                    <Button onClick={handleSendHomework}>होमवर्क भेजें</Button>
+                    <Button variant="outline" onClick={() => setIsHomeworkDialogOpen(false)}>Cancel</Button>
+                    <Button onClick={handleSendHomework}>Send Homework</Button>
                 </DialogFooter>
               </DialogContent>
             </Dialog>

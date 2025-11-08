@@ -14,7 +14,7 @@ export function StudentAppHeader() {
   const student = initialStudents[0]; // Assuming first student is logged in
 
   const navLinks = [
-    { href: '/student-dashboard', label: 'डेशबोर्ड', icon: LayoutGrid },
+    { href: '/student-dashboard', label: 'Dashboard', icon: LayoutGrid },
     // Add more student-specific links here if needed
   ];
 
@@ -25,18 +25,18 @@ export function StudentAppHeader() {
           <div className="flex items-center gap-4">
             <BookOpenCheck className="h-10 w-10 text-primary" />
             <div>
-              <h1 className="text-xl font-bold">आदर्श बाल विद्या मन्दिर</h1>
+              <h1 className="text-xl font-bold">Adarsh Bal Vidya Mandir</h1>
               <p className="text-sm text-muted-foreground">
-                स्वागत है, {student.name}
+                Welcome, {student.name}
               </p>
             </div>
           </div>
           <div className="flex items-center gap-4">
             <Badge variant="secondary" className="text-sm bg-green-100 text-green-800">
-              छात्र
+              Student
             </Badge>
             <Button variant="destructive" asChild>
-              <Link href="/">लॉगआउट</Link>
+              <Link href="/">Logout</Link>
             </Button>
           </div>
         </div>

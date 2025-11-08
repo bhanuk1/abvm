@@ -13,16 +13,16 @@ export default function LoginPage() {
           <BookOpenCheck className="h-12 w-12 text-primary" />
           <div>
             <h1 className="text-2xl font-bold text-primary">
-              आदर्श बाल विद्या मन्दिर
+              Adarsh Bal Vidya Mandir
             </h1>
             <p className="text-sm text-green-600 font-semibold">
-              हमारा ध्येय संपूर्ण विकास
+              Our goal is complete development
             </p>
           </div>
         </Link>
         <Card>
           <CardHeader>
-            <CardTitle className="text-center text-2xl">लॉगिन करें</CardTitle>
+            <CardTitle className="text-center text-2xl">Login</CardTitle>
           </CardHeader>
           <CardContent>
             <LoginForm />

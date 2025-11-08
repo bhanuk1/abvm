@@ -197,7 +197,7 @@ export default function SchoolManagementPage() {
     const noticeToAdd = {
       ...newNotice,
       authorId: currentUser.uid,
-      author: 'प्रधानाचार्य',
+      author: 'Principal',
       createdAt: serverTimestamp(),
     };
 
@@ -259,7 +259,7 @@ export default function SchoolManagementPage() {
 
   const handleCreateUser = async () => {
     if (!newUser.role || !newUser.username || !auth || !firestore) {
-      toast({ variant: 'destructive', title: 'त्रुटि', description: 'कृपया सभी आवश्यक फ़ील्ड भरें।' });
+      toast({ variant: 'destructive', title: 'Error', description: 'Please fill all required fields.' });
       return;
     }
   
@@ -273,7 +273,7 @@ export default function SchoolManagementPage() {
       userCredential = await createUserWithEmailAndPassword(auth, mainUserEmail, mainUserPassword);
     } catch (error: any) {
       console.error("Error creating auth user:", error);
-      toast({ variant: 'destructive', title: 'प्रमाणीकरण त्रुटि', description: 'उपयोगकर्ता प्रमाणीकरण बनाने में विफल: ' + error.message });
+      toast({ variant: 'destructive', title: 'Authentication Error', description: 'Failed to create user authentication: ' + error.message });
       return;
     }
   
@@ -290,7 +290,7 @@ export default function SchoolManagementPage() {
       userData = { ...userData, mobile: newUser.teacherMobile, classSubject: `${newUser.teacherClass} - ${newUser.teacherSubject}` };
     } else if (newUser.role === 'parent') {
       if (!newUser.studentName) {
-        toast({ variant: 'destructive', title: 'त्रुटि', description: 'अभिभावक बनाते समय कृपया छात्र का नाम भरें।' });
+        toast({ variant: 'destructive', title: 'Error', description: 'Please fill in the student name when creating a parent.' });
         return;
       }
       userData = { ...userData, fatherName: newUser.username, motherName: newUser.motherName, address: newUser.address, mobile: newUser.studentMobile };
@@ -315,7 +315,7 @@ export default function SchoolManagementPage() {
         });
       } catch (error: any) {
         console.error("Error creating student auth user:", error);
-        toast({ variant: 'destructive', title: 'छात्र त्रुटि', description: 'संबद्ध छात्र बनाने में विफल: ' + error.message });
+        toast({ variant: 'destructive', title: 'Student Error', description: 'Failed to create associated student: ' + error.message });
         return;
       }
     } else if (newUser.role === 'student') {
@@ -332,7 +332,7 @@ export default function SchoolManagementPage() {
       errorEmitter.emit('permission-error', contextualError);
     });
   
-    toast({ title: 'सफलता!', description: 'नया उपयोगकर्ता सफलतापूर्वक बनाया गया।' });
+    toast({ title: 'Success!', description: 'New user created successfully.' });
     setNewUser(initialNewUserState);
     setIsUserDialogOpen(false);
   };
@@ -346,13 +346,13 @@ export default function SchoolManagementPage() {
   
   const handleAddResult = async () => {
     if (!selectedResultClass || !selectedResultStudent || !selectedExamType || !students || !firestore) {
-      toast({ variant: 'destructive', title: 'त्रुटि', description: 'कृपया कक्षा, छात्र और परीक्षा का प्रकार चुनें।' });
+      toast({ variant: 'destructive', title: 'Error', description: 'Please select class, student, and exam type.' });
       return;
     }
 
     const student = students.find(s => s.id === selectedResultStudent);
     if (!student) {
-      toast({ variant: 'destructive', title: 'त्रुटि', description: 'चयनित छात्र नहीं मिला।' });
+      toast({ variant: 'destructive', title: 'Error', description: 'Selected student not found.' });
       return;
     }
 
@@ -367,7 +367,7 @@ export default function SchoolManagementPage() {
             monthlyTotal === null ||
             String(monthlyTotal).trim() === ''
         ) {
-            toast({ variant: 'destructive', title: 'त्रुटि', description: 'कृपया मासिक टेस्ट के अंक भरें।' });
+            toast({ variant: 'destructive', title: 'Error', description: 'Please enter marks for the monthly test.' });
             return;
         }
         resultMarks = {
@@ -384,7 +384,7 @@ export default function SchoolManagementPage() {
 
         const allMarksEntered = resultMarks.every(m => m.obtained);
         if (!allMarksEntered) {
-            toast({ variant: 'destructive', title: 'त्रुटि', description: 'कृपया सभी विषयों के अंक भरें।' });
+            toast({ variant: 'destructive', title: 'Error', description: 'Please enter marks for all subjects.' });
             return;
         }
     }
@@ -407,7 +407,7 @@ export default function SchoolManagementPage() {
         errorEmitter.emit('permission-error', contextualError);
     });
     
-    toast({ title: 'सफलता!', description: 'परिणाम सफलतापूर्वक जोड़ा गया!' });
+    toast({ title: 'Success!', description: 'Result added successfully!' });
     setSelectedResultClass('');
     setSelectedResultStudent('');
     setSelectedExamType('');
@@ -448,22 +448,22 @@ export default function SchoolManagementPage() {
         doc.setFont('TiroDevanagariHindi');
 
         doc.setFontSize(16);
-        doc.text('आदर्श बाल विद्या मन्दिर', doc.internal.pageSize.getWidth() / 2, 15, { align: 'center' });
+        doc.text('Adarsh Bal Vidya Mandir', doc.internal.pageSize.getWidth() / 2, 15, { align: 'center' });
         doc.setFontSize(12);
-        doc.text('छात्र प्रगति रिपोर्ट', doc.internal.pageSize.getWidth() / 2, 22, { align: 'center' });
+        doc.text('Student Progress Report', doc.internal.pageSize.getWidth() / 2, 22, { align: 'center' });
         
         const studentDetails = [
-            ['नाम', student.username],
-            ['कक्षा', student.class],
-            ['रोल नंबर', student.rollNo],
-            ['पिता का नाम', student.fatherName],
-            ['जन्म तिथि', student.dob],
-            ['पता', student.address],
+            ['Name', student.username],
+            ['Class', student.class],
+            ['Roll No.', student.rollNo],
+            ["Father's Name", student.fatherName],
+            ['Date of Birth', student.dob],
+            ['Address', student.address],
         ];
 
         (doc as any).autoTable({
           startY: 30,
-          head: [['विवरण', 'जानकारी']],
+          head: [['Detail', 'Information']],
           body: studentDetails,
           theme: 'grid',
           styles: { font: 'TiroDevanagariHindi', fontStyle: 'normal' },
@@ -473,19 +473,19 @@ export default function SchoolManagementPage() {
         results.forEach(result => {
             const lastTableY = (doc as any).lastAutoTable.finalY;
             doc.setFontSize(12);
-            doc.text(`परीक्षा: ${result.examType}`, 14, lastTableY + 10);
+            doc.text(`Exam: ${result.examType}`, 14, lastTableY + 10);
 
             let tableBody: (string|number)[][] = [];
             let tableHead;
 
             if (Array.isArray(result.marks)) {
-                tableHead = [['विषय', 'प्राप्तांक', 'पूर्णांक']];
+                tableHead = [['Subject', 'Marks Obtained', 'Total Marks']];
                 tableBody = result.marks.map(m => [m.subject, m.obtained, m.total]);
             } else {
-                tableHead = [['विवरण', 'अंक']];
+                tableHead = [['Description', 'Marks']];
                 tableBody = [
-                    ['प्राप्तांक', result.marks.obtained],
-                    ['पूर्णांक', result.marks.total]
+                    ['Marks Obtained', result.marks.obtained],
+                    ['Total Marks', result.marks.total]
                 ];
             }
 
@@ -501,25 +501,25 @@ export default function SchoolManagementPage() {
         
     } catch (error) {
         console.error("Error generating PDF:", error);
-        alert('PDF बनाने में त्रुटि हुई। कृपया कंसोल देखें।');
+        alert('Error generating PDF. Please check the console.');
     }
   };
 
   const handleDownloadClick = async () => {
     if (!selectedReportClass || !selectedReportStudent || !students || !resultsData) {
-      alert('कृपया रिपोर्ट बनाने के लिए कक्षा और छात्र चुनें।');
+      alert('Please select class and student to generate the report.');
       return;
     }
 
     const student = students.find(s => s.id === selectedReportStudent);
     if (!student) {
-        alert('छात्र नहीं मिला।');
+        alert('Student not found.');
         return;
     }
 
     const studentResults = resultsData.filter(r => r.studentId === student.id);
     if (studentResults.length === 0) {
-        alert('इस छात्र के लिए कोई परिणाम नहीं मिला।');
+        alert('No results found for this student.');
         return;
     }
     
@@ -529,19 +529,19 @@ export default function SchoolManagementPage() {
         doc.save(`${student.username}_${student.class}_report.pdf`);
     } catch (e) {
         console.error(e);
-        alert('PDF बनाने में त्रुटि हुई।');
+        alert('Error generating PDF.');
     }
   };
 
   const handleClassReportDownloadClick = async () => {
     if (!selectedClassReportClass || !selectedClassReportExam || !students || !resultsData) {
-      alert('कृपया कक्षा और परीक्षा का प्रकार चुनें।');
+      alert('Please select class and exam type.');
       return;
     }
 
     const studentsInClass = students.filter(s => s.class === selectedClassReportClass);
     if (studentsInClass.length === 0) {
-      alert('इस कक्षा में कोई छात्र नहीं हैं।');
+      alert('There are no students in this class.');
       return;
     }
 
@@ -549,7 +549,7 @@ export default function SchoolManagementPage() {
     const resultsForExam = resultsData.filter(r => r.class === selectedClassReportClass && r.examType === examLabel);
 
     if (resultsForExam.length === 0) {
-      alert(`इस कक्षा के लिए '${examLabel}' का कोई परिणाम नहीं मिला।`);
+      alert(`No results found for '${examLabel}' in this class.`);
       return;
     }
 
@@ -568,16 +568,16 @@ export default function SchoolManagementPage() {
     }
 
     if (isFirstPage) {
-        alert(`इस कक्षा और परीक्षा के लिए किसी भी छात्र का परिणाम नहीं मिला।`);
+        alert(`No student results found for this class and exam.`);
         return;
     }
 
-    doc.save(`कक्षा-${selectedClassReportClass}_${examLabel}_रिपोर्ट.pdf`);
+    doc.save(`Class-${selectedClassReportClass}_${examLabel}_Report.pdf`);
   };
 
   const handleShowMarksheets = async () => {
     if (!marksheetClass || !marksheetExam || !firestore) {
-      toast({ variant: 'destructive', title: 'त्रुटि', description: 'कृपया कक्षा और परीक्षा का प्रकार चुनें।' });
+      toast({ variant: 'destructive', title: 'Error', description: 'Please select class and exam type.' });
       return;
     }
     const examLabel = examTypes.find(e => e.value === marksheetExam)?.label || '';
@@ -603,7 +603,7 @@ export default function SchoolManagementPage() {
   
   const handlePrintIdCards = () => {
     if (!idCardClass) {
-        alert('कृपया पहले प्रिंट करने के लिए एक कक्षा चुनें।');
+        alert('Please select a class to print first.');
         return;
     }
     window.print();
@@ -619,18 +619,18 @@ export default function SchoolManagementPage() {
   };
 
   const academicYearQuarters = [
-    { id: 'q1', label: 'अप्रैल - जून' },
-    { id: 'q2', label: 'जुलाई - सितंबर' },
-    { id: 'q3', label: 'अक्टूबर - दिसंबर' },
-    { id: 'q4', label: 'जनवरी - मार्च' },
+    { id: 'q1', label: 'April - June' },
+    { id: 'q2', label: 'July - September' },
+    { id: 'q3', label: 'October - December' },
+    { id: 'q4', label: 'January - March' },
   ];
 
   const getFeeStatusForQuarter = (quarterId: string) => {
-    if (!studentFees) return { status: 'अदत्त' };
+    if (!studentFees) return { status: 'Unpaid' };
     const feeRecord = studentFees.find(f => f.quarter === quarterId);
     return feeRecord
       ? { status: feeRecord.status, paymentDate: feeRecord.paymentDate, id: feeRecord.id }
-      : { status: 'अदत्त' };
+      : { status: 'Unpaid' };
   };
 
   const handlePayFee = (quarterId: string, amount: number) => {
@@ -644,7 +644,7 @@ export default function SchoolManagementPage() {
     if (quarterData.id) {
       // Update existing fee record
       const feeDocRef = doc(firestore, 'fees', quarterData.id);
-      const updatedData = { status: 'जमा', paymentDate: serverTimestamp() };
+      const updatedData = { status: 'Paid', paymentDate: serverTimestamp() };
       updateDoc(feeDocRef, updatedData)
         .catch(error => {
             const contextualError = new FirestorePermissionError({
@@ -663,7 +663,7 @@ export default function SchoolManagementPage() {
         class: feeClass,
         quarter: quarterId,
         amount: amount,
-        status: 'जमा',
+        status: 'Paid',
         paymentDate: serverTimestamp()
       };
       addDoc(feeColRef, newData)
@@ -695,26 +695,26 @@ export default function SchoolManagementPage() {
         doc.setFont('TiroDevanagariHindi');
 
         doc.setFontSize(18);
-        doc.text('आदर्श बाल विद्या मन्दिर', doc.internal.pageSize.getWidth() / 2, 20, { align: 'center' });
+        doc.text('Adarsh Bal Vidya Mandir', doc.internal.pageSize.getWidth() / 2, 20, { align: 'center' });
         doc.setFontSize(14);
-        doc.text('शुल्क रसीद', doc.internal.pageSize.getWidth() / 2, 30, { align: 'center' });
+        doc.text('Fee Receipt', doc.internal.pageSize.getWidth() / 2, 30, { align: 'center' });
 
         const quarterInfo = academicYearQuarters.find(q => q.id === feeData.quarter);
 
         const details = [
-            ['रसीद संख्या', feeData.id.slice(0, 8).toUpperCase()],
-            ['भुगतान तिथि', feeData.paymentDate ? format(feeData.paymentDate.toDate(), 'dd/MM/yyyy') : ''],
-            ['छात्र का नाम', student.username],
-            ['कक्षा', student.class],
-            ['रोल नंबर', student.rollNo],
-            ['तिमाही', quarterInfo?.label || ''],
-            ['राशि (₹)', feeData.amount.toString()],
-            ['स्थिति', feeData.status],
+            ['Receipt No.', feeData.id.slice(0, 8).toUpperCase()],
+            ['Payment Date', feeData.paymentDate ? format(feeData.paymentDate.toDate(), 'dd/MM/yyyy') : ''],
+            ['Student Name', student.username],
+            ['Class', student.class],
+            ['Roll No.', student.rollNo],
+            ['Quarter', quarterInfo?.label || ''],
+            ['Amount (₹)', feeData.amount.toString()],
+            ['Status', feeData.status],
         ];
 
         (doc as any).autoTable({
           startY: 40,
-          head: [['विवरण', 'जानकारी']],
+          head: [['Detail', 'Information']],
           body: details,
           theme: 'grid',
           styles: { font: 'TiroDevanagariHindi', fontStyle: 'normal', cellPadding: 3 },
@@ -723,23 +723,23 @@ export default function SchoolManagementPage() {
 
         const finalY = (doc as any).lastAutoTable.finalY;
         doc.setFontSize(10);
-        doc.text('यह एक कंप्यूटर-जनित रसीद है।', 14, finalY + 15);
-        doc.text('प्रधानाचार्य', doc.internal.pageSize.getWidth() - 30, finalY + 25, {align: 'center'});
+        doc.text('This is a computer-generated receipt.', 14, finalY + 15);
+        doc.text('Principal', doc.internal.pageSize.getWidth() - 30, finalY + 25, {align: 'center'});
 
         doc.save(`Fee_Receipt_${student.username}_${feeData.quarter}.pdf`);
     } catch (e) {
         console.error(e);
-        toast({variant: 'destructive', title: 'त्रुटि', description: 'रसीद बनाने में विफल।'});
+        toast({variant: 'destructive', title: 'Error', description: 'Failed to generate receipt.'});
     }
   };
 
 
   const classes = ['Nursery', 'KG', ...Array.from({length: 12}, (_, i) => (i + 1).toString())];
   const examTypes = [
-    { value: 'monthly', label: 'मासिक टेस्ट' },
-    { value: 'quarterly', label: 'त्रैमासिक परीक्षा' },
-    { value: 'half-yearly', label: 'अर्धवार्षिक परीक्षा' },
-    { value: 'final', label: 'वार्षिक परीक्षा' },
+    { value: 'monthly', label: 'Monthly Test' },
+    { value: 'quarterly', label: 'Quarterly Exam' },
+    { value: 'half-yearly', label: 'Half-Yearly Exam' },
+    { value: 'final', label: 'Final Exam' },
   ];
   const studentSubjects = getSubjectsForStudent();
   
@@ -755,7 +755,7 @@ export default function SchoolManagementPage() {
       );
       return {
         ...student,
-        status: attendanceRecord ? attendanceRecord.status : 'अनुपस्थित',
+        status: attendanceRecord ? attendanceRecord.status : 'Absent',
       };
     });
   }, [attendanceReportClass, attendanceReportDate, students, attendance]);
@@ -774,7 +774,7 @@ export default function SchoolManagementPage() {
   if (isUserLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
-        <p>डेटा लोड हो रहा है...</p>
+        <p>Loading data...</p>
       </div>
     );
   }
@@ -802,116 +802,116 @@ export default function SchoolManagementPage() {
           }
         `}
       </style>
-      <h1 className="text-3xl font-bold">प्रधानाचार्य डैशबोर्ड</h1>
+      <h1 className="text-3xl font-bold">Principal Dashboard</h1>
       <Card>
         <Tabs defaultValue="user-management">
           <CardHeader className="p-2 md:p-4">
             <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-10">
-              <TabsTrigger value="user-management">उपयोगकर्ता</TabsTrigger>
-              <TabsTrigger value="student-management">छात्र</TabsTrigger>
-              <TabsTrigger value="notice-management">सूचना</TabsTrigger>
-              <TabsTrigger value="result-management">परिणाम</TabsTrigger>
-              <TabsTrigger value="fee-management">फीस प्रबंधन</TabsTrigger>
-              <TabsTrigger value="id-cards">आई-कार्ड</TabsTrigger>
-              <TabsTrigger value="marksheets">मार्कशीट</TabsTrigger>
-              <TabsTrigger value="reports">छात्र रिपोर्ट</TabsTrigger>
-              <TabsTrigger value="attendance-report">उपस्थिति रिपोर्ट</TabsTrigger>
-              <TabsTrigger value="homework-report">होमवर्क रिपोर्ट</TabsTrigger>
+              <TabsTrigger value="user-management">Users</TabsTrigger>
+              <TabsTrigger value="student-management">Students</TabsTrigger>
+              <TabsTrigger value="notice-management">Notices</TabsTrigger>
+              <TabsTrigger value="result-management">Results</TabsTrigger>
+              <TabsTrigger value="fee-management">Fee Management</TabsTrigger>
+              <TabsTrigger value="id-cards">ID Cards</TabsTrigger>
+              <TabsTrigger value="marksheets">Marksheets</TabsTrigger>
+              <TabsTrigger value="reports">Student Reports</TabsTrigger>
+              <TabsTrigger value="attendance-report">Attendance Report</TabsTrigger>
+              <TabsTrigger value="homework-report">Homework Report</TabsTrigger>
             </TabsList>
           </CardHeader>
           <TabsContent value="user-management">
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>उपयोगकर्ता प्रबंधन</CardTitle>
+              <CardTitle>User Management</CardTitle>
               <Dialog open={isUserDialogOpen} onOpenChange={setIsUserDialogOpen}>
                 <DialogTrigger asChild>
                   <Button onClick={() => { setNewUser(initialNewUserState); setIsUserDialogOpen(true); }}>
                     <UserPlus className="mr-2" />
-                    नया उपयोगकर्ता बनाएं
+                    Create New User
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto">
                   <DialogHeader>
-                    <DialogTitle>नया उपयोगकर्ता बनाएं</DialogTitle>
+                    <DialogTitle>Create New User</DialogTitle>
                   </DialogHeader>
                   <div className="grid gap-4 py-4">
                     <div className="grid grid-cols-4 items-center gap-4">
                       <Label htmlFor="role" className="text-right">
-                        भूमिका
+                        Role
                       </Label>
                       <Select value={newUser.role} onValueChange={handleSelectChange}>
                         <SelectTrigger className="col-span-3">
-                          <SelectValue placeholder="भूमिका चुनें" />
+                          <SelectValue placeholder="Select a role" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="teacher">शिक्षक</SelectItem>
-                          <SelectItem value="parent">अभिभावक</SelectItem>
-                          <SelectItem value="student">छात्र</SelectItem>
+                          <SelectItem value="teacher">Teacher</SelectItem>
+                          <SelectItem value="parent">Parent</SelectItem>
+                          <SelectItem value="student">Student</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
 
                     <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="username" className="text-right">नाम</Label>
+                      <Label htmlFor="username" className="text-right">Name</Label>
                       <Input id="username" value={newUser.username || ''} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" />
                     </div>
 
                     {newUser.role === 'teacher' && (
                       <>
                         <div className="grid grid-cols-4 items-center gap-4">
-                          <Label htmlFor="teacherMobile" className="text-right">मोबाइल नंबर</Label>
+                          <Label htmlFor="teacherMobile" className="text-right">Mobile Number</Label>
                           <Input id="teacherMobile" value={newUser.teacherMobile || ''} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" />
                         </div>
                         <div className="grid grid-cols-4 items-center gap-4">
-                          <Label htmlFor="teacherSubject" className="text-right">विषय</Label>
-                          <Input id="teacherSubject" value={newUser.teacherSubject || ''} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" placeholder="जैसे: हिंदी, अंग्रेजी"/>
+                          <Label htmlFor="teacherSubject" className="text-right">Subject</Label>
+                          <Input id="teacherSubject" value={newUser.teacherSubject || ''} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" placeholder="e.g., Hindi, English"/>
                         </div>
                          <div className="grid grid-cols-4 items-center gap-4">
-                          <Label htmlFor="teacherClass" className="text-right">कक्षा</Label>
-                          <Input id="teacherClass" value={newUser.teacherClass || ''} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" placeholder="जैसे: 5, 6, 7" />
+                          <Label htmlFor="teacherClass" className="text-right">Class</Label>
+                          <Input id="teacherClass" value={newUser.teacherClass || ''} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" placeholder="e.g., 5, 6, 7" />
                         </div>
                       </>
                     )}
                     
                     {(newUser.role === 'parent' || newUser.role === 'student') && (
                       <>
-                        <h3 className="col-span-4 font-semibold text-lg border-b pb-2 mb-2">{newUser.role === 'parent' ? 'अभिभावक और छात्र विवरण' : 'छात्र विवरण'}</h3>
+                        <h3 className="col-span-4 font-semibold text-lg border-b pb-2 mb-2">{newUser.role === 'parent' ? 'Parent & Student Details' : 'Student Details'}</h3>
                         
                         {newUser.role === 'student' && (
                           <div className="grid grid-cols-4 items-center gap-4">
-                              <Label htmlFor="parentName" className="text-right">पिता का नाम</Label>
+                              <Label htmlFor="parentName" className="text-right">Father's Name</Label>
                               <Input id="parentName" value={newUser.parentName || ''} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" />
                           </div>
                         )}
 
                         <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="motherName" className="text-right">माता का नाम</Label>
+                            <Label htmlFor="motherName" className="text-right">Mother's Name</Label>
                             <Input id="motherName" value={newUser.motherName || ''} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" />
                         </div>
                         
                         <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="studentMobile" className="text-right">मोबाइल नंबर</Label>
+                            <Label htmlFor="studentMobile" className="text-right">Mobile Number</Label>
                             <Input id="studentMobile" value={newUser.studentMobile || ''} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" />
                         </div>
                         
                         {newUser.role === 'parent' && (
                         <>
-                          <h4 className="col-span-4 font-semibold text-md border-b pb-2 mt-4 mb-2">छात्र लॉगिन विवरण</h4>
+                          <h4 className="col-span-4 font-semibold text-md border-b pb-2 mt-4 mb-2">Student Login Details</h4>
                           <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="studentName" className="text-right">छात्र का नाम</Label>
+                            <Label htmlFor="studentName" className="text-right">Student's Name</Label>
                             <Input id="studentName" value={newUser.studentName || ''} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" />
                           </div>
                         </>
                         )}
-                        <h4 className="col-span-4 font-semibold text-md border-b pb-2 mt-4 mb-2">छात्र अकादमिक विवरण</h4>
+                        <h4 className="col-span-4 font-semibold text-md border-b pb-2 mt-4 mb-2">Student Academic Details</h4>
                         <div className="grid grid-cols-4 items-center gap-4">
-                          <Label htmlFor="rollNo" className="text-right">रोल नंबर</Label>
-                          <Input id="rollNo" value={newUser.rollNo || ''} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" readOnly placeholder="कक्षा चुनने पर ऑटो-जेनरेट होगा" />
+                          <Label htmlFor="rollNo" className="text-right">Roll No.</Label>
+                          <Input id="rollNo" value={newUser.rollNo || ''} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" readOnly placeholder="Auto-generated on class selection" />
                         </div>
                         <div className="grid grid-cols-4 items-center gap-4">
-                          <Label htmlFor="studentClass" className="text-right">कक्षा</Label>
+                          <Label htmlFor="studentClass" className="text-right">Class</Label>
                           <Select onValueChange={handleStudentClassChange} value={newUser.studentClass}>
                             <SelectTrigger className="col-span-3">
-                              <SelectValue placeholder="कक्षा चुनें" />
+                              <SelectValue placeholder="Select a class" />
                             </SelectTrigger>
                             <SelectContent>
                               {classes.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
@@ -919,15 +919,15 @@ export default function SchoolManagementPage() {
                           </Select>
                         </div>
                         <div className="grid grid-cols-4 items-center gap-4">
-                          <Label htmlFor="studentSubjects" className="text-right">विषय</Label>
-                          <Input id="studentSubjects" value={newUser.studentSubjects || ''} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" placeholder="कक्षा चुनने पर विषय स्वतः भर जाएंगे"/>
+                          <Label htmlFor="studentSubjects" className="text-right">Subjects</Label>
+                          <Input id="studentSubjects" value={newUser.studentSubjects || ''} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" placeholder="Auto-filled on class selection"/>
                         </div>
                          <div className="grid grid-cols-4 items-center gap-4">
-                          <Label htmlFor="address" className="text-right">पता</Label>
+                          <Label htmlFor="address" className="text-right">Address</Label>
                           <Input id="address" value={newUser.address || ''} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" />
                         </div>
                          <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="dob" className="text-right">जन्म तिथि</Label>
+                            <Label htmlFor="dob" className="text-right">Date of Birth</Label>
                              <Popover>
                                 <PopoverTrigger asChild>
                                 <Button
@@ -955,7 +955,7 @@ export default function SchoolManagementPage() {
                             </Popover>
                         </div>
                         <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="admissionDate" className="text-right">प्रवेश तिथि</Label>
+                            <Label htmlFor="admissionDate" className="text-right">Admission Date</Label>
                              <Popover>
                                 <PopoverTrigger asChild>
                                 <Button
@@ -983,19 +983,19 @@ export default function SchoolManagementPage() {
                             </Popover>
                         </div>
                          <div className="grid grid-cols-4 items-center gap-4">
-                          <Label htmlFor="aadhaar" className="text-right">आधार नंबर</Label>
+                          <Label htmlFor="aadhaar" className="text-right">Aadhaar Number</Label>
                           <Input id="aadhaar" value={newUser.aadhaar || ''} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" />
                         </div>
                          <div className="grid grid-cols-4 items-center gap-4">
-                          <Label htmlFor="pen" className="text-right">PEN नंबर</Label>
+                          <Label htmlFor="pen" className="text-right">PEN Number</Label>
                           <Input id="pen" value={newUser.pen || ''} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" />
                         </div>
                       </>
                     )}
                   </div>
                   <DialogFooter>
-                    <Button variant="outline" onClick={() => setIsUserDialogOpen(false)}>रद्द करें</Button>
-                    <Button type="submit" onClick={handleCreateUser}>बनाएं</Button>
+                    <Button variant="outline" onClick={() => setIsUserDialogOpen(false)}>Cancel</Button>
+                    <Button type="submit" onClick={handleCreateUser}>Create</Button>
                   </DialogFooter>
                 </DialogContent>
               </Dialog>
@@ -1004,13 +1004,13 @@ export default function SchoolManagementPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>नाम</TableHead>
-                    <TableHead>भूमिका</TableHead>
-                    <TableHead>यूजर आईडी</TableHead>
-                    <TableHead>पासवर्ड</TableHead>
-                    <TableHead>मोबाइल</TableHead>
-                    <TableHead>कक्षा/विषय</TableHead>
-                    <TableHead>कार्य</TableHead>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Role</TableHead>
+                    <TableHead>User ID</TableHead>
+                    <TableHead>Password</TableHead>
+                    <TableHead>Mobile</TableHead>
+                    <TableHead>Class/Subject</TableHead>
+                    <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -1046,7 +1046,7 @@ export default function SchoolManagementPage() {
                           variant="link"
                           className="p-0 h-auto text-destructive"
                         >
-                          हटाएं
+                          Delete
                         </Button>
                       </TableCell>
                     </TableRow>
@@ -1057,20 +1057,20 @@ export default function SchoolManagementPage() {
           </TabsContent>
           <TabsContent value="student-management">
             <CardHeader>
-              <CardTitle>छात्र प्रबंधन</CardTitle>
+              <CardTitle>Student Management</CardTitle>
             </CardHeader>
             <CardContent>
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>रोल नं.</TableHead>
-                    <TableHead>नाम</TableHead>
-                    <TableHead>कक्षा</TableHead>
-                    <TableHead>पिता का नाम</TableHead>
-                    <TableHead>यूजर आईडी</TableHead>
-                    <TableHead>पासवर्ड</TableHead>
-                    <TableHead>मोबाइल</TableHead>
-                    <TableHead>कार्य</TableHead>
+                    <TableHead>Roll No.</TableHead>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Class</TableHead>
+                    <TableHead>Father's Name</TableHead>
+                    <TableHead>User ID</TableHead>
+                    <TableHead>Password</TableHead>
+                    <TableHead>Mobile</TableHead>
+                    <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -1094,7 +1094,7 @@ export default function SchoolManagementPage() {
                           variant="link"
                           className="p-0 h-auto text-destructive"
                         >
-                          हटाएं
+                          Delete
                         </Button>
                       </TableCell>
                     </TableRow>
@@ -1105,52 +1105,52 @@ export default function SchoolManagementPage() {
           </TabsContent>
            <TabsContent value="notice-management">
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>सूचना प्रबंधन</CardTitle>
+              <CardTitle>Notice Management</CardTitle>
                 <Dialog open={isNoticeDialogOpen} onOpenChange={handleNoticeDialogClose}>
                 <DialogTrigger asChild>
                   <Button onClick={() => setIsNoticeDialogOpen(true)} className="bg-amber-500 hover:bg-amber-600">
                     <PlusCircle className="mr-2" />
-                    नई सूचना जोड़ें
+                    Add New Notice
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="sm:max-w-lg">
                   <DialogHeader>
-                    <DialogTitle>{editingNotice ? 'सूचना संपादित करें' : 'नई सूचना बनाएं'}</DialogTitle>
+                    <DialogTitle>{editingNotice ? 'Edit Notice' : 'Create New Notice'}</DialogTitle>
                   </DialogHeader>
                   <div className="grid gap-4 py-4">
                     <div className="grid grid-cols-4 items-center gap-4">
                       <Label htmlFor="title" className="text-right">
-                        शीर्षक
+                        Title
                       </Label>
                       <Input id="title" value={newNotice.title} onChange={handleNoticeInputChange} className="col-span-3" />
                     </div>
                     <div className="grid grid-cols-4 items-start gap-4">
                       <Label htmlFor="content" className="text-right pt-2">
-                        विवरण
+                        Content
                       </Label>
                       <Textarea id="content" value={newNotice.content} onChange={handleNoticeInputChange} className="col-span-3" rows={5} />
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
                       <Label htmlFor="role" className="text-right">
-                        किसके लिए
+                        For
                       </Label>
                       <Select value={newNotice.role} onValueChange={handleNoticeRoleChange}>
                         <SelectTrigger className="col-span-3">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="All">सभी</SelectItem>
-                          <SelectItem value="Teachers">शिक्षक</SelectItem>
-                          <SelectItem value="Students">छात्र</SelectItem>
-                          <SelectItem value="Parents">अभिभावक</SelectItem>
+                          <SelectItem value="All">All</SelectItem>
+                          <SelectItem value="Teachers">Teachers</SelectItem>
+                          <SelectItem value="Students">Students</SelectItem>
+                          <SelectItem value="Parents">Parents</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
                   </div>
                   <DialogFooter>
-                    <Button variant="outline" onClick={() => handleNoticeDialogClose(false)}>रद्द करें</Button>
+                    <Button variant="outline" onClick={() => handleNoticeDialogClose(false)}>Cancel</Button>
                     <Button type="submit" onClick={editingNotice ? handleUpdateNotice : handleCreateNotice}>
-                        {editingNotice ? 'अपडेट करें' : 'प्रकाशित करें'}
+                        {editingNotice ? 'Update' : 'Publish'}
                     </Button>
                   </DialogFooter>
                 </DialogContent>
@@ -1167,8 +1167,8 @@ export default function SchoolManagementPage() {
                       <p className="text-xs text-muted-foreground mt-2">{notice.createdAt ? format(notice.createdAt.toDate(), 'dd/MM/yyyy') : ''} - {notice.author}</p>
                     </div>
                     <div className="flex items-center gap-2 absolute top-4 right-4">
-                        <Button variant="outline" size="sm" className="bg-amber-100 text-amber-800" onClick={() => handleEditNoticeClick(notice)}>संपादित करें</Button>
-                        <Button variant="destructive" size="sm" onClick={() => handleDeleteNotice(notice.id)}>हटाएं</Button>
+                        <Button variant="outline" size="sm" className="bg-amber-100 text-amber-800" onClick={() => handleEditNoticeClick(notice)}>Edit</Button>
+                        <Button variant="destructive" size="sm" onClick={() => handleDeleteNotice(notice.id)}>Delete</Button>
                     </div>
                   </div>
                 </div>
@@ -1177,37 +1177,37 @@ export default function SchoolManagementPage() {
           </TabsContent>
            <TabsContent value="result-management">
             <CardHeader>
-              <CardTitle>परिणाम प्रबंधन</CardTitle>
+              <CardTitle>Result Management</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 items-end">
                 <div className="space-y-2">
-                  <Label htmlFor="result-class">कक्षा</Label>
+                  <Label htmlFor="result-class">Class</Label>
                   <Select value={selectedResultClass} onValueChange={(value) => { setSelectedResultClass(value); setSelectedResultStudent(''); setMarks({}); }}>
                     <SelectTrigger id="result-class">
-                      <SelectValue placeholder="कक्षा चुनें" />
+                      <SelectValue placeholder="Select Class" />
                     </SelectTrigger>
                     <SelectContent>
-                      {classes.map(c => <SelectItem key={c} value={c}>कक्षा {c}</SelectItem>)}
+                      {classes.map(c => <SelectItem key={c} value={c}>Class {c}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="result-student">छात्र</Label>
+                  <Label htmlFor="result-student">Student</Label>
                   <Select value={selectedResultStudent} onValueChange={(value) => {setSelectedResultStudent(value); setMarks({});}} disabled={!selectedResultClass}>
                     <SelectTrigger id="result-student">
-                      <SelectValue placeholder="छात्र चुनें" />
+                      <SelectValue placeholder="Select Student" />
                     </SelectTrigger>
                     <SelectContent>
-                      {students && students.filter(s => s.class === selectedResultClass).map(s => <SelectItem key={s.id} value={s.id}>{s.username} (रोल नं. {s.rollNo})</SelectItem>)}
+                      {students && students.filter(s => s.class === selectedResultClass).map(s => <SelectItem key={s.id} value={s.id}>{s.username} (Roll No. {s.rollNo})</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
-                    <Label htmlFor="result-exam-type">परीक्षा का प्रकार</Label>
+                    <Label htmlFor="result-exam-type">Exam Type</Label>
                     <Select value={selectedExamType} onValueChange={(value) => {setSelectedExamType(value); setMarks({});}}>
                         <SelectTrigger id="result-exam-type">
-                            <SelectValue placeholder="परीक्षा चुनें" />
+                            <SelectValue placeholder="Select Exam" />
                         </SelectTrigger>
                         <SelectContent>
                           {examTypes.map(type => (
@@ -1218,7 +1218,7 @@ export default function SchoolManagementPage() {
                 </div>
                 {selectedExamType !== 'monthly' && (
                   <Button onClick={handleAddResult} disabled={!selectedResultClass || !selectedResultStudent || !selectedExamType}>
-                    परिणाम जोड़ें
+                    Add Result
                   </Button>
                 )}
               </div>
@@ -1228,21 +1228,21 @@ export default function SchoolManagementPage() {
                   {selectedExamType === 'monthly' ? (
                     <div className="space-y-4">
                       <div className="grid grid-cols-2 gap-4 items-center max-w-sm">
-                        <Label htmlFor="monthly-obtained" className="font-semibold">प्राप्तांक</Label>
-                        <Input id="monthly-obtained" type="number" placeholder="प्राप्तांक" value={monthlyObtained} onChange={(e) => setMonthlyObtained(e.target.value)}/>
-                         <Label htmlFor="monthly-total" className="font-semibold">पूर्णांक</Label>
+                        <Label htmlFor="monthly-obtained" className="font-semibold">Marks Obtained</Label>
+                        <Input id="monthly-obtained" type="number" placeholder="Obtained" value={monthlyObtained} onChange={(e) => setMonthlyObtained(e.target.value)}/>
+                         <Label htmlFor="monthly-total" className="font-semibold">Total Marks</Label>
                         <Input id="monthly-total" type="number" value={monthlyTotal} onChange={(e) => setMonthlyTotal(e.target.value)} />
                       </div>
-                      <Button onClick={handleAddResult}>टेस्ट परिणाम सहेजें</Button>
+                      <Button onClick={handleAddResult}>Save Test Result</Button>
                     </div>
                   ) : (
                     <div>
-                      <h3 className="text-lg font-medium mb-4">विषयवार अंक</h3>
+                      <h3 className="text-lg font-medium mb-4">Subject-wise Marks</h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {studentSubjects.map(subject => (
                            <div key={subject} className="grid grid-cols-3 gap-2 items-center">
                               <Label htmlFor={`marks-obtained-${subject}`} className="col-span-1">{subject}</Label>
-                              <Input id={`${subject}-obtained`} type="number" placeholder="प्राप्तांक" className="col-span-1" value={marks[`${subject}-obtained`] || ''} onChange={handleMarksChange} />
+                              <Input id={`${subject}-obtained`} type="number" placeholder="Obtained" className="col-span-1" value={marks[`${subject}-obtained`] || ''} onChange={handleMarksChange} />
                               <Input id={`${subject}-total`} type="number" value={marks[`${subject}-total`] || '100'} readOnly className="col-span-1 bg-gray-100" onChange={handleMarksChange}/>
                           </div>
                         ))}
@@ -1253,17 +1253,17 @@ export default function SchoolManagementPage() {
               )}
               
               <div>
-                <h3 className="text-lg font-medium mb-4 mt-6">सभी परिणाम</h3>
+                <h3 className="text-lg font-medium mb-4 mt-6">All Results</h3>
                 <div className="border rounded-lg">
-                  {(resultsLoading) && <p>परिणाम लोड हो रहे हैं...</p>}
+                  {(resultsLoading) && <p>Loading results...</p>}
                   {resultsData && resultsData.length > 0 ? (
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>छात्र</TableHead>
-                          <TableHead>कक्षा</TableHead>
-                          <TableHead>परीक्षा</TableHead>
-                          <TableHead>परिणाम</TableHead>
+                          <TableHead>Student</TableHead>
+                          <TableHead>Class</TableHead>
+                          <TableHead>Exam</TableHead>
+                          <TableHead>Result</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -1280,7 +1280,7 @@ export default function SchoolManagementPage() {
                                   ))}
                                 </ul>
                               ) : (
-                                `प्राप्तांक: ${result.marks.obtained}/${result.marks.total}`
+                                `Marks: ${result.marks.obtained}/${result.marks.total}`
                               )}
                             </TableCell>
                           </TableRow>
@@ -1289,7 +1289,7 @@ export default function SchoolManagementPage() {
                     </Table>
                   ) : !resultsLoading ? (
                     <div className="p-4 min-h-[100px] flex items-center justify-center">
-                      <p className="text-muted-foreground">कोई परिणाम उपलब्ध नहीं है</p>
+                      <p className="text-muted-foreground">No results available</p>
                     </div>
                   ) : null}
                 </div>
@@ -1298,30 +1298,30 @@ export default function SchoolManagementPage() {
           </TabsContent>
           <TabsContent value="fee-management">
             <CardHeader>
-              <CardTitle>फीस प्रबंधन</CardTitle>
-              <CardDescription>त्रैमासिक छात्र फीस जमा करें और ट्रैक करें।</CardDescription>
+              <CardTitle>Fee Management</CardTitle>
+              <CardDescription>Submit and track quarterly student fees.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
                 <div className="space-y-2">
-                  <Label htmlFor="fee-class">कक्षा</Label>
+                  <Label htmlFor="fee-class">Class</Label>
                   <Select value={feeClass} onValueChange={(value) => { setFeeClass(value); setFeeStudent(''); }}>
                     <SelectTrigger id="fee-class">
-                      <SelectValue placeholder="कक्षा चुनें" />
+                      <SelectValue placeholder="Select Class" />
                     </SelectTrigger>
                     <SelectContent>
-                      {classes.map(c => <SelectItem key={c} value={c}>कक्षा {c}</SelectItem>)}
+                      {classes.map(c => <SelectItem key={c} value={c}>Class {c}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="fee-student">छात्र</Label>
+                  <Label htmlFor="fee-student">Student</Label>
                   <Select value={feeStudent} onValueChange={setFeeStudent} disabled={!feeClass}>
                     <SelectTrigger id="fee-student">
-                      <SelectValue placeholder="छात्र चुनें" />
+                      <SelectValue placeholder="Select Student" />
                     </SelectTrigger>
                     <SelectContent>
-                      {students && students.filter(s => s.class === feeClass).map(s => <SelectItem key={s.id} value={s.id}>{s.username} (रोल नं. {s.rollNo})</SelectItem>)}
+                      {students && students.filter(s => s.class === feeClass).map(s => <SelectItem key={s.id} value={s.id}>{s.username} (Roll No. {s.rollNo})</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
@@ -1329,23 +1329,23 @@ export default function SchoolManagementPage() {
               {feeStudent && (
                 <Card>
                   <CardHeader>
-                    <CardTitle>शुल्क स्थिति</CardTitle>
+                    <CardTitle>Fee Status</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>तिमाही</TableHead>
-                          <TableHead>राशि (₹)</TableHead>
-                          <TableHead>स्थिति</TableHead>
-                          <TableHead>भुगतान तिथि</TableHead>
-                          <TableHead className="text-right">कार्य</TableHead>
+                          <TableHead>Quarter</TableHead>
+                          <TableHead>Amount (₹)</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Payment Date</TableHead>
+                          <TableHead className="text-right">Actions</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {academicYearQuarters.map(q => {
                           const feeInfo = getFeeStatusForQuarter(q.id);
-                          const isPaid = feeInfo.status === 'जमा';
+                          const isPaid = feeInfo.status === 'Paid';
                           const feeAmount = getQuarterlyFee(feeClass);
                           const feeData = studentFees?.find(f => f.quarter === q.id);
 
@@ -1362,12 +1362,12 @@ export default function SchoolManagementPage() {
                               <TableCell className="text-right space-x-2">
                                 <Button size="sm" disabled={isPaid} onClick={() => handlePayFee(q.id, feeAmount)}>
                                   <DollarSign className="mr-2 h-4 w-4" />
-                                  फीस जमा करें
+                                  Pay Fee
                                 </Button>
                                 {isPaid && feeData && (
                                   <Button size="sm" variant="outline" onClick={() => handlePrintFeeReceipt({...feeData, amount: feeAmount })}>
                                       <Printer className="mr-2 h-4 w-4" />
-                                      रसीद प्रिंट करें
+                                      Print Receipt
                                   </Button>
                                 )}
                               </TableCell>
@@ -1383,24 +1383,24 @@ export default function SchoolManagementPage() {
           </TabsContent>
           <TabsContent value="id-cards">
             <CardHeader>
-              <CardTitle>आई-कार्ड जेनरेटर</CardTitle>
-              <CardDescription>कक्षा चुनें और सभी छात्रों के आई-कार्ड देखें।</CardDescription>
+              <CardTitle>ID Card Generator</CardTitle>
+              <CardDescription>Select a class and view all student ID cards.</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="flex items-center gap-4 p-4 border rounded-lg mb-6">
                 <div className="space-y-2">
-                  <Label htmlFor="id-card-class">कक्षा चुनें</Label>
+                  <Label htmlFor="id-card-class">Select Class</Label>
                   <Select value={idCardClass} onValueChange={setIdCardClass}>
                     <SelectTrigger id="id-card-class" className="w-[180px]">
-                      <SelectValue placeholder="कक्षा चुनें" />
+                      <SelectValue placeholder="Select Class" />
                     </SelectTrigger>
                     <SelectContent>
-                      {classes.map(c => <SelectItem key={c} value={c}>कक्षा {c}</SelectItem>)}
+                      {classes.map(c => <SelectItem key={c} value={c}>Class {c}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
                 <Button onClick={handlePrintIdCards}>
-                  <Printer className="mr-2" /> प्रिंट करें
+                  <Printer className="mr-2" /> Print
                 </Button>
               </div>
 
@@ -1410,8 +1410,8 @@ export default function SchoolManagementPage() {
                     <div key={student.id} className="id-card-print-wrapper">
                       <Card className="overflow-hidden shadow-lg border-primary border-2">
                         <CardHeader className="bg-primary text-primary-foreground p-2 text-center">
-                          <h2 className="text-sm font-bold">आदर्श बाल विद्या मन्दिर</h2>
-                          <p className="text-xs">पहचान पत्र (सत्र 2024-25)</p>
+                          <h2 className="text-sm font-bold">Adarsh Bal Vidya Mandir</h2>
+                          <p className="text-xs">Identity Card (Session 2024-25)</p>
                         </CardHeader>
                         <CardContent className="p-3">
                           <div className="flex gap-3">
@@ -1419,10 +1419,10 @@ export default function SchoolManagementPage() {
                                 <Image src={`https://picsum.photos/seed/${student.id}/200/300`} alt="Student Photo" width={80} height={96} className="rounded-md object-cover w-full h-full" data-ai-hint="student portrait" />
                             </div>
                             <div className="space-y-1 text-xs">
-                              <p><strong>नाम:</strong> {student.username}</p>
-                              <p><strong>कक्षा:</strong> {student.class}</p>
-                              <p><strong>रोल नं:</strong> {student.rollNo}</p>
-                              <p><strong>पिता:</strong> {student.fatherName}</p>
+                              <p><strong>Name:</strong> {student.username}</p>
+                              <p><strong>Class:</strong> {student.class}</p>
+                              <p><strong>Roll No:</strong> {student.rollNo}</p>
+                              <p><strong>Father:</strong> {student.fatherName}</p>
                             </div>
                           </div>
                           <div className="text-xs space-y-1 mt-2">
@@ -1437,7 +1437,7 @@ export default function SchoolManagementPage() {
                           </div>
                         </CardContent>
                         <div className="bg-primary text-primary-foreground text-center p-1 text-xs">
-                            <p><strong>प्रधानाचार्य</strong></p>
+                            <p><strong>Principal</strong></p>
                         </div>
                       </Card>
                     </div>
@@ -1448,27 +1448,27 @@ export default function SchoolManagementPage() {
           </TabsContent>
           <TabsContent value="marksheets">
             <CardHeader>
-              <CardTitle>कक्षा-वार मार्कशीट</CardTitle>
-              <CardDescription>पूरी कक्षा की मार्कशीट एक साथ देखें।</CardDescription>
+              <CardTitle>Class-wise Marksheets</CardTitle>
+              <CardDescription>View marksheet for an entire class at once.</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="flex items-end gap-4 p-4 border rounded-lg mb-6">
                 <div className="space-y-2">
-                  <Label htmlFor="marksheet-class">कक्षा चुनें</Label>
+                  <Label htmlFor="marksheet-class">Select Class</Label>
                   <Select value={marksheetClass} onValueChange={setMarksheetClass}>
                     <SelectTrigger id="marksheet-class" className="w-[180px]">
-                      <SelectValue placeholder="कक्षा चुनें" />
+                      <SelectValue placeholder="Select Class" />
                     </SelectTrigger>
                     <SelectContent>
-                      {classes.map(c => <SelectItem key={c} value={c}>कक्षा {c}</SelectItem>)}
+                      {classes.map(c => <SelectItem key={c} value={c}>Class {c}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="marksheet-exam">परीक्षा चुनें</Label>
+                  <Label htmlFor="marksheet-exam">Select Exam</Label>
                   <Select value={marksheetExam} onValueChange={setMarksheetExam}>
                     <SelectTrigger id="marksheet-exam" className="w-[180px]">
-                      <SelectValue placeholder="परीक्षा चुनें" />
+                      <SelectValue placeholder="Select Exam" />
                     </SelectTrigger>
                     <SelectContent>
                       {examTypes.map(type => (
@@ -1477,7 +1477,7 @@ export default function SchoolManagementPage() {
                     </SelectContent>
                   </Select>
                 </div>
-                <Button onClick={handleShowMarksheets}>मार्कशीट देखें</Button>
+                <Button onClick={handleShowMarksheets}>View Marksheets</Button>
               </div>
 
               {classMarksheets.length > 0 && (
@@ -1486,7 +1486,7 @@ export default function SchoolManagementPage() {
                     <Card key={student.id}>
                       <CardHeader>
                         <CardTitle>{student.username}</CardTitle>
-                        <CardDescription>रोल नंबर: {student.rollNo}</CardDescription>
+                        <CardDescription>Roll No: {student.rollNo}</CardDescription>
                       </CardHeader>
                       <CardContent>
                         {student.result ? (
@@ -1494,9 +1494,9 @@ export default function SchoolManagementPage() {
                             <Table>
                               <TableHeader>
                                 <TableRow>
-                                  <TableHead>विषय</TableHead>
-                                  <TableHead>प्राप्तांक</TableHead>
-                                  <TableHead>पूर्णांक</TableHead>
+                                  <TableHead>Subject</TableHead>
+                                  <TableHead>Obtained</TableHead>
+                                  <TableHead>Total</TableHead>
                                 </TableRow>
                               </TableHeader>
                               <TableBody>
@@ -1510,10 +1510,10 @@ export default function SchoolManagementPage() {
                               </TableBody>
                             </Table>
                           ) : (
-                             <p>प्राप्तांक: {student.result.marks.obtained}/{student.result.marks.total}</p>
+                             <p>Marks: {student.result.marks.obtained}/{student.result.marks.total}</p>
                           )
                         ) : (
-                          <p className="text-muted-foreground">इस छात्र के लिए परिणाम उपलब्ध नहीं है।</p>
+                          <p className="text-muted-foreground">Result not available for this student.</p>
                         )}
                       </CardContent>
                     </Card>
@@ -1524,64 +1524,64 @@ export default function SchoolManagementPage() {
           </TabsContent>
           <TabsContent value="reports">
             <CardHeader>
-              <CardTitle>रिपोर्ट्स</CardTitle>
+              <CardTitle>Reports</CardTitle>
             </CardHeader>
             <CardContent>
                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-base">छात्र प्रगति रिपोर्ट</CardTitle>
+                    <CardTitle className="text-base">Student Progress Report</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                      <div className="space-y-2">
-                      <Label htmlFor="report-class">कक्षा चुनें</Label>
+                      <Label htmlFor="report-class">Select Class</Label>
                       <Select value={selectedReportClass} onValueChange={setSelectedReportClass}>
                         <SelectTrigger id="report-class">
-                          <SelectValue placeholder="कक्षा चुनें" />
+                          <SelectValue placeholder="Select Class" />
                         </SelectTrigger>
                         <SelectContent>
-                           {classes.map(c => <SelectItem key={c} value={c}>कक्षा {c}</SelectItem>)}
+                           {classes.map(c => <SelectItem key={c} value={c}>Class {c}</SelectItem>)}
                         </SelectContent>
                       </Select>
                     </div>
                      <div className="space-y-2">
-                      <Label htmlFor="report-student">छात्र चुनें</Label>
+                      <Label htmlFor="report-student">Select Student</Label>
                       <Select value={selectedReportStudent} onValueChange={setSelectedReportStudent} disabled={!selectedReportClass}>
                         <SelectTrigger id="report-student">
-                          <SelectValue placeholder="छात्र चुनें" />
+                          <SelectValue placeholder="Select Student" />
                         </SelectTrigger>
                         <SelectContent>
-                          {students && students.filter(s => s.class === selectedReportClass).map(s => <SelectItem key={s.id} value={s.id}>{s.username} (रोल नं. {s.rollNo})</SelectItem>)}
+                          {students && students.filter(s => s.class === selectedReportClass).map(s => <SelectItem key={s.id} value={s.id}>{s.username} (Roll No. {s.rollNo})</SelectItem>)}
                         </SelectContent>
                       </Select>
                     </div>
                     <Button className="w-full bg-pink-600 hover:bg-pink-700 text-white" onClick={handleDownloadClick}>
                       <FileDown className="mr-2"/>
-                      PDF रिपोर्ट बनाएं
+                      Generate PDF Report
                     </Button>
                   </CardContent>
                 </Card>
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-base">कक्षा-वार रिपोर्ट</CardTitle>
+                    <CardTitle className="text-base">Class-wise Report</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                      <div className="space-y-2">
-                      <Label htmlFor="class-report-class">कक्षा चुनें</Label>
+                      <Label htmlFor="class-report-class">Select Class</Label>
                       <Select value={selectedClassReportClass} onValueChange={setSelectedClassReportClass}>
                         <SelectTrigger id="class-report-class">
-                          <SelectValue placeholder="कक्षा चुनें" />
+                          <SelectValue placeholder="Select Class" />
                         </SelectTrigger>
                         <SelectContent>
-                           {classes.map(c => <SelectItem key={c} value={c}>कक्षा {c}</SelectItem>)}
+                           {classes.map(c => <SelectItem key={c} value={c}>Class {c}</SelectItem>)}
                         </SelectContent>
                       </Select>
                     </div>
                      <div className="space-y-2">
-                      <Label htmlFor="class-report-exam">परीक्षा चुनें</Label>
+                      <Label htmlFor="class-report-exam">Select Exam</Label>
                       <Select value={selectedClassReportExam} onValueChange={setSelectedClassReportExam}>
                         <SelectTrigger id="class-report-exam">
-                          <SelectValue placeholder="परीक्षा चुनें" />
+                          <SelectValue placeholder="Select Exam" />
                         </SelectTrigger>
                         <SelectContent>
                           {examTypes.map(type => (
@@ -1591,7 +1591,7 @@ export default function SchoolManagementPage() {
                     </div>
                     <Button className="w-full bg-green-600 hover:bg-green-700 text-white" onClick={handleClassReportDownloadClick}>
                       <FileDown className="mr-2"/>
-                      PDF रिपोर्ट बनाएँ
+                      Generate PDF Report
                     </Button>
                   </CardContent>
                 </Card>
@@ -1600,23 +1600,23 @@ export default function SchoolManagementPage() {
           </TabsContent>
           <TabsContent value="attendance-report">
              <CardHeader>
-              <CardTitle>कक्षा-वार उपस्थिति रिपोर्ट</CardTitle>
+              <CardTitle>Class-wise Attendance Report</CardTitle>
              </CardHeader>
              <CardContent className="space-y-6">
                <div className="flex items-center gap-4 p-4 border rounded-lg">
                 <div className="space-y-2">
-                  <Label htmlFor="att-report-class">कक्षा चुनें</Label>
+                  <Label htmlFor="att-report-class">Select Class</Label>
                   <Select value={attendanceReportClass} onValueChange={setAttendanceReportClass}>
                     <SelectTrigger id="att-report-class" className="w-[180px]">
-                      <SelectValue placeholder="कक्षा चुनें" />
+                      <SelectValue placeholder="Select Class" />
                     </SelectTrigger>
                     <SelectContent>
-                       {classes.map(c => <SelectItem key={c} value={c}>कक्षा {c}</SelectItem>)}
+                       {classes.map(c => <SelectItem key={c} value={c}>Class {c}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
-                   <Label>तारीख चुनें</Label>
+                   <Label>Select Date</Label>
                    <Popover>
                       <PopoverTrigger asChild>
                         <Button
@@ -1627,7 +1627,7 @@ export default function SchoolManagementPage() {
                           )}
                         >
                           <CalendarIcon className="mr-2 h-4 w-4" />
-                          {attendanceReportDate ? format(attendanceReportDate, "PPP") : <span>तारीख चुनें</span>}
+                          {attendanceReportDate ? format(attendanceReportDate, "PPP") : <span>Pick a date</span>}
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0">
@@ -1645,9 +1645,9 @@ export default function SchoolManagementPage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>रोल नंबर</TableHead>
-                      <TableHead>नाम</TableHead>
-                      <TableHead className="text-right">स्थिति</TableHead>
+                      <TableHead>Roll No.</TableHead>
+                      <TableHead>Name</TableHead>
+                      <TableHead className="text-right">Status</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -1658,9 +1658,9 @@ export default function SchoolManagementPage() {
                           <TableCell>{student.username}</TableCell>
                           <TableCell className="text-right">
                              <Badge 
-                               variant={student.status === 'उपस्थित' ? 'default' : 'destructive'}
+                               variant={student.status === 'Present' ? 'default' : 'destructive'}
                                className={cn(
-                                 student.status === 'उपस्थित' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800',
+                                 student.status === 'Present' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800',
                                  'w-20 justify-center'
                                )}
                               >
@@ -1672,7 +1672,7 @@ export default function SchoolManagementPage() {
                     ) : (
                       <TableRow>
                         <TableCell colSpan={3} className="text-center h-24">
-                          इस कक्षा के लिए कोई छात्र नहीं मिला या डेटा उपलब्ध नहीं है।
+                          No students found for this class or data not available.
                         </TableCell>
                       </TableRow>
                     )}
@@ -1682,26 +1682,26 @@ export default function SchoolManagementPage() {
           </TabsContent>
           <TabsContent value="homework-report">
              <CardHeader>
-              <CardTitle>कक्षा-वार होमवर्क रिपोर्ट</CardTitle>
+              <CardTitle>Class-wise Homework Report</CardTitle>
              </CardHeader>
              <CardContent className="space-y-6">
                 <div className="flex items-center gap-4 p-4 border rounded-lg">
                   <div className="space-y-2">
-                    <Label htmlFor="hw-report-class">कक्षा चुनें</Label>
+                    <Label htmlFor="hw-report-class">Select Class</Label>
                     <Select value={homeworkReportClass} onValueChange={setHomeworkReportClass}>
                       <SelectTrigger id="hw-report-class" className="w-[180px]">
-                        <SelectValue placeholder="कक्षा चुनें" />
+                        <SelectValue placeholder="Select Class" />
                       </SelectTrigger>
                       <SelectContent>
-                         {classes.map(c => <SelectItem key={c} value={c}>कक्षा {c}</SelectItem>)}
+                         {classes.map(c => <SelectItem key={c} value={c}>Class {c}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="hw-report-subject">विषय चुनें</Label>
+                    <Label htmlFor="hw-report-subject">Select Subject</Label>
                     <Select value={homeworkReportSubject} onValueChange={setHomeworkReportSubject}>
                       <SelectTrigger id="hw-report-subject" className="w-[180px]">
-                        <SelectValue placeholder="विषय चुनें" />
+                        <SelectValue placeholder="Select Subject" />
                       </SelectTrigger>
                       <SelectContent>
                          {allSubjects.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
@@ -1709,7 +1709,7 @@ export default function SchoolManagementPage() {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                     <Label>तारीख चुनें</Label>
+                     <Label>Select Date</Label>
                      <Popover>
                         <PopoverTrigger asChild>
                           <Button
@@ -1720,7 +1720,7 @@ export default function SchoolManagementPage() {
                             )}
                           >
                             <CalendarIcon className="mr-2 h-4 w-4" />
-                            {homeworkReportDate ? format(homeworkReportDate, "PPP") : <span>तारीख चुनें</span>}
+                            {homeworkReportDate ? format(homeworkReportDate, "PPP") : <span>Pick a date</span>}
                           </Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-auto p-0">
@@ -1737,15 +1737,15 @@ export default function SchoolManagementPage() {
 
                 <Card>
                   <CardHeader>
-                    <CardTitle>होमवर्क विवरण</CardTitle>
+                    <CardTitle>Homework Details</CardTitle>
                     <CardContent className="pt-4">
                       {filteredHomework ? (
                         <div>
-                          <p className="font-semibold">शिक्षक: {filteredHomework.teacherName}</p>
+                          <p className="font-semibold">Teacher: {filteredHomework.teacherName}</p>
                           <p className="mt-2 text-muted-foreground">{filteredHomework.content}</p>
                         </div>
                       ) : (
-                         <p className="text-muted-foreground">चुनी गई कक्षा, विषय और तारीख के लिए कोई होमवर्क नहीं मिला।</p>
+                         <p className="text-muted-foreground">No homework found for the selected class, subject, and date.</p>
                       )}
                     </CardContent>
                   </CardHeader>

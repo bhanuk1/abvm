@@ -17,7 +17,7 @@ function LoginButton() {
 
   return (
     <Button type="submit" className="w-full" disabled={pending}>
-      {pending ? 'लॉग इन हो रहा है...' : <><LogIn className="mr-2 h-4 w-4" /> लॉग इन करें</>}
+      {pending ? 'Logging in...' : <><LogIn className="mr-2 h-4 w-4" /> Login</>}
     </Button>
   );
 }
@@ -35,10 +35,10 @@ function LoginFormContent() {
 
   const getRoleDisplayName = () => {
     switch (role) {
-      case 'student': return 'छात्र';
-      case 'parent': return 'अभिभावक';
-      case 'teacher': return 'शिक्षक';
-      case 'admin': return 'प्रधानाचार्य';
+      case 'student': return 'Student';
+      case 'parent': return 'Parent';
+      case 'teacher': return 'Teacher';
+      case 'admin': return 'Principal';
       default: return '';
     }
   };
@@ -67,11 +67,11 @@ function LoginFormContent() {
     event.preventDefault();
     setError(null);
     if (!auth) {
-        setError('प्रमाणीकरण सेवा उपलब्ध नहीं है।');
+        setError('Authentication service is not available.');
         return;
     }
     if (!userId || !password) {
-      setError('यूजर आईडी और पासवर्ड आवश्यक हैं।');
+      setError('User ID and password are required.');
       return;
     }
 
@@ -83,8 +83,8 @@ function LoginFormContent() {
       // After successful login, redirect based on role
       if (userCredential.user) {
         toast({
-            title: "सफलता!",
-            description: "आप सफलतापूर्वक लॉग इन हो गए हैं।",
+            title: "Success!",
+            description: "You have been logged in successfully.",
             className: "bg-green-100 text-green-800",
         });
         handleRedirect(role);
@@ -92,9 +92,9 @@ function LoginFormContent() {
     } catch (error: any) {
       console.error(error);
       if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
-        setError('अमान्य यूजर आईडी या पासवर्ड।');
+        setError('Invalid User ID or Password.');
       } else {
-        setError('लॉगिन के दौरान एक त्रुटि हुई।');
+        setError('An error occurred during login.');
       }
     }
   };
@@ -102,15 +102,15 @@ function LoginFormContent() {
   return (
     <form onSubmit={handleSubmit} className="grid gap-4">
       <div className="grid gap-2">
-        <Label htmlFor="role">आपकी भूमिका</Label>
+        <Label htmlFor="role">Your Role</Label>
         <Input id="role" name="role" value={getRoleDisplayName()} readOnly className="bg-gray-100" />
       </div>
       <div className="grid gap-2">
-        <Label htmlFor="user-id">यूजर आईडी</Label>
+        <Label htmlFor="user-id">User ID</Label>
         <Input 
           id="user-id" 
           name="userId" 
-          placeholder="आपकी आईडी" 
+          placeholder="Your ID" 
           required 
           value={userId}
           onChange={(e) => setUserId(e.target.value)}
@@ -118,7 +118,7 @@ function LoginFormContent() {
       </div>
       <div className="grid gap-2">
         <div className="flex items-center">
-          <Label htmlFor="password">पासवर्ड</Label>
+          <Label htmlFor="password">Password</Label>
         </div>
         <Input 
           id="password" 

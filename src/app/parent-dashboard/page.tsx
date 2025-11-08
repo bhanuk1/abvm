@@ -11,13 +11,13 @@ import { Users, BarChart } from 'lucide-react';
 
 const stats = [
   {
-    title: 'मेरे बच्चे',
+    title: 'My Children',
     value: '1',
     icon: Users,
     color: 'bg-yellow-100 text-yellow-600',
   },
   {
-    title: 'औसत उपस्थिति',
+    title: 'Average Attendance',
     value: '94%',
     icon: BarChart,
     color: 'bg-green-100 text-green-600',
@@ -28,7 +28,7 @@ const stats = [
 export default function ParentDashboardPage() {
   return (
     <div className="flex flex-col gap-8">
-      <h1 className="text-3xl font-bold">डैशबोर्ड</h1>
+      <h1 className="text-3xl font-bold">Dashboard</h1>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat) => (
           <Card key={stat.title}>
@@ -48,11 +48,11 @@ export default function ParentDashboardPage() {
       </div>
       <Card>
         <CardHeader>
-          <CardTitle>त्वरित कार्य</CardTitle>
+          <CardTitle>Quick Actions</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="h-40 flex items-center justify-center text-muted-foreground">
-            <p>कोई त्वरित कार्य उपलब्ध नहीं है।</p>
+            <p>No quick actions available.</p>
           </div>
         </CardContent>
       </Card>

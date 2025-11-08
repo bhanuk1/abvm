@@ -22,7 +22,7 @@ export interface Fee {
   class: string;
   quarter: string;
   amount: number;
-  status: 'जमा' | 'अदत्त';
+  status: 'Paid' | 'Unpaid';
   paymentDate?: Timestamp;
 }
 
@@ -56,11 +56,11 @@ export const initialNewUserState = {
 
 // Mock data for the logged-in teacher
 export const teacherData = {
-  name: 'श्रीमती सुनीता गुप्ता',
+  name: 'Mrs. Sunita Gupta',
   id: 'teacher01',
   classes: [
-    { name: '5', subject: 'हिंदी', students: 3 },
-    { name: '6', subject: 'हिंदी', students: 2 },
+    { name: '5', subject: 'Hindi', students: 3 },
+    { name: '6', subject: 'Hindi', students: 2 },
   ],
 };
 
@@ -77,47 +77,47 @@ export interface Homework {
 export const homeworks: Homework[] = [];
 
 export const classSubjects: { [key: string]: string[] } = {
-  'Nursery': ['हिंदी', 'अंग्रेजी', 'गणित', 'Drawing'],
-  'KG': ['हिंदी', 'अंग्रेजी', 'गणित', 'Drawing'],
-  '1': ['हिंदी', 'अंग्रेजी', 'गणित', 'विज्ञान', 'सामाजिक विज्ञान', 'कंप्यूटर', 'नैतिक शिक्षा', 'Drawing', 'संस्कृत/उर्दू'],
-  '2': ['हिंदी', 'अंग्रेजी', 'गणित', 'विज्ञान', 'सामाजिक विज्ञान', 'कंप्यूटर', 'नैतिक शिक्षा', 'Drawing', 'संस्कृत/उर्दू'],
-  '3': ['हिंदी', 'अंग्रेजी', 'गणित', 'विज्ञान', 'सामाजिक विज्ञान', 'कंप्यूटर', 'नैतिक शिक्षा', 'Drawing', 'संस्कृत/उर्दू'],
-  '4': ['हिंदी', 'अंग्रेजी', 'गणित', 'विज्ञान', 'सामाजिक विज्ञान', 'कंप्यूटर', 'नैतिक शिक्षा', 'Drawing', 'संस्कृत/उर्दू'],
-  '5': ['हिंदी', 'अंग्रेजी', 'गणित', 'विज्ञान', 'सामाजिक विज्ञान', 'कंप्यूटर', 'नैतिक शिक्षा', 'Drawing', 'संस्कृत/उर्दू'],
-  '6': ['हिंदी', 'अंग्रेजी', 'गणित', 'विज्ञान', 'सामाजिक विज्ञान', 'कंप्यूटर', 'नैतिक शिक्षा', 'Drawing', 'संस्कृत/उर्दू'],
-  '7': ['हिंदी', 'अंग्रेजी', 'गणित', 'विज्ञान', 'सामाजिक विज्ञान', 'कंप्यूटर', 'नैतिक शिक्षा', 'Drawing', 'संस्कृत/उर्दू'],
-  '8': ['हिंदी', 'अंग्रेजी', 'गणित', 'विज्ञान', 'सामाजिक विज्ञान', 'कंप्यूटर', 'नैतिक शिक्षा', 'Drawing', 'संस्कृत/उर्दू'],
-  '9': ['हिंदी', 'अंग्रेजी/उर्दू/संस्कृत', 'गणित/गृह विज्ञान', 'विज्ञान', 'सामाजिक विज्ञान', 'चित्रकला'],
-  '10': ['हिंदी', 'अंग्रेजी/उर्दू/संस्कृत', 'गणित/गृह विज्ञान', 'विज्ञान', 'सामाजिक विज्ञान', 'चित्रकला'],
-  '11': ['हिंदी', 'अंग्रेजी', 'भौतिक विज्ञान/भूगोल', 'रसायन विज्ञान/शिक्षाशास्त्र', 'गणित/जीव विज्ञान/समाजशास्त्र'],
-  '12': ['हिंदी', 'अंग्रेजी', 'भौतिक विज्ञान/भूगोल', 'रसायन विज्ञान/शिक्षाशास्त्र', 'गणित/जीव विज्ञान/समाजशास्त्र'],
+  'Nursery': ['Hindi', 'English', 'Math', 'Drawing'],
+  'KG': ['Hindi', 'English', 'Math', 'Drawing'],
+  '1': ['Hindi', 'English', 'Math', 'Science', 'Social Science', 'Computer', 'Moral Science', 'Drawing', 'Sanskrit/Urdu'],
+  '2': ['Hindi', 'English', 'Math', 'Science', 'Social Science', 'Computer', 'Moral Science', 'Drawing', 'Sanskrit/Urdu'],
+  '3': ['Hindi', 'English', 'Math', 'Science', 'Social Science', 'Computer', 'Moral Science', 'Drawing', 'Sanskrit/Urdu'],
+  '4': ['Hindi', 'English', 'Math', 'Science', 'Social Science', 'Computer', 'Moral Science', 'Drawing', 'Sanskrit/Urdu'],
+  '5': ['Hindi', 'English', 'Math', 'Science', 'Social Science', 'Computer', 'Moral Science', 'Drawing', 'Sanskrit/Urdu'],
+  '6': ['Hindi', 'English', 'Math', 'Science', 'Social Science', 'Computer', 'Moral Science', 'Drawing', 'Sanskrit/Urdu'],
+  '7': ['Hindi', 'English', 'Math', 'Science', 'Social Science', 'Computer', 'Moral Science', 'Drawing', 'Sanskrit/Urdu'],
+  '8': ['Hindi', 'English', 'Math', 'Science', 'Social Science', 'Computer', 'Moral Science', 'Drawing', 'Sanskrit/Urdu'],
+  '9': ['Hindi', 'English/Urdu/Sanskrit', 'Math/Home Science', 'Science', 'Social Science', 'Drawing'],
+  '10': ['Hindi', 'English/Urdu/Sanskrit', 'Math/Home Science', 'Science', 'Social Science', 'Drawing'],
+  '11': ['Hindi', 'English', 'Physics/Geography', 'Chemistry/Education', 'Math/Biology/Sociology'],
+  '12': ['Hindi', 'English', 'Physics/Geography', 'Chemistry/Education', 'Math/Biology/Sociology'],
 };
 
 export const allSubjects = [
-    'हिंदी',
-    'अंग्रेजी',
-    'गणित',
-    'विज्ञान',
-    'सामाजिक विज्ञान',
-    'कला',
-    'संस्कृत',
+    'Hindi',
+    'English',
+    'Math',
+    'Science',
+    'Social Science',
+    'Art',
+    'Sanskrit',
     'Drawing',
-    'कंप्यूटर',
-    'नैतिक शिक्षा',
-    'संस्कृत/उर्दू',
-    'अंग्रेजी/उर्दू/संस्कृत',
-    'गणित/गृह विज्ञान',
-    'चित्रकला',
-    'भौतिक विज्ञान/भूगोल',
-    'रसायन विज्ञान/शिक्षाशास्त्र',
-    'गणित/जीव विज्ञान/समाजशास्त्र',
+    'Computer',
+    'Moral Science',
+    'Sanskrit/Urdu',
+    'English/Urdu/Sanskrit',
+    'Math/Home Science',
+    'Drawing',
+    'Physics/Geography',
+    'Chemistry/Education',
+    'Math/Biology/Sociology',
 ];
 
 export interface Attendance {
   id?: string;
   studentId: string;
   date: string; // YYYY-MM-DD
-  status: 'उपस्थित' | 'अनुपस्थित';
+  status: 'Present' | 'Absent';
   class: string;
 }
 

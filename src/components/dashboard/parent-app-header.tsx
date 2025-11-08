@@ -12,10 +12,10 @@ export function ParentAppHeader() {
   const pathname = usePathname();
 
   const navLinks = [
-    { href: '/parent-dashboard', label: 'डेशबोर्ड', icon: LayoutGrid },
+    { href: '/parent-dashboard', label: 'Dashboard', icon: LayoutGrid },
     {
       href: '/parent-dashboard/children-information',
-      label: 'बच्चों की जानकारी',
+      label: 'Children Information',
       icon: Users,
     },
   ];
@@ -27,18 +27,18 @@ export function ParentAppHeader() {
           <div className="flex items-center gap-4">
             <BookOpenCheck className="h-10 w-10 text-primary" />
             <div>
-              <h1 className="text-xl font-bold">आदर्श बाल विद्या मन्दिर</h1>
+              <h1 className="text-xl font-bold">Adarsh Bal Vidya Mandir</h1>
               <p className="text-sm text-muted-foreground">
-                स्वागत है, विकास शर्मा
+                Welcome, Vikas Sharma
               </p>
             </div>
           </div>
           <div className="flex items-center gap-4">
             <Badge variant="secondary" className="text-sm bg-yellow-100 text-yellow-800">
-              अभिभावक
+              Parent
             </Badge>
             <Button variant="destructive" asChild>
-              <Link href="/">लॉगआउट</Link>
+              <Link href="/">Logout</Link>
             </Button>
           </div>
         </div>

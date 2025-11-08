@@ -12,10 +12,10 @@ export function AppHeader() {
   const pathname = usePathname();
 
   const navLinks = [
-    { href: '/dashboard', label: 'डेशबोर्ड', icon: LayoutGrid },
+    { href: '/dashboard', label: 'Dashboard', icon: LayoutGrid },
     {
       href: '/dashboard/school-management',
-      label: 'स्कूल प्रबंधन',
+      label: 'School Management',
       icon: FolderKanban,
     },
   ];
@@ -27,18 +27,18 @@ export function AppHeader() {
           <div className="flex items-center gap-4">
             <BookOpenCheck className="h-10 w-10 text-primary" />
             <div>
-              <h1 className="text-xl font-bold">आदर्श बाल विद्या मन्दिर</h1>
+              <h1 className="text-xl font-bold">Adarsh Bal Vidya Mandir</h1>
               <p className="text-sm text-muted-foreground">
-                स्वागत है, भानु प्रताप कुशवाहा
+                Welcome, Bhanu Pratap Kushwaha
               </p>
             </div>
           </div>
           <div className="flex items-center gap-4">
             <Badge variant="outline" className="text-sm bg-primary/10 text-primary">
-              प्रधानाचार्य
+              Principal
             </Badge>
             <Button variant="destructive" asChild>
-              <Link href="/">लॉगआउट</Link>
+              <Link href="/">Logout</Link>
             </Button>
           </div>
         </div>

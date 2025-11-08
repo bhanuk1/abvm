@@ -78,36 +78,36 @@ export default function StudentDashboardPage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <h1 className="text-3xl font-bold">मेरा डैशबोर्ड</h1>
+      <h1 className="text-3xl font-bold">My Dashboard</h1>
 
       <Card>
         <CardHeader>
           <CardTitle>{loggedInStudent.name}</CardTitle>
           <CardDescription>
-            कक्षा: {loggedInStudent.class} | रोल नंबर: {loggedInStudent.rollNo}
+            Class: {loggedInStudent.class} | Roll No: {loggedInStudent.rollNo}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="homework">
             <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="homework">होमवर्क</TabsTrigger>
-              <TabsTrigger value="attendance">उपस्थिति</TabsTrigger>
-              <TabsTrigger value="results">परिणाम</TabsTrigger>
-              <TabsTrigger value="notices">सूचना</TabsTrigger>
+              <TabsTrigger value="homework">Homework</TabsTrigger>
+              <TabsTrigger value="attendance">Attendance</TabsTrigger>
+              <TabsTrigger value="results">Results</TabsTrigger>
+              <TabsTrigger value="notices">Notices</TabsTrigger>
             </TabsList>
             <TabsContent value="homework">
               <Card>
                 <CardHeader>
-                  <CardTitle>मेरा होमवर्क</CardTitle>
+                  <CardTitle>My Homework</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>तारीख</TableHead>
-                        <TableHead>विषय</TableHead>
-                        <TableHead>शिक्षक</TableHead>
-                        <TableHead>विवरण</TableHead>
+                        <TableHead>Date</TableHead>
+                        <TableHead>Subject</TableHead>
+                        <TableHead>Teacher</TableHead>
+                        <TableHead>Details</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -127,15 +127,15 @@ export default function StudentDashboardPage() {
             <TabsContent value="attendance">
               <Card>
                 <CardHeader>
-                  <CardTitle>मेरी उपस्थिति</CardTitle>
+                  <CardTitle>My Attendance</CardTitle>
                 </CardHeader>
                 <CardContent>
                    {studentAttendance && studentAttendance.length > 0 ? (
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>तारीख</TableHead>
-                          <TableHead className="text-right">स्थिति</TableHead>
+                          <TableHead>Date</TableHead>
+                          <TableHead className="text-right">Status</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -144,9 +144,9 @@ export default function StudentDashboardPage() {
                             <TableCell>{format(new Date(att.date), 'PPP')}</TableCell>
                             <TableCell className="text-right">
                               <Badge 
-                                variant={att.status === 'उपस्थित' ? 'default' : 'destructive'}
+                                variant={att.status === 'Present' ? 'default' : 'destructive'}
                                 className={cn(
-                                 att.status === 'उपस्थित' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                                 att.status === 'Present' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                                )}
                               >
                                {att.status}
@@ -158,7 +158,7 @@ export default function StudentDashboardPage() {
                     </Table>
                    ) : (
                      <div className="p-4 min-h-[150px] flex items-center justify-center">
-                       <p className="text-muted-foreground">इस महीने का उपस्थिति डेटा जल्द ही उपलब्ध होगा।</p>
+                       <p className="text-muted-foreground">This month's attendance data will be available soon.</p>
                      </div>
                    )}
                 </CardContent>
@@ -167,7 +167,7 @@ export default function StudentDashboardPage() {
             <TabsContent value="results">
               <Card>
                 <CardHeader>
-                  <CardTitle>मेरे परिणाम</CardTitle>
+                  <CardTitle>My Results</CardTitle>
                 </CardHeader>
                  <CardContent>
                    {studentResults && studentResults.length > 0 ? (
@@ -182,9 +182,9 @@ export default function StudentDashboardPage() {
                                 <Table>
                                   <TableHeader>
                                     <TableRow>
-                                      <TableHead>विषय</TableHead>
-                                      <TableHead>प्राप्तांक</TableHead>
-                                      <TableHead>पूर्णांक</TableHead>
+                                      <TableHead>Subject</TableHead>
+                                      <TableHead>Obtained</TableHead>
+                                      <TableHead>Total</TableHead>
                                     </TableRow>
                                   </TableHeader>
                                   <TableBody>
@@ -199,8 +199,8 @@ export default function StudentDashboardPage() {
                                 </Table>
                               ) : (
                                 <div className="flex gap-4">
-                                  <p><strong>प्राप्तांक:</strong> {result.marks.obtained}</p>
-                                  <p><strong>पूर्णांक:</strong> {result.marks.total}</p>
+                                  <p><strong>Marks Obtained:</strong> {result.marks.obtained}</p>
+                                  <p><strong>Total Marks:</strong> {result.marks.total}</p>
                                 </div>
                               )}
                           </CardContent>
@@ -209,7 +209,7 @@ export default function StudentDashboardPage() {
                     </div>
                    ) : (
                      <div className="p-4 min-h-[150px] flex items-center justify-center">
-                       <p className="text-muted-foreground">कोई परिणाम उपलब्ध नहीं है।</p>
+                       <p className="text-muted-foreground">No results available.</p>
                      </div>
                    )}
                 </CardContent>
@@ -218,7 +218,7 @@ export default function StudentDashboardPage() {
              <TabsContent value="notices">
               <Card>
                 <CardHeader>
-                  <CardTitle>स्कूल की सूचनाएं</CardTitle>
+                  <CardTitle>School Notices</CardTitle>
                 </CardHeader>
                  <CardContent className="space-y-4">
                     {studentNotices && studentNotices.map(notice => (

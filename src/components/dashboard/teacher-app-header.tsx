@@ -12,10 +12,10 @@ export function TeacherAppHeader() {
   const pathname = usePathname();
 
   const navLinks = [
-    { href: '/teacher-dashboard', label: 'डेशबोर्ड', icon: LayoutGrid },
+    { href: '/teacher-dashboard', label: 'Dashboard', icon: LayoutGrid },
     {
       href: '/teacher-dashboard/class-management',
-      label: 'कक्षा प्रबंधन',
+      label: 'Class Management',
       icon: BookMarked,
     },
   ];
@@ -27,18 +27,18 @@ export function TeacherAppHeader() {
           <div className="flex items-center gap-4">
             <BookOpenCheck className="h-10 w-10 text-primary" />
             <div>
-              <h1 className="text-xl font-bold">आदर्श बाल विद्या मन्दिर</h1>
+              <h1 className="text-xl font-bold">Adarsh Bal Vidya Mandir</h1>
               <p className="text-sm text-muted-foreground">
-                स्वागत है, श्रीमती सुनीता गुप्ता
+                Welcome, Mrs. Sunita Gupta
               </p>
             </div>
           </div>
           <div className="flex items-center gap-4">
             <Badge variant="secondary" className="text-sm bg-blue-100 text-blue-800">
-              शिक्षक
+              Teacher
             </Badge>
             <Button variant="destructive" asChild>
-              <Link href="/">लॉगआउट</Link>
+              <Link href="/">Logout</Link>
             </Button>
           </div>
         </div>
