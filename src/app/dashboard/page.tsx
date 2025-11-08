@@ -98,7 +98,7 @@ export default function DashboardPage() {
         <CardContent>
            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
             {quickActions.map(action => (
-                <Button key={action.label} asChild className={`flex flex-col h-28 gap-2 text-white shadow-lg transform transition-transform hover:scale-105 hover:-translate-y-1 ${action.color}`}>
+                <Button key={action.label} asChild className={`flex flex-col h-28 gap-2 text-white shadow-lg transform transition-transform hover:-translate-y-1 ${action.color}`}>
                     <Link href={action.href}>
                         <action.icon className="h-8 w-8"/>
                         <span>{action.label}</span>
