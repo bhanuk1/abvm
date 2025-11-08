@@ -624,8 +624,8 @@ export default function SchoolManagementPage() {
   
   const handlePrintIdCards = () => {
     if (!idCardClass) {
-        alert('Please select a class to print first.');
-        return;
+      toast({ variant: 'destructive', title: 'Selection Missing', description: 'Please select a class to print first.' });
+      return;
     }
     window.print();
   };
@@ -708,7 +708,6 @@ export default function SchoolManagementPage() {
     try {
         // The custom font logic has been removed to prevent fetch errors.
         // The PDF will now use one of jsPDF's built-in fonts.
-        // Note: Hindi characters may not render correctly with default fonts.
         doc.setFontSize(18);
         doc.text('Adarsh Bal Vidya Mandir', doc.internal.pageSize.getWidth() / 2, 20, { align: 'center' });
         doc.setFontSize(14);
