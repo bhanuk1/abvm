@@ -348,8 +348,7 @@ function SchoolManagementPageContent() {
           address: newUser.address,
           mobile: newUser.studentMobile,
         };
-        const parentDocRef = doc(firestore, 'users', parentUser.uid);
-        await setDoc(parentDocRef, parentData);
+        await setDoc(doc(firestore, 'users', parentUser.uid), parentData);
       } catch (error: any) {
         toast({ variant: 'destructive', title: 'Parent Creation Error', description: error.message });
         return;
@@ -381,12 +380,10 @@ function SchoolManagementPageContent() {
           rollNo: newUser.rollNo,
           parentId: parentUser.uid, // Link to parent
         };
-        const studentDocRef = doc(firestore, 'users', studentUser.uid);
-        await setDoc(studentDocRef, studentData);
+        await setDoc(doc(firestore, 'users', studentUser.uid), studentData);
 
         // Update parent doc with studentId
-        const parentDocRef = doc(firestore, 'users', parentUser.uid);
-        await updateDoc(parentDocRef, { studentId: studentUser.uid });
+        await updateDoc(doc(firestore, 'users', parentUser.uid), { studentId: studentUser.uid });
 
       } catch (error: any) {
         toast({ variant: 'destructive', title: 'Student Creation Error', description: error.message });
@@ -417,8 +414,7 @@ function SchoolManagementPageContent() {
           mobile: newUser.studentMobile,
           rollNo: newUser.rollNo,
         };
-        const studentDocRef = doc(firestore, 'users', user.uid);
-        await setDoc(studentDocRef, studentData);
+        await setDoc(doc(firestore, 'users', user.uid), studentData);
       } catch (error: any) {
         toast({ variant: 'destructive', title: 'Student Creation Error', description: error.message });
         return;
