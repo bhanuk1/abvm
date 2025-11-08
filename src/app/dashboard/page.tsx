@@ -782,27 +782,31 @@ function DashboardPageContent() {
 
   const handlePayFee = (quarterId: string, amount: number) => {
     if (!firestore || !feeStudent || !feeClass || !students) return;
-
+  
     const student = students.find(s => s.id === feeStudent);
     if (!student) return;
-
-    const quarterData = getFeeStatusForQuarter(quarterId);
-
-    if (quarterData.id) {
-      // Update existing fee record
-      const feeDocRef = doc(firestore, 'fees', quarterData.id);
-      const updatedData = { status: 'Paid', paymentDate: serverTimestamp() };
-      updateDoc(feeDocRef, updatedData)
-        .catch(error => {
+  
+    const quarterFeeRecord = studentFees?.find(f => f.quarter === quarterId);
+  
+    if (quarterFeeRecord && quarterFeeRecord.id) {
+      // Update existing fee record if it's 'Unpaid'
+      if (quarterFeeRecord.status === 'Unpaid') {
+        const feeDocRef = doc(firestore, 'fees', quarterFeeRecord.id);
+        const updatedData = { status: 'Paid', paymentDate: serverTimestamp() };
+        updateDoc(feeDocRef, updatedData)
+          .then(() => toast({ title: 'Success', description: 'Fee paid successfully.' }))
+          .catch(error => {
             const contextualError = new FirestorePermissionError({
                 path: feeDocRef.path,
                 operation: 'update',
                 requestResourceData: updatedData,
             });
             errorEmitter.emit('permission-error', contextualError);
+            toast({ variant: 'destructive', title: 'Error', description: 'Failed to update fee status.' });
         });
+      }
     } else {
-      // Create new fee record
+      // Create new fee record if one doesn't exist for the quarter
       const feeColRef = collection(firestore, 'fees');
       const newData = {
         studentId: feeStudent,
@@ -814,6 +818,7 @@ function DashboardPageContent() {
         paymentDate: serverTimestamp()
       };
       addDoc(feeColRef, newData)
+        .then(() => toast({ title: 'Success', description: 'Fee paid successfully.' }))
         .catch(error => {
             const contextualError = new FirestorePermissionError({
                 path: feeColRef.path,
@@ -821,6 +826,7 @@ function DashboardPageContent() {
                 requestResourceData: newData,
             });
             errorEmitter.emit('permission-error', contextualError);
+            toast({ variant: 'destructive', title: 'Error', description: 'Failed to create fee record.' });
         });
     }
   };
