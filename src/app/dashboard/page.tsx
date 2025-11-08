@@ -150,6 +150,7 @@ function DashboardPageContent() {
 
   const [feeClass, setFeeClass] = React.useState('');
   const [feeStudent, setFeeStudent] = React.useState('');
+  const [feeQuarter, setFeeQuarter] = React.useState('');
   
   const [dailyReportDate, setDailyReportDate] = React.useState<Date | undefined>(new Date());
   
@@ -831,6 +832,66 @@ function DashboardPageContent() {
     }
   };
 
+  const handlePayAllClassFees = async () => {
+    if (!firestore || !feeClass || !feeQuarter || !students) {
+      toast({ variant: 'destructive', title: 'Error', description: 'Please select a class and a quarter.' });
+      return;
+    }
+
+    const studentsInClass = students.filter(s => s.class === feeClass);
+    if (studentsInClass.length === 0) {
+      toast({ title: 'Info', description: 'No students found in the selected class.' });
+      return;
+    }
+    
+    const feeAmount = getQuarterlyFee(feeClass);
+    const batch = writeBatch(firestore);
+
+    // Get all existing fee documents for the class and quarter to avoid duplicates
+    const feesRef = collection(firestore, 'fees');
+    const q = query(feesRef, where('class', '==', feeClass), where('quarter', '==', feeQuarter));
+    const querySnapshot = await getDocs(q);
+    const existingFeesMap = new Map(querySnapshot.docs.map(doc => [doc.data().studentId, {id: doc.id, ...doc.data()}]));
+
+    let paymentsProcessed = 0;
+
+    studentsInClass.forEach(student => {
+      const existingFee = existingFeesMap.get(student.id);
+
+      if (existingFee && existingFee.status === 'Paid') {
+        // Fee already paid, skip
+        return;
+      } else if (existingFee && existingFee.status === 'Unpaid') {
+        // Fee exists but is unpaid, update it
+        const feeDocRef = doc(firestore, 'fees', existingFee.id);
+        batch.update(feeDocRef, { status: 'Paid', paymentDate: serverTimestamp() });
+        paymentsProcessed++;
+      } else {
+        // No fee record exists, create a new one
+        const newFeeDocRef = doc(collection(firestore, 'fees'));
+        batch.set(newFeeDocRef, {
+          studentId: student.id,
+          studentName: student.username,
+          class: student.class,
+          quarter: feeQuarter,
+          amount: feeAmount,
+          status: 'Paid',
+          paymentDate: serverTimestamp()
+        });
+        paymentsProcessed++;
+      }
+    });
+
+    if (paymentsProcessed === 0) {
+      toast({ title: 'Info', description: 'All fees for this quarter are already paid.' });
+      return;
+    }
+
+    await batch.commit();
+    toast({ title: 'Success', description: `Processed ${paymentsProcessed} fee payment(s) for Class ${feeClass}.` });
+  };
+
+
   const handlePrintFeeReceipt = async (feeData: any) => {
     if (!students) return;
     const student = students.find(s => s.id === feeData.studentId);
@@ -1029,6 +1090,7 @@ function DashboardPageContent() {
           <CardHeader>
             <CardTitle>School Management</CardTitle>
             <CardDescription>Select a module to manage school operations.</CardDescription>
+            <ScrollArea className="w-full whitespace-nowrap">
              <TabsList className="grid h-auto grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-8 gap-2 p-2 bg-transparent border-none">
                 {managementOptions.map(option => (
                     <TabsTrigger key={option.value} value={option.value} asChild>
@@ -1042,6 +1104,7 @@ function DashboardPageContent() {
                     </TabsTrigger>
                 ))}
              </TabsList>
+            </ScrollArea>
           </CardHeader>
           <TabsContent value="user-management">
             <CardHeader className="flex flex-row items-center justify-between">
@@ -1552,34 +1615,71 @@ function DashboardPageContent() {
               <CardDescription>Submit and track quarterly student fees.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
-                <div className="space-y-2">
-                  <Label htmlFor="fee-class">Class</Label>
-                  <Select value={feeClass} onValueChange={(value) => { setFeeClass(value); setFeeStudent(''); }}>
-                    <SelectTrigger id="fee-class">
-                      <SelectValue placeholder="Select Class" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {classes.map(c => <SelectItem key={c} value={c}>Class {c}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="fee-student">Student</Label>
-                  <Select value={feeStudent} onValueChange={setFeeStudent} disabled={!feeClass}>
-                    <SelectTrigger id="fee-student">
-                      <SelectValue placeholder="Select Student" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {students && students.filter(s => s.class === feeClass).map(s => <SelectItem key={s.id} value={s.id}>{s.username} (Roll No. {s.rollNo})</SelectItem>)}
-                    </SelectContent>
-                  </Select>
+              <div className="p-4 border rounded-lg space-y-4">
+                <h3 className="font-medium">Single Student Fee</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
+                  <div className="space-y-2">
+                    <Label htmlFor="fee-class">Class</Label>
+                    <Select value={feeClass} onValueChange={(value) => { setFeeClass(value); setFeeStudent(''); }}>
+                      <SelectTrigger id="fee-class">
+                        <SelectValue placeholder="Select Class" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {classes.map(c => <SelectItem key={c} value={c}>Class {c}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="fee-student">Student</Label>
+                    <Select value={feeStudent} onValueChange={setFeeStudent} disabled={!feeClass}>
+                      <SelectTrigger id="fee-student">
+                        <SelectValue placeholder="Select Student" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {students && students.filter(s => s.class === feeClass).map(s => <SelectItem key={s.id} value={s.id}>{s.username} (Roll No. {s.rollNo})</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
               </div>
+
+              <div className="p-4 border rounded-lg space-y-4">
+                <h3 className="font-medium">Bulk Fee Payment</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
+                    <div className="space-y-2">
+                      <Label htmlFor="fee-class-bulk">Class</Label>
+                      <Select value={feeClass} onValueChange={setFeeClass}>
+                        <SelectTrigger id="fee-class-bulk">
+                          <SelectValue placeholder="Select Class" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {classes.map(c => <SelectItem key={c} value={c}>Class {c}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="fee-quarter-bulk">Quarter</Label>
+                        <Select value={feeQuarter} onValueChange={setFeeQuarter}>
+                          <SelectTrigger id="fee-quarter-bulk">
+                            <SelectValue placeholder="Select Quarter" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {academicYearQuarters.map(q => <SelectItem key={q.id} value={q.id}>{q.label}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                    </div>
+                    <Button onClick={handlePayAllClassFees} disabled={!feeClass || !feeQuarter} className="bg-blue-600 hover:bg-blue-700">
+                      <DollarSign className="mr-2 h-4 w-4" />
+                      Pay All Fees for this Class
+                    </Button>
+                </div>
+              </div>
+
+
               {feeStudent && (
                 <Card>
                   <CardHeader>
-                    <CardTitle>Fee Status</CardTitle>
+                    <CardTitle>Fee Status for {students?.find(s => s.id === feeStudent)?.username}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <Table>
@@ -1615,7 +1715,7 @@ function DashboardPageContent() {
                                   Pay Fee
                                 </Button>
                                 {isPaid && feeData && (
-                                  <Button size="sm" variant="outline" onClick={() => handlePrintFeeReceipt({...feeData, amount: feeAmount })}>
+                                  <Button size="sm" variant="outline" onClick={() => handlePrintFeeReceipt({...feeData, amount: feeAmount, id: feeInfo.id })}>
                                       <Printer className="mr-2 h-4 w-4" />
                                       Print Receipt
                                   </Button>
