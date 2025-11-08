@@ -436,17 +436,9 @@ export default function SchoolManagementPage() {
   
   const handleGeneratePdf = async (doc: jsPDF, student: any, results: Result[]) => {
     try {
-        const fontResponse = await fetch('/fonts/TiroDevanagariHindi-Regular.ttf');
-        if (!fontResponse.ok) {
-            throw new Error(`Failed to fetch font: ${fontResponse.statusText}`);
-        }
-        const fontBuffer = await fontResponse.arrayBuffer();
-        const fontBase64 = Buffer.from(fontBuffer).toString('base64');
-        
-        doc.addFileToVFS('TiroDevanagariHindi-Regular.ttf', fontBase64);
-        doc.addFont('TiroDevanagariHindi-Regular.ttf', 'TiroDevanagariHindi', 'normal');
-        doc.setFont('TiroDevanagariHindi');
-
+        // The custom font logic has been removed to prevent fetch errors.
+        // The PDF will now use one of jsPDF's built-in fonts.
+        // Note: Hindi characters may not render correctly with default fonts.
         doc.setFontSize(16);
         doc.text('Adarsh Bal Vidya Mandir', doc.internal.pageSize.getWidth() / 2, 15, { align: 'center' });
         doc.setFontSize(12);
@@ -466,8 +458,6 @@ export default function SchoolManagementPage() {
           head: [['Detail', 'Information']],
           body: studentDetails,
           theme: 'grid',
-          styles: { font: 'TiroDevanagariHindi', fontStyle: 'normal' },
-          headStyles: { fillColor: [41, 128, 185], font: 'TiroDevanagariHindi', fontStyle: 'normal' },
         });
 
         results.forEach(result => {
@@ -494,8 +484,6 @@ export default function SchoolManagementPage() {
                 head: tableHead,
                 body: tableBody,
                 theme: 'grid',
-                styles: { font: 'TiroDevanagariHindi', fontStyle: 'normal' },
-                headStyles: { fillColor: [22, 160, 133], font: 'TiroDevanagariHindi', fontStyle: 'normal' },
             });
         });
         
@@ -685,15 +673,9 @@ export default function SchoolManagementPage() {
     
     const doc = new jsPDF();
     try {
-        const fontResponse = await fetch('/fonts/TiroDevanagariHindi-Regular.ttf');
-        if (!fontResponse.ok) throw new Error(`Failed to fetch font: ${fontResponse.statusText}`);
-        const fontBuffer = await fontResponse.arrayBuffer();
-        const fontBase64 = Buffer.from(fontBuffer).toString('base64');
-        
-        doc.addFileToVFS('TiroDevanagariHindi-Regular.ttf', fontBase64);
-        doc.addFont('TiroDevanagariHindi-Regular.ttf', 'TiroDevanagariHindi', 'normal');
-        doc.setFont('TiroDevanagariHindi');
-
+        // The custom font logic has been removed to prevent fetch errors.
+        // The PDF will now use one of jsPDF's built-in fonts.
+        // Note: Hindi characters may not render correctly with default fonts.
         doc.setFontSize(18);
         doc.text('Adarsh Bal Vidya Mandir', doc.internal.pageSize.getWidth() / 2, 20, { align: 'center' });
         doc.setFontSize(14);
@@ -717,8 +699,7 @@ export default function SchoolManagementPage() {
           head: [['Detail', 'Information']],
           body: details,
           theme: 'grid',
-          styles: { font: 'TiroDevanagariHindi', fontStyle: 'normal', cellPadding: 3 },
-          headStyles: { fillColor: [41, 128, 185], font: 'TiroDevanagariHindi', fontStyle: 'normal' },
+          styles: { cellPadding: 3 },
         });
 
         const finalY = (doc as any).lastAutoTable.finalY;
