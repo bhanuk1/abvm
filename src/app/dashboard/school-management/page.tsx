@@ -201,7 +201,8 @@ export default function SchoolManagementPage() {
       createdAt: serverTimestamp(),
     };
 
-    addDoc(noticesCol, noticeToAdd).catch(error => {
+    addDoc(noticesCol, noticeToAdd)
+      .catch(error => {
         const contextualError = new FirestorePermissionError({
             operation: 'create',
             path: noticesCol.path,
@@ -1683,5 +1684,3 @@ export default function SchoolManagementPage() {
     </div>
   );
 }
-
-    
