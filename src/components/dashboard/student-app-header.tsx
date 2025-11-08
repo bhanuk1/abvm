@@ -13,13 +13,13 @@ import { Badge } from '@/components/ui/badge';
 export function StudentAppHeader() {
   const pathname = usePathname();
   const firestore = useFirestore();
-  const { user } = useUser();
+  const { user, isUserLoading } = useUser();
 
   const userDocRef = useMemoFirebase(
     () => (firestore && user ? doc(firestore, 'users', user.uid) : null),
     [firestore, user]
   );
-  const { data: userData } = useDoc<any>(userDocRef);
+  const { data: userData, isLoading: isUserDocLoading } = useDoc<any>(userDocRef);
 
   const navLinks = [
     { href: '/student-dashboard', label: 'Dashboard', icon: LayoutGrid },
@@ -35,7 +35,7 @@ export function StudentAppHeader() {
             <div>
               <h1 className="text-xl font-bold">Adarsh Bal Vidya Mandir</h1>
               <p className="text-sm text-muted-foreground">
-                Welcome, {userData?.username || 'Student'}
+                {isUserLoading || isUserDocLoading ? 'Welcome...' : `Welcome, ${userData?.username || 'Student'}`}
               </p>
             </div>
           </div>
