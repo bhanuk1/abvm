@@ -17,19 +17,26 @@ import {
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { initialStudents } from '@/lib/school-data';
 import { type Notice } from '@/lib/placeholder-data';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { useCollection, useFirestore, useUser, useMemoFirebase } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
 
 
-// Assuming the logged in parent is linked to the first student for this example
-const parentStudent = initialStudents[0];
-
 export default function ChildrenInformationPage() {
   const firestore = useFirestore();
+  const { user: currentUser } = useUser();
+
+  const childrenQuery = useMemoFirebase(() =>
+    (firestore && currentUser)
+      ? query(collection(firestore, 'users'), where('role', '==', 'student'), where('parentId', '==', currentUser.uid))
+      : null,
+    [firestore, currentUser]
+  );
+  const { data: children, isLoading: childrenLoading } = useCollection<any>(childrenQuery);
+  const parentStudent = children && children.length > 0 ? children[0] : null;
+
 
   const homeworksQuery = useMemoFirebase(() => 
     firestore && parentStudent 
@@ -38,7 +45,7 @@ export default function ChildrenInformationPage() {
           where('class', '==', parentStudent.class)
         ) 
       : null, 
-    [firestore]
+    [firestore, parentStudent]
   );
   const { data: studentHomeworks } = useCollection<any>(homeworksQuery);
 
@@ -60,7 +67,7 @@ export default function ChildrenInformationPage() {
           where('studentId', '==', parentStudent.id)
         )
       : null,
-    [firestore]
+    [firestore, parentStudent]
   );
   const { data: studentResults } = useCollection<any>(resultsQuery);
   
@@ -71,7 +78,7 @@ export default function ChildrenInformationPage() {
         where('studentId', '==', parentStudent.id)
       )
       : null,
-    [firestore]
+    [firestore, parentStudent]
   );
   const { data: studentAttendance } = useCollection<any>(attendanceQuery);
 
@@ -84,13 +91,30 @@ export default function ChildrenInformationPage() {
     );
   }
 
+  if (childrenLoading) {
+    return <p>Loading child information...</p>;
+  }
+
+  if (!parentStudent) {
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle>No Child Information Found</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <p>We could not find any students linked to your account. Please contact the school administration.</p>
+            </CardContent>
+        </Card>
+    )
+  }
+
   return (
     <div className="flex flex-col gap-8">
       <h1 className="text-3xl font-bold">My Child's Information</h1>
 
       <Card>
         <CardHeader>
-          <CardTitle>{parentStudent.name}</CardTitle>
+          <CardTitle>{parentStudent.username}</CardTitle>
           <CardDescription>
             Class: {parentStudent.class} | Roll No: {parentStudent.rollNo}
           </CardDescription>
@@ -183,7 +207,7 @@ export default function ChildrenInformationPage() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {studentHomeworks && studentHomeworks.filter(hw => parentStudent.subjects.includes(hw.subject)).map((hw) => (
+                      {studentHomeworks && parentStudent.subjects && studentHomeworks.filter(hw => parentStudent.subjects.includes(hw.subject)).map((hw) => (
                         <TableRow key={hw.id}>
                           <TableCell>{format(new Date(hw.date), 'dd/MM/yyyy')}</TableCell>
                           <TableCell>{hw.subject}</TableCell>

@@ -17,19 +17,22 @@ import {
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { initialStudents } from '@/lib/school-data';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query, where } from 'firebase/firestore';
+import { useCollection, useFirestore, useUser, useDoc, useMemoFirebase } from '@/firebase';
+import { collection, query, where, doc } from 'firebase/firestore';
 import type { Notice } from '@/lib/placeholder-data';
 
 
-// Assuming the logged in student is the first student for this example
-const loggedInStudent = initialStudents[0];
-
 export default function StudentDashboardPage() {
   const firestore = useFirestore();
+  const { user: currentUser, isUserLoading } = useUser();
+
+  const loggedInStudentDocRef = useMemoFirebase(
+    () => (firestore && currentUser ? doc(firestore, 'users', currentUser.uid) : null),
+    [firestore, currentUser]
+  );
+  const { data: loggedInStudent, isLoading: studentLoading } = useDoc<any>(loggedInStudentDocRef);
 
   const homeworksQuery = useMemoFirebase(() => 
     firestore && loggedInStudent 
@@ -38,7 +41,7 @@ export default function StudentDashboardPage() {
           where('class', '==', loggedInStudent.class)
         ) 
       : null, 
-    [firestore]
+    [firestore, loggedInStudent]
   );
   const { data: studentHomeworks } = useCollection<any>(homeworksQuery);
 
@@ -60,7 +63,7 @@ export default function StudentDashboardPage() {
           where('studentId', '==', loggedInStudent.id)
         )
       : null,
-    [firestore]
+    [firestore, loggedInStudent]
   );
   const { data: studentResults } = useCollection<any>(resultsQuery);
   
@@ -71,9 +74,26 @@ export default function StudentDashboardPage() {
         where('studentId', '==', loggedInStudent.id)
       )
       : null,
-    [firestore]
+    [firestore, loggedInStudent]
   );
   const { data: studentAttendance } = useCollection<any>(attendanceQuery);
+
+  if (isUserLoading || studentLoading) {
+    return <p>Loading dashboard...</p>
+  }
+
+  if (!loggedInStudent) {
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle>Error</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <p>Could not load student information. Please try again or contact support.</p>
+            </CardContent>
+        </Card>
+    )
+  }
 
 
   return (
@@ -82,7 +102,7 @@ export default function StudentDashboardPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>{loggedInStudent.name}</CardTitle>
+          <CardTitle>{loggedInStudent.username}</CardTitle>
           <CardDescription>
             Class: {loggedInStudent.class} | Roll No: {loggedInStudent.rollNo}
           </CardDescription>
@@ -111,7 +131,7 @@ export default function StudentDashboardPage() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {studentHomeworks && studentHomeworks.filter(hw => loggedInStudent.subjects.includes(hw.subject)).map((hw) => (
+                      {studentHomeworks && loggedInStudent.subjects && studentHomeworks.filter(hw => loggedInStudent.subjects.includes(hw.subject)).map((hw) => (
                         <TableRow key={hw.id}>
                           <TableCell>{format(new Date(hw.date), 'dd/MM/yyyy')}</TableCell>
                           <TableCell>{hw.subject}</TableCell>

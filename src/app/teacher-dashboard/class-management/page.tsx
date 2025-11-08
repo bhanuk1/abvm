@@ -39,16 +39,16 @@ import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { teacherData, type Attendance } from '@/lib/school-data';
+import { type Attendance } from '@/lib/school-data';
 import { useToast } from '@/hooks/use-toast';
 import { Textarea } from '@/components/ui/textarea';
-import { useCollection, useFirestore, useMemoFirebase, useUser, errorEmitter, FirestorePermissionError } from '@/firebase';
-import { addDoc, collection, query, where } from 'firebase/firestore';
+import { useCollection, useFirestore, useUser, useDoc, useMemoFirebase, errorEmitter, FirestorePermissionError } from '@/firebase';
+import { addDoc, collection, query, where, doc } from 'firebase/firestore';
 
 type Student = {
     id: string;
     rollNo: string;
-    name: string;
+    username: string;
     class: string;
 };
 
@@ -57,12 +57,28 @@ const allClasses = ['Nursery', 'KG', ...Array.from({length: 12}, (_, i) => (i + 
 export default function TeacherClassManagementPage() {
   const firestore = useFirestore();
   const { user: currentUser } = useUser();
-  const [selectedClass, setSelectedClass] = React.useState(teacherData.classes[0]?.name || '');
+
+  const teacherDocRef = useMemoFirebase(
+    () => (firestore && currentUser ? doc(firestore, 'users', currentUser.uid) : null),
+    [firestore, currentUser]
+  );
+  const { data: teacherData, isLoading: teacherLoading } = useDoc<any>(teacherDocRef);
+
+  const [selectedClass, setSelectedClass] = React.useState('');
   const [selectedDate, setSelectedDate] = React.useState<Date | undefined>();
   
   useEffect(() => {
     setSelectedDate(new Date());
   }, []);
+
+  useEffect(() => {
+    if (teacherData && !selectedClass) {
+        const teacherClasses = teacherData.classSubject?.split(',').map((s: string) => s.split('-')[0].trim()) || [];
+        if (teacherClasses.length > 0) {
+            setSelectedClass(teacherClasses[0]);
+        }
+    }
+  }, [teacherData, selectedClass]);
 
 
   const studentsQuery = useMemoFirebase(() => 
@@ -126,7 +142,7 @@ export default function TeacherClassManagementPage() {
         content: homeworkContent,
         date: format(new Date(), 'yyyy-MM-dd'),
         teacherId: currentUser.uid,
-        teacherName: currentUser.displayName || 'Teacher'
+        teacherName: teacherData?.username || 'Teacher'
     };
     
     addDoc(homeworkCol, homeworkData).catch(error => {
@@ -155,6 +171,22 @@ export default function TeacherClassManagementPage() {
     return attendanceRecord?.status || 'Absent'; // Default to absent
   };
 
+  const teacherClasses = React.useMemo(() => {
+    if (!teacherData?.classSubject) return [];
+    const classSubjectPairs = teacherData.classSubject.split(',');
+    const uniqueClasses = [...new Set(classSubjectPairs.map((pair: string) => pair.split('-')[0].trim()))];
+    return uniqueClasses;
+  }, [teacherData]);
+
+  const teacherSubjectsForSelectedClass = React.useMemo(() => {
+    if (!teacherData?.classSubject || !selectedClass) return [];
+    const classSubjectPairs = teacherData.classSubject.split(',');
+    return classSubjectPairs
+        .filter((pair: string) => pair.split('-')[0].trim() === selectedClass)
+        .map((pair: string) => pair.split('-')[1].trim());
+  }, [teacherData, selectedClass]);
+
+
   return (
     <div className="flex flex-col gap-8">
       <h1 className="text-3xl font-bold">Class Management</h1>
@@ -167,7 +199,7 @@ export default function TeacherClassManagementPage() {
               <SelectValue placeholder="Select Class" />
             </SelectTrigger>
             <SelectContent>
-              {allClasses.map(c => (
+              {teacherClasses.map((c: string) => (
                 <SelectItem key={c} value={c}>Class {c}</SelectItem>
               ))}
             </SelectContent>
@@ -218,7 +250,7 @@ export default function TeacherClassManagementPage() {
                   return (
                     <TableRow key={student.id}>
                       <TableCell>{student.rollNo}</TableCell>
-                      <TableCell>{student.name}</TableCell>
+                      <TableCell>{student.username}</TableCell>
                       <TableCell className="flex justify-end items-center gap-4">
                          <Badge 
                            variant={status === 'Present' ? 'default' : 'destructive'}
@@ -232,7 +264,7 @@ export default function TeacherClassManagementPage() {
                          <Switch
                             checked={status === 'Present'}
                             onCheckedChange={(isChecked) => handleAttendanceChange(student.id, isChecked)}
-                            aria-label={`Mark ${student.name} as ${status === 'Present' ? 'absent' : 'present'}`}
+                            aria-label={`Mark ${student.username} as ${status === 'Present' ? 'absent' : 'present'}`}
                          />
                       </TableCell>
                     </TableRow>
@@ -268,7 +300,7 @@ export default function TeacherClassManagementPage() {
                                 <SelectValue placeholder="Select Subject" />
                             </SelectTrigger>
                             <SelectContent>
-                                {teacherData.classes.find(c => c.name === selectedClass)?.subject.split(', ').map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                                {teacherSubjectsForSelectedClass.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
                             </SelectContent>
                         </Select>
                     </div>
