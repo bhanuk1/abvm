@@ -890,17 +890,15 @@ export default function SchoolManagementPage() {
                     Create New User
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto">
+                <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle>Create New User</DialogTitle>
                   </DialogHeader>
-                  <div className="grid gap-4 py-4">
-                    <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="role" className="text-right">
-                        Role
-                      </Label>
+                  <div className="space-y-6 py-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="role">Role</Label>
                       <Select value={newUser.role} onValueChange={handleSelectChange}>
-                        <SelectTrigger className="col-span-3">
+                        <SelectTrigger>
                           <SelectValue placeholder="Select a role" />
                         </SelectTrigger>
                         <SelectContent>
@@ -911,145 +909,146 @@ export default function SchoolManagementPage() {
                       </Select>
                     </div>
 
-                    <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="username" className="text-right">Name</Label>
-                      <Input id="username" value={newUser.username || ''} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" />
+                    <div className="space-y-2">
+                      <Label htmlFor="username">Name</Label>
+                      <Input id="username" value={newUser.username || ''} onChange={(e) => handleInputChange(e.target.id, e.target.value)} />
                     </div>
 
                     {newUser.role === 'teacher' && (
-                      <>
-                        <div className="grid grid-cols-4 items-center gap-4">
-                          <Label htmlFor="teacherMobile" className="text-right">Mobile Number</Label>
-                          <Input id="teacherMobile" value={newUser.teacherMobile || ''} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" />
+                      <div className="space-y-4 rounded-md border p-4">
+                        <h3 className="font-semibold">Teacher Details</h3>
+                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                          <div className="space-y-2">
+                            <Label htmlFor="teacherMobile">Mobile Number</Label>
+                            <Input id="teacherMobile" value={newUser.teacherMobile || ''} onChange={(e) => handleInputChange(e.target.id, e.target.value)} />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="teacherSubject">Subject</Label>
+                            <Input id="teacherSubject" value={newUser.teacherSubject || ''} onChange={(e) => handleInputChange(e.target.id, e.target.value)} placeholder="e.g., Hindi, English"/>
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="teacherClass">Class</Label>
+                            <Input id="teacherClass" value={newUser.teacherClass || ''} onChange={(e) => handleInputChange(e.target.id, e.target.value)} placeholder="e.g., 5, 6, 7" />
+                          </div>
                         </div>
-                        <div className="grid grid-cols-4 items-center gap-4">
-                          <Label htmlFor="teacherSubject" className="text-right">Subject</Label>
-                          <Input id="teacherSubject" value={newUser.teacherSubject || ''} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" placeholder="e.g., Hindi, English"/>
-                        </div>
-                         <div className="grid grid-cols-4 items-center gap-4">
-                          <Label htmlFor="teacherClass" className="text-right">Class</Label>
-                          <Input id="teacherClass" value={newUser.teacherClass || ''} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" placeholder="e.g., 5, 6, 7" />
-                        </div>
-                      </>
+                      </div>
                     )}
                     
                     {(newUser.role === 'parent' || newUser.role === 'student') && (
                       <>
-                        <h3 className="col-span-4 font-semibold text-lg border-b pb-2 mb-2">{newUser.role === 'parent' ? 'Parent & Student Details' : 'Student Details'}</h3>
-                        
-                        {newUser.role === 'student' && (
-                          <div className="grid grid-cols-4 items-center gap-4">
-                              <Label htmlFor="parentName" className="text-right">Father's Name</Label>
-                              <Input id="parentName" value={newUser.parentName || ''} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" />
-                          </div>
-                        )}
+                        <div className="space-y-4 rounded-md border p-4">
+                          <h3 className="font-semibold">{newUser.role === 'parent' ? 'Parent & Student Details' : 'Student Details'}</h3>
+                          
+                          {newUser.role === 'student' && (
+                            <div className="space-y-2">
+                                <Label htmlFor="parentName">Father's Name</Label>
+                                <Input id="parentName" value={newUser.parentName || ''} onChange={(e) => handleInputChange(e.target.id, e.target.value)} />
+                            </div>
+                          )}
 
-                        <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="motherName" className="text-right">Mother's Name</Label>
-                            <Input id="motherName" value={newUser.motherName || ''} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" />
-                        </div>
-                        
-                        <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="studentMobile" className="text-right">Mobile Number</Label>
-                            <Input id="studentMobile" value={newUser.studentMobile || ''} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" />
-                        </div>
-                        
-                        {newUser.role === 'parent' && (
-                        <>
-                          <h4 className="col-span-4 font-semibold text-md border-b pb-2 mt-4 mb-2">Student Login Details</h4>
-                          <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="studentName" className="text-right">Student's Name</Label>
-                            <Input id="studentName" value={newUser.studentName || ''} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" />
+                          <div className="space-y-2">
+                              <Label htmlFor="motherName">Mother's Name</Label>
+                              <Input id="motherName" value={newUser.motherName || ''} onChange={(e) => handleInputChange(e.target.id, e.target.value)} />
                           </div>
-                        </>
-                        )}
-                        <h4 className="col-span-4 font-semibold text-md border-b pb-2 mt-4 mb-2">Student Academic Details</h4>
-                        <div className="grid grid-cols-4 items-center gap-4">
-                          <Label htmlFor="rollNo" className="text-right">Roll No.</Label>
-                          <Input id="rollNo" value={newUser.rollNo || ''} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" readOnly placeholder="Auto-generated on class selection" />
+                          
+                          <div className="space-y-2">
+                              <Label htmlFor="studentMobile">Mobile Number</Label>
+                              <Input id="studentMobile" value={newUser.studentMobile || ''} onChange={(e) => handleInputChange(e.target.id, e.target.value)} />
+                          </div>
+                          
+                          {newUser.role === 'parent' && (
+                          <div className="space-y-2 pt-4 border-t">
+                            <Label htmlFor="studentName" className="font-medium text-primary">Student's Name</Label>
+                            <Input id="studentName" value={newUser.studentName || ''} onChange={(e) => handleInputChange(e.target.id, e.target.value)} />
+                          </div>
+                          )}
                         </div>
-                        <div className="grid grid-cols-4 items-center gap-4">
-                          <Label htmlFor="studentClass" className="text-right">Class</Label>
-                          <Select onValueChange={handleStudentClassChange} value={newUser.studentClass}>
-                            <SelectTrigger className="col-span-3">
-                              <SelectValue placeholder="Select a class" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {classes.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div className="grid grid-cols-4 items-center gap-4">
-                          <Label htmlFor="studentSubjects" className="text-right">Subjects</Label>
-                          <Input id="studentSubjects" value={newUser.studentSubjects || ''} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" placeholder="Auto-filled on class selection"/>
-                        </div>
-                         <div className="grid grid-cols-4 items-center gap-4">
-                          <Label htmlFor="address" className="text-right">Address</Label>
-                          <Input id="address" value={newUser.address || ''} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" />
-                        </div>
-                         <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="dob" className="text-right">Date of Birth</Label>
-                             <Popover>
-                                <PopoverTrigger asChild>
-                                <Button
-                                    variant={"outline"}
-                                    className={cn(
-                                    "col-span-3 justify-start text-left font-normal",
-                                    !newUser.dob && "text-muted-foreground"
-                                    )}
-                                >
-                                    <CalendarIcon className="mr-2 h-4 w-4" />
-                                    {newUser.dob ? format(newUser.dob, "PPP") : <span>Pick a date</span>}
-                                </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0">
-                                <Calendar
-                                    mode="single"
-                                    selected={newUser.dob}
-                                    onSelect={(date) => handleDateChange('dob', date)}
-                                    captionLayout="dropdown"
-                                    fromYear={1980}
-                                    toYear={new Date().getFullYear()}
-                                    initialFocus
-                                />
-                                </PopoverContent>
-                            </Popover>
-                        </div>
-                        <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="admissionDate" className="text-right">Admission Date</Label>
-                             <Popover>
-                                <PopoverTrigger asChild>
-                                <Button
-                                    variant={"outline"}
-                                    className={cn(
-                                    "col-span-3 justify-start text-left font-normal",
-                                    !newUser.admissionDate && "text-muted-foreground"
-                                    )}
-                                >
-                                    <CalendarIcon className="mr-2 h-4 w-4" />
-                                    {newUser.admissionDate ? format(newUser.admissionDate, "PPP") : <span>Pick a date</span>}
-                                </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0">
-                                <Calendar
-                                    mode="single"
-                                    selected={newUser.admissionDate}
-                                    onSelect={(date) => handleDateChange('admissionDate', date)}
-                                    captionLayout="dropdown"
-                                    fromYear={new Date().getFullYear() - 10}
-                                    toYear={new Date().getFullYear()}
-                                    initialFocus
-                                />
-                                </PopoverContent>
-                            </Popover>
-                        </div>
-                         <div className="grid grid-cols-4 items-center gap-4">
-                          <Label htmlFor="aadhaar" className="text-right">Aadhaar Number</Label>
-                          <Input id="aadhaar" value={newUser.aadhaar || ''} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" />
-                        </div>
-                         <div className="grid grid-cols-4 items-center gap-4">
-                          <Label htmlFor="pen" className="text-right">PEN Number</Label>
-                          <Input id="pen" value={newUser.pen || ''} onChange={(e) => handleInputChange(e.target.id, e.target.value)} className="col-span-3" />
+
+                        <div className="space-y-4 rounded-md border p-4">
+                          <h3 className="font-semibold">Student Academic Details</h3>
+                          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                            <div className="space-y-2">
+                              <Label htmlFor="studentClass">Class</Label>
+                              <Select onValueChange={handleStudentClassChange} value={newUser.studentClass}>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select a class" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {classes.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="rollNo">Roll No.</Label>
+                              <Input id="rollNo" value={newUser.rollNo || ''} readOnly className="bg-gray-100" placeholder="Auto-generated"/>
+                            </div>
+                            <div className="space-y-2 sm:col-span-2">
+                              <Label htmlFor="studentSubjects">Subjects</Label>
+                              <Input id="studentSubjects" value={newUser.studentSubjects || ''} readOnly className="bg-gray-100" placeholder="Auto-filled"/>
+                            </div>
+                            <div className="space-y-2 sm:col-span-2">
+                              <Label htmlFor="address">Address</Label>
+                              <Input id="address" value={newUser.address || ''} onChange={(e) => handleInputChange(e.target.id, e.target.value)} />
+                            </div>
+                             <div className="space-y-2">
+                                <Label htmlFor="dob">Date of Birth</Label>
+                                 <Popover>
+                                    <PopoverTrigger asChild>
+                                    <Button
+                                        variant={"outline"}
+                                        className={cn("w-full justify-start text-left font-normal", !newUser.dob && "text-muted-foreground")}
+                                    >
+                                        <CalendarIcon className="mr-2 h-4 w-4" />
+                                        {newUser.dob ? format(newUser.dob, "PPP") : <span>Pick a date</span>}
+                                    </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0">
+                                    <Calendar
+                                        mode="single"
+                                        selected={newUser.dob}
+                                        onSelect={(date) => handleDateChange('dob', date)}
+                                        captionLayout="dropdown"
+                                        fromYear={1980}
+                                        toYear={new Date().getFullYear()}
+                                        initialFocus
+                                    />
+                                    </PopoverContent>
+                                </Popover>
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="admissionDate">Admission Date</Label>
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                    <Button
+                                        variant={"outline"}
+                                        className={cn("w-full justify-start text-left font-normal", !newUser.admissionDate && "text-muted-foreground")}
+                                    >
+                                        <CalendarIcon className="mr-2 h-4 w-4" />
+                                        {newUser.admissionDate ? format(newUser.admissionDate, "PPP") : <span>Pick a date</span>}
+                                    </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0">
+                                    <Calendar
+                                        mode="single"
+                                        selected={newUser.admissionDate}
+                                        onSelect={(date) => handleDateChange('admissionDate', date)}
+                                        captionLayout="dropdown"
+                                        fromYear={new Date().getFullYear() - 10}
+                                        toYear={new Date().getFullYear()}
+                                        initialFocus
+                                    />
+                                    </PopoverContent>
+                                </Popover>
+                            </div>
+                             <div className="space-y-2">
+                              <Label htmlFor="aadhaar">Aadhaar Number</Label>
+                              <Input id="aadhaar" value={newUser.aadhaar || ''} onChange={(e) => handleInputChange(e.target.id, e.target.value)} />
+                            </div>
+                             <div className="space-y-2">
+                              <Label htmlFor="pen">PEN Number</Label>
+                              <Input id="pen" value={newUser.pen || ''} onChange={(e) => handleInputChange(e.target.id, e.target.value)} />
+                            </div>
+                          </div>
                         </div>
                       </>
                     )}
