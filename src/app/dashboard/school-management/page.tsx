@@ -609,11 +609,20 @@ export default function SchoolManagementPage() {
     window.print();
   };
 
+  const getQuarterlyFee = (className: string) => {
+    if (!className) return 0;
+    const classNum = parseInt(className);
+    if (className === 'Nursery' || className === 'KG') return 1200;
+    if (classNum >= 1 && classNum <= 8) return 1800;
+    if (classNum >= 9 && classNum <= 12) return 2400;
+    return 0;
+  };
+
   const academicYearQuarters = [
-    { id: 'q1', label: 'अप्रैल - जून', amount: 1200 },
-    { id: 'q2', label: 'जुलाई - सितंबर', amount: 1200 },
-    { id: 'q3', label: 'अक्टूबर - दिसंबर', amount: 1200 },
-    { id: 'q4', label: 'जनवरी - मार्च', amount: 1200 },
+    { id: 'q1', label: 'अप्रैल - जून' },
+    { id: 'q2', label: 'जुलाई - सितंबर' },
+    { id: 'q3', label: 'अक्टूबर - दिसंबर' },
+    { id: 'q4', label: 'जनवरी - मार्च' },
   ];
 
   const getFeeStatusForQuarter = (quarterId: string) => {
@@ -666,6 +675,61 @@ export default function SchoolManagementPage() {
             });
             errorEmitter.emit('permission-error', contextualError);
         });
+    }
+  };
+
+  const handlePrintFeeReceipt = async (feeData: any) => {
+    if (!students) return;
+    const student = students.find(s => s.id === feeData.studentId);
+    if (!student) return;
+    
+    const doc = new jsPDF();
+    try {
+        const fontResponse = await fetch('/fonts/TiroDevanagariHindi-Regular.ttf');
+        if (!fontResponse.ok) throw new Error(`Failed to fetch font: ${fontResponse.statusText}`);
+        const fontBuffer = await fontResponse.arrayBuffer();
+        const fontBase64 = Buffer.from(fontBuffer).toString('base64');
+        
+        doc.addFileToVFS('TiroDevanagariHindi-Regular.ttf', fontBase64);
+        doc.addFont('TiroDevanagariHindi-Regular.ttf', 'TiroDevanagariHindi', 'normal');
+        doc.setFont('TiroDevanagariHindi');
+
+        doc.setFontSize(18);
+        doc.text('आदर्श बाल विद्या मन्दिर', doc.internal.pageSize.getWidth() / 2, 20, { align: 'center' });
+        doc.setFontSize(14);
+        doc.text('शुल्क रसीद', doc.internal.pageSize.getWidth() / 2, 30, { align: 'center' });
+
+        const quarterInfo = academicYearQuarters.find(q => q.id === feeData.quarter);
+
+        const details = [
+            ['रसीद संख्या', feeData.id.slice(0, 8).toUpperCase()],
+            ['भुगतान तिथि', feeData.paymentDate ? format(feeData.paymentDate.toDate(), 'dd/MM/yyyy') : ''],
+            ['छात्र का नाम', student.username],
+            ['कक्षा', student.class],
+            ['रोल नंबर', student.rollNo],
+            ['तिमाही', quarterInfo?.label || ''],
+            ['राशि (₹)', feeData.amount.toString()],
+            ['स्थिति', feeData.status],
+        ];
+
+        (doc as any).autoTable({
+          startY: 40,
+          head: [['विवरण', 'जानकारी']],
+          body: details,
+          theme: 'grid',
+          styles: { font: 'TiroDevanagariHindi', fontStyle: 'normal', cellPadding: 3 },
+          headStyles: { fillColor: [41, 128, 185], font: 'TiroDevanagariHindi', fontStyle: 'normal' },
+        });
+
+        const finalY = (doc as any).lastAutoTable.finalY;
+        doc.setFontSize(10);
+        doc.text('यह एक कंप्यूटर-जनित रसीद है।', 14, finalY + 15);
+        doc.text('प्रधानाचार्य', doc.internal.pageSize.getWidth() - 30, finalY + 25, {align: 'center'});
+
+        doc.save(`Fee_Receipt_${student.username}_${feeData.quarter}.pdf`);
+    } catch (e) {
+        console.error(e);
+        toast({variant: 'destructive', title: 'त्रुटि', description: 'रसीद बनाने में विफल।'});
     }
   };
 
@@ -1282,21 +1346,30 @@ export default function SchoolManagementPage() {
                         {academicYearQuarters.map(q => {
                           const feeInfo = getFeeStatusForQuarter(q.id);
                           const isPaid = feeInfo.status === 'जमा';
+                          const feeAmount = getQuarterlyFee(feeClass);
+                          const feeData = studentFees?.find(f => f.quarter === q.id);
+
                           return (
                             <TableRow key={q.id}>
                               <TableCell className="font-medium">{q.label}</TableCell>
-                              <TableCell>{q.amount}</TableCell>
+                              <TableCell>{feeAmount}</TableCell>
                               <TableCell>
                                 <Badge variant={isPaid ? 'default' : 'destructive'} className={isPaid ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}>
                                   {feeInfo.status}
                                 </Badge>
                               </TableCell>
                               <TableCell>{feeInfo.paymentDate ? format(feeInfo.paymentDate.toDate(), 'dd/MM/yyyy') : '-'}</TableCell>
-                              <TableCell className="text-right">
-                                <Button size="sm" disabled={isPaid} onClick={() => handlePayFee(q.id, q.amount)}>
+                              <TableCell className="text-right space-x-2">
+                                <Button size="sm" disabled={isPaid} onClick={() => handlePayFee(q.id, feeAmount)}>
                                   <DollarSign className="mr-2 h-4 w-4" />
                                   फीस जमा करें
                                 </Button>
+                                {isPaid && feeData && (
+                                  <Button size="sm" variant="outline" onClick={() => handlePrintFeeReceipt({...feeData, amount: feeAmount })}>
+                                      <Printer className="mr-2 h-4 w-4" />
+                                      रसीद प्रिंट करें
+                                  </Button>
+                                )}
                               </TableCell>
                             </TableRow>
                           )
@@ -1684,5 +1757,3 @@ export default function SchoolManagementPage() {
     </div>
   );
 }
-
-    
