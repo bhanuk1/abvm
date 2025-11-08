@@ -107,7 +107,6 @@ export const allSubjects = [
     'Sanskrit/Urdu',
     'English/Urdu/Sanskrit',
     'Math/Home Science',
-    'Drawing',
     'Physics/Geography',
     'Chemistry/Education',
     'Math/Biology/Sociology',
