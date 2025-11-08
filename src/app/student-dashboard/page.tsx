@@ -22,6 +22,7 @@ import { cn } from '@/lib/utils';
 import { useCollection, useFirestore, useUser, useDoc, useMemoFirebase } from '@/firebase';
 import { collection, query, where, doc } from 'firebase/firestore';
 import type { Notice } from '@/lib/placeholder-data';
+import { type Fee } from '@/lib/school-data';
 
 function DetailRow({ label, value }: { label: string; value?: string | null }) {
     return (
@@ -85,6 +86,42 @@ export default function StudentDashboardPage() {
     [firestore, loggedInStudent]
   );
   const { data: studentAttendance } = useCollection<any>(attendanceQuery);
+  
+  const feesQuery = useMemoFirebase(() =>
+    firestore && currentUser?.uid
+      ? query(
+        collection(firestore, 'fees'),
+        where('studentId', '==', currentUser.uid)
+      )
+      : null,
+    [firestore, currentUser]
+  );
+  const { data: studentFees } = useCollection<Fee>(feesQuery);
+
+
+  const academicYearQuarters = [
+    { id: 'q1', label: 'April - June' },
+    { id: 'q2', label: 'July - September' },
+    { id: 'q3', label: 'October - December' },
+    { id: 'q4', label: 'January - March' },
+  ];
+
+  const getQuarterlyFee = (className: string) => {
+    if (!className) return 0;
+    const classNum = parseInt(className);
+    if (className === 'Nursery' || className === 'KG') return 1200;
+    if (classNum >= 1 && classNum <= 8) return 1800;
+    if (classNum >= 9 && classNum <= 12) return 2400;
+    return 0;
+  };
+
+  const getFeeStatusForQuarter = (quarterId: string) => {
+    if (!studentFees) return { status: 'Unpaid' };
+    const feeRecord = studentFees.find(f => f.quarter === quarterId);
+    return feeRecord
+      ? { status: feeRecord.status, paymentDate: feeRecord.paymentDate }
+      : { status: 'Unpaid' };
+  };
 
   if (isUserLoading || studentLoading) {
     return <p>Loading dashboard...</p>
@@ -117,8 +154,9 @@ export default function StudentDashboardPage() {
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="profile">
-            <TabsList className="grid w-full grid-cols-5">
+            <TabsList className="grid w-full grid-cols-6">
               <TabsTrigger value="profile">Profile</TabsTrigger>
+              <TabsTrigger value="fees">Fees</TabsTrigger>
               <TabsTrigger value="homework">Homework</TabsTrigger>
               <TabsTrigger value="attendance">Attendance</TabsTrigger>
               <TabsTrigger value="results">Results</TabsTrigger>
@@ -144,6 +182,45 @@ export default function StudentDashboardPage() {
                         <DetailRow label="Subjects" value={loggedInStudent.subjects} />
                     </div>
                   </dl>
+                </CardContent>
+              </Card>
+            </TabsContent>
+            <TabsContent value="fees">
+              <Card>
+                <CardHeader>
+                  <CardTitle>My Fee Status</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Quarter</TableHead>
+                        <TableHead>Amount (INR)</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Payment Date</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {academicYearQuarters.map(q => {
+                        const feeInfo = getFeeStatusForQuarter(q.id);
+                        const isPaid = feeInfo.status === 'Paid';
+                        const feeAmount = getQuarterlyFee(loggedInStudent.class);
+                        
+                        return (
+                          <TableRow key={q.id}>
+                            <TableCell className="font-medium">{q.label}</TableCell>
+                            <TableCell>{feeAmount}</TableCell>
+                            <TableCell>
+                              <Badge variant={isPaid ? 'default' : 'destructive'} className={isPaid ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}>
+                                {feeInfo.status}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>{feeInfo.paymentDate ? format(feeInfo.paymentDate.toDate(), 'dd/MM/yyyy') : '-'}</TableCell>
+                          </TableRow>
+                        )
+                      })}
+                    </TableBody>
+                  </Table>
                 </CardContent>
               </Card>
             </TabsContent>
