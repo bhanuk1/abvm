@@ -319,7 +319,7 @@ function SchoolManagementPageContent() {
 
     if (newUser.role === 'teacher') {
       const teacherPassword = generatePassword();
-      const teacherUserId = `teacher_${Date.now()}`;
+      const teacherUserId = `abvm${Date.now()}`;
       const teacherEmail = `${teacherUserId}@vidyalaya.com`;
 
       try {
@@ -347,11 +347,11 @@ function SchoolManagementPageContent() {
         }
 
         const parentPassword = generatePassword();
-        const parentUserId = `parent_${Date.now()}`;
+        const parentUserId = `abvm${Date.now()}`;
         const parentEmail = `${parentUserId}@vidyalaya.com`;
         
         const studentPassword = generatePassword();
-        const studentUserId = `student_${Date.now()}`;
+        const studentUserId = `abvm${Date.now() + 1}`; // Add 1 to ensure unique timestamp
         const studentEmail = `${studentUserId}@vidyalaya.com`;
 
         try {
@@ -407,7 +407,7 @@ function SchoolManagementPageContent() {
 
     } else if (newUser.role === 'student') {
       const studentPassword = generatePassword();
-      const studentUserId = `student_${Date.now()}`;
+      const studentUserId = `abvm${Date.now()}`;
       const studentEmail = `${studentUserId}@vidyalaya.com`;
       try {
         const userCredential = await createUserWithEmailAndPassword(auth, studentEmail, studentPassword);
