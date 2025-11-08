@@ -42,7 +42,7 @@ import { Label } from '@/components/ui/label';
 import { teacherData, type Attendance } from '@/lib/school-data';
 import { useToast } from '@/hooks/use-toast';
 import { Textarea } from '@/components/ui/textarea';
-import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase, useUser, errorEmitter, FirestorePermissionError } from '@/firebase';
 import { addDoc, collection, query, where } from 'firebase/firestore';
 
 type Student = {
@@ -120,13 +120,22 @@ export default function TeacherClassManagementPage() {
     }
     
     const homeworkCol = collection(firestore, 'homeworks');
-    addDoc(homeworkCol, {
+    const homeworkData = {
         class: selectedClass,
         subject: homeworkSubject,
         content: homeworkContent,
         date: format(new Date(), 'yyyy-MM-dd'),
         teacherId: currentUser.uid,
         teacherName: currentUser.displayName || 'शिक्षक'
+    };
+    
+    addDoc(homeworkCol, homeworkData).catch(error => {
+      const contextualError = new FirestorePermissionError({
+        operation: 'create',
+        path: homeworkCol.path,
+        requestResourceData: homeworkData,
+      });
+      errorEmitter.emit('permission-error', contextualError);
     });
 
     toast({
