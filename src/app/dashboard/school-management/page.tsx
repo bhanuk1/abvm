@@ -91,6 +91,7 @@ export default function SchoolManagementPage() {
 
   const [isUserDialogOpen, setIsUserDialogOpen] = React.useState(false);
   const [isNoticeDialogOpen, setIsNoticeDialogOpen] = React.useState(false);
+  const [editingNotice, setEditingNotice] = React.useState<Notice | null>(null);
 
   const [passwordVisibility, setPasswordVisibility] = React.useState<{[key: string]: boolean}>({});
 
@@ -139,6 +140,20 @@ export default function SchoolManagementPage() {
     setAttendanceReportDate(new Date());
     setHomeworkReportDate(new Date());
   }, []);
+  
+  React.useEffect(() => {
+    if (editingNotice) {
+      setNewNotice({
+        title: editingNotice.title,
+        content: editingNotice.content,
+        role: editingNotice.role,
+      });
+      setIsNoticeDialogOpen(true);
+    } else {
+      setNewNotice({ title: '', content: '', role: 'All' });
+    }
+  }, [editingNotice]);
+
 
   const handleInputChange = (id: string, value: string) => {
     setNewUser((prev: any) => ({ ...prev, [id]: value }));
@@ -181,7 +196,6 @@ export default function SchoolManagementPage() {
     const noticesCol = collection(firestore, 'notices');
     const noticeToAdd = {
       ...newNotice,
-      id: `NTC${Date.now()}`,
       authorId: currentUser.uid,
       author: 'प्रधानाचार्य',
       createdAt: serverTimestamp(),
@@ -198,6 +212,36 @@ export default function SchoolManagementPage() {
     
     setNewNotice({ title: '', content: '', role: 'All' });
     setIsNoticeDialogOpen(false);
+  };
+  
+  const handleUpdateNotice = () => {
+    if (!editingNotice || !firestore) return;
+    
+    const noticeDocRef = doc(firestore, 'notices', editingNotice.id);
+    const updatedData = { ...newNotice };
+
+    updateDoc(noticeDocRef, updatedData).catch(error => {
+      const contextualError = new FirestorePermissionError({
+        operation: 'update',
+        path: noticeDocRef.path,
+        requestResourceData: updatedData
+      });
+      errorEmitter.emit('permission-error', contextualError);
+    });
+    
+    setEditingNotice(null);
+    setIsNoticeDialogOpen(false);
+  };
+
+  const handleNoticeDialogClose = (open: boolean) => {
+    if (!open) {
+      setEditingNotice(null);
+    }
+    setIsNoticeDialogOpen(open);
+  };
+  
+  const handleEditNoticeClick = (notice: Notice) => {
+    setEditingNotice(notice);
   };
 
   const handleDeleteNotice = (noticeId: string) => {
@@ -997,7 +1041,7 @@ export default function SchoolManagementPage() {
            <TabsContent value="notice-management">
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>सूचना प्रबंधन</CardTitle>
-              <Dialog open={isNoticeDialogOpen} onOpenChange={setIsNoticeDialogOpen}>
+                <Dialog open={isNoticeDialogOpen} onOpenChange={handleNoticeDialogClose}>
                 <DialogTrigger asChild>
                   <Button onClick={() => setIsNoticeDialogOpen(true)} className="bg-amber-500 hover:bg-amber-600">
                     <PlusCircle className="mr-2" />
@@ -1006,7 +1050,7 @@ export default function SchoolManagementPage() {
                 </DialogTrigger>
                 <DialogContent className="sm:max-w-lg">
                   <DialogHeader>
-                    <DialogTitle>नई सूचना बनाएं</DialogTitle>
+                    <DialogTitle>{editingNotice ? 'सूचना संपादित करें' : 'नई सूचना बनाएं'}</DialogTitle>
                   </DialogHeader>
                   <div className="grid gap-4 py-4">
                     <div className="grid grid-cols-4 items-center gap-4">
@@ -1039,8 +1083,10 @@ export default function SchoolManagementPage() {
                     </div>
                   </div>
                   <DialogFooter>
-                    <Button variant="outline" onClick={() => setIsNoticeDialogOpen(false)}>रद्द करें</Button>
-                    <Button type="submit" onClick={handleCreateNotice}>प्रकाशित करें</Button>
+                    <Button variant="outline" onClick={() => handleNoticeDialogClose(false)}>रद्द करें</Button>
+                    <Button type="submit" onClick={editingNotice ? handleUpdateNotice : handleCreateNotice}>
+                        {editingNotice ? 'अपडेट करें' : 'प्रकाशित करें'}
+                    </Button>
                   </DialogFooter>
                 </DialogContent>
               </Dialog>
@@ -1056,7 +1102,7 @@ export default function SchoolManagementPage() {
                       <p className="text-xs text-muted-foreground mt-2">{notice.createdAt ? format(notice.createdAt.toDate(), 'dd/MM/yyyy') : ''} - {notice.author}</p>
                     </div>
                     <div className="flex items-center gap-2 absolute top-4 right-4">
-                        <Button variant="outline" size="sm" className="bg-amber-100 text-amber-800">संपादित करें</Button>
+                        <Button variant="outline" size="sm" className="bg-amber-100 text-amber-800" onClick={() => handleEditNoticeClick(notice)}>संपादित करें</Button>
                         <Button variant="destructive" size="sm" onClick={() => handleDeleteNotice(notice.id)}>हटाएं</Button>
                     </div>
                   </div>
@@ -1246,7 +1292,7 @@ export default function SchoolManagementPage() {
                               </TableCell>
                               <TableCell>{feeInfo.paymentDate ? format(feeInfo.paymentDate.toDate(), 'dd/MM/yyyy') : '-'}</TableCell>
                               <TableCell className="text-right">
-                                <Button size="sm" disabled={isPaid} onClick={() => handlePayFee(q.id, q.amount)}>
+                                <Button size="sm" disabled={isPaid} onClick={()={() => handlePayFee(q.id, q.amount)}}>
                                   <DollarSign className="mr-2 h-4 w-4" />
                                   फीस जमा करें
                                 </Button>
@@ -1637,3 +1683,5 @@ export default function SchoolManagementPage() {
     </div>
   );
 }
+
+    
