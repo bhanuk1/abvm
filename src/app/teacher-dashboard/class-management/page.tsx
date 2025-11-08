@@ -126,11 +126,11 @@ export default function TeacherClassManagementPage() {
   }
 
   const handleSendHomework = () => {
-    if (!homeworkContent || !homeworkSubject || !firestore || !currentUser) {
+    if (!homeworkContent || !homeworkSubject || !firestore || !currentUser || !selectedClass) {
         toast({
             variant: 'destructive',
             title: 'Error',
-            description: 'Please fill in the subject and content for the homework.',
+            description: 'Please select a class and fill in the subject and content for the homework.',
         });
         return;
     }

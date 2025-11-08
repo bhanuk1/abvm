@@ -39,7 +39,7 @@ export default function ChildrenInformationPage() {
 
 
   const homeworksQuery = useMemoFirebase(() => 
-    firestore && parentStudent 
+    firestore && parentStudent?.class
       ? query(
           collection(firestore, 'homeworks'), 
           where('class', '==', parentStudent.class)
@@ -61,7 +61,7 @@ export default function ChildrenInformationPage() {
   const { data: studentNotices } = useCollection<Notice>(noticesQuery);
 
   const resultsQuery = useMemoFirebase(() => 
-    firestore && parentStudent
+    firestore && parentStudent?.id
       ? query(
           collection(firestore, 'results'),
           where('studentId', '==', parentStudent.id)
@@ -72,7 +72,7 @@ export default function ChildrenInformationPage() {
   const { data: studentResults } = useCollection<any>(resultsQuery);
   
   const attendanceQuery = useMemoFirebase(() =>
-    firestore && parentStudent
+    firestore && parentStudent?.id
       ? query(
         collection(firestore, 'attendance'),
         where('studentId', '==', parentStudent.id)

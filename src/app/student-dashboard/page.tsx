@@ -35,7 +35,7 @@ export default function StudentDashboardPage() {
   const { data: loggedInStudent, isLoading: studentLoading } = useDoc<any>(loggedInStudentDocRef);
 
   const homeworksQuery = useMemoFirebase(() => 
-    firestore && loggedInStudent 
+    firestore && loggedInStudent?.class
       ? query(
           collection(firestore, 'homeworks'), 
           where('class', '==', loggedInStudent.class)
@@ -57,7 +57,7 @@ export default function StudentDashboardPage() {
   const { data: studentNotices } = useCollection<Notice>(noticesQuery);
 
   const resultsQuery = useMemoFirebase(() => 
-    firestore && loggedInStudent
+    firestore && loggedInStudent?.id
       ? query(
           collection(firestore, 'results'),
           where('studentId', '==', loggedInStudent.id)
@@ -68,7 +68,7 @@ export default function StudentDashboardPage() {
   const { data: studentResults } = useCollection<any>(resultsQuery);
   
   const attendanceQuery = useMemoFirebase(() =>
-    firestore && loggedInStudent
+    firestore && loggedInStudent?.id
       ? query(
         collection(firestore, 'attendance'),
         where('studentId', '==', loggedInStudent.id)
