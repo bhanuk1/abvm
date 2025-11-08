@@ -44,7 +44,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { Textarea } from '@/components/ui/textarea';
-import { format } from 'date-fns';
+import { format, startOfDay, endOfDay } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { type Notice } from '@/lib/placeholder-data';
 import {
@@ -60,7 +60,7 @@ import {
   type Fee,
 } from '@/lib/school-data';
 import { useCollection, useFirestore, useUser, useMemoFirebase, useAuth, errorEmitter, FirestorePermissionError } from '@/firebase';
-import { addDoc, collection, serverTimestamp, setDoc, doc, query, where, deleteDoc, getDocs, updateDoc } from 'firebase/firestore';
+import { addDoc, collection, serverTimestamp, setDoc, doc, query, where, deleteDoc, getDocs, updateDoc, Timestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 
@@ -127,13 +127,39 @@ export default function SchoolManagementPage() {
 
   const [feeClass, setFeeClass] = React.useState('');
   const [feeStudent, setFeeStudent] = React.useState('');
-
+  
+  const [dailyReportDate, setDailyReportDate] = React.useState<Date | undefined>(new Date());
+  
   const feesQuery = useMemoFirebase(
     () => firestore && feeStudent ? query(collection(firestore, 'fees'), where('studentId', '==', feeStudent)) : null,
     [firestore, feeStudent]
   );
   const { data: studentFees } = useCollection<Fee>(feesQuery);
 
+  const dailyFeesQuery = useMemoFirebase(() => {
+    if (!firestore || !dailyReportDate) return null;
+    const start = startOfDay(dailyReportDate);
+    const end = endOfDay(dailyReportDate);
+    return query(
+        collection(firestore, 'fees'), 
+        where('paymentDate', '>=', Timestamp.fromDate(start)),
+        where('paymentDate', '<=', Timestamp.fromDate(end))
+    );
+  }, [firestore, dailyReportDate]);
+  const { data: dailyFeeData, isLoading: dailyFeeLoading } = useCollection<Fee>(dailyFeesQuery);
+
+  const dailyFeeReportData = React.useMemo(() => {
+    if (!dailyFeeData) return {};
+    const groupedByClass = dailyFeeData.reduce((acc, fee) => {
+      const className = fee.class;
+      if (!acc[className]) {
+        acc[className] = [];
+      }
+      acc[className].push(fee);
+      return acc;
+    }, {} as {[key: string]: Fee[]});
+    return groupedByClass;
+  }, [dailyFeeData]);
 
   React.useEffect(() => {
     // Set date on client-side only to avoid hydration mismatch
@@ -714,6 +740,59 @@ export default function SchoolManagementPage() {
     }
   };
 
+  const handlePrintDailyFeeReport = () => {
+    if (!dailyFeeData || dailyFeeData.length === 0 || !dailyReportDate) {
+      toast({ variant: 'destructive', title: 'No Data', description: 'No fee data available for the selected date.' });
+      return;
+    }
+    
+    const doc = new jsPDF();
+    doc.setFontSize(18);
+    doc.text('Adarsh Bal Vidya Mandir', doc.internal.pageSize.getWidth() / 2, 20, { align: 'center' });
+    doc.setFontSize(14);
+    doc.text(`Daily Fee Collection Report - ${format(dailyReportDate, 'PPP')}`, doc.internal.pageSize.getWidth() / 2, 30, { align: 'center' });
+
+    let totalDayCollection = 0;
+    let startY = 40;
+
+    Object.keys(dailyFeeReportData).sort().forEach(className => {
+        const feesForClass = dailyFeeReportData[className];
+        if (feesForClass.length === 0) return;
+
+        let classTotal = 0;
+        const tableBody = feesForClass.map(fee => {
+            const quarterInfo = academicYearQuarters.find(q => q.id === fee.quarter);
+            classTotal += fee.amount;
+            return [fee.studentName, quarterInfo?.label || fee.quarter, fee.amount.toFixed(2)];
+        });
+
+        totalDayCollection += classTotal;
+
+        doc.setFontSize(12);
+        doc.text(`Class: ${className}`, 14, startY);
+
+        (doc as any).autoTable({
+            startY: startY + 6,
+            head: [['Student Name', 'Quarter', 'Amount (INR)']],
+            body: tableBody,
+            theme: 'grid',
+            didDrawPage: (data: any) => {
+                startY = data.cursor.y;
+            }
+        });
+        
+        startY = (doc as any).lastAutoTable.finalY + 2;
+        doc.setFontSize(10);
+        doc.text(`Class Total: ${classTotal.toFixed(2)}`, doc.internal.pageSize.getWidth() - 14, startY, { align: 'right' });
+        startY += 10;
+    });
+
+    startY += 5;
+    doc.setFontSize(14);
+    doc.text(`Total Collection for the Day: ${totalDayCollection.toFixed(2)} INR`, 14, startY);
+
+    doc.save(`Daily_Fee_Report_${format(dailyReportDate, 'yyyy-MM-dd')}.pdf`);
+  };
 
   const classes = ['Nursery', 'KG', ...Array.from({length: 12}, (_, i) => (i + 1).toString())];
   const examTypes = [
@@ -787,12 +866,13 @@ export default function SchoolManagementPage() {
       <Card>
         <Tabs defaultValue="user-management">
           <CardHeader className="p-2 md:p-4">
-            <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-10">
+            <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-11">
               <TabsTrigger value="user-management">Users</TabsTrigger>
               <TabsTrigger value="student-management">Students</TabsTrigger>
               <TabsTrigger value="notice-management">Notices</TabsTrigger>
               <TabsTrigger value="result-management">Results</TabsTrigger>
               <TabsTrigger value="fee-management">Fee Management</TabsTrigger>
+              <TabsTrigger value="daily-fee-report">Daily Fee Report</TabsTrigger>
               <TabsTrigger value="id-cards">ID Cards</TabsTrigger>
               <TabsTrigger value="marksheets">Marksheets</TabsTrigger>
               <TabsTrigger value="reports">Student Reports</TabsTrigger>
@@ -1360,6 +1440,90 @@ export default function SchoolManagementPage() {
                   </CardContent>
                 </Card>
               )}
+            </CardContent>
+          </TabsContent>
+          <TabsContent value="daily-fee-report">
+            <CardHeader>
+                <CardTitle>Daily Fee Collection Report</CardTitle>
+                <CardDescription>View and print fee collection for a specific day.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+                <div className="flex items-center gap-4 p-4 border rounded-lg">
+                    <div className="space-y-2">
+                        <Label>Select Date</Label>
+                        <Popover>
+                            <PopoverTrigger asChild>
+                                <Button
+                                    variant={"outline"}
+                                    className={cn(
+                                        "w-[280px] justify-start text-left font-normal",
+                                        !dailyReportDate && "text-muted-foreground"
+                                    )}
+                                >
+                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                    {dailyReportDate ? format(dailyReportDate, "PPP") : <span>Pick a date</span>}
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0">
+                                <Calendar
+                                    mode="single"
+                                    selected={dailyReportDate}
+                                    onSelect={setDailyReportDate}
+                                    initialFocus
+                                />
+                            </PopoverContent>
+                        </Popover>
+                    </div>
+                    <Button onClick={handlePrintDailyFeeReport}><Printer className="mr-2" /> Print Report</Button>
+                </div>
+                {dailyFeeLoading ? (
+                    <p>Loading report...</p>
+                ) : Object.keys(dailyFeeReportData).length > 0 ? (
+                  <div className="space-y-8">
+                    {Object.keys(dailyFeeReportData).sort().map(className => {
+                      const feesForClass = dailyFeeReportData[className];
+                      const classTotal = feesForClass.reduce((sum, fee) => sum + fee.amount, 0);
+                      return (
+                        <Card key={className}>
+                          <CardHeader>
+                            <CardTitle>Class {className}</CardTitle>
+                            <CardDescription>Total collected: {classTotal.toFixed(2)} INR</CardDescription>
+                          </CardHeader>
+                          <CardContent>
+                            <Table>
+                              <TableHeader>
+                                <TableRow>
+                                  <TableHead>Student Name</TableHead>
+                                  <TableHead>Quarter</TableHead>
+                                  <TableHead className="text-right">Amount (INR)</TableHead>
+                                </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                {feesForClass.map(fee => {
+                                  const quarterInfo = academicYearQuarters.find(q => q.id === fee.quarter);
+                                  return (
+                                    <TableRow key={fee.id}>
+                                      <TableCell>{fee.studentName}</TableCell>
+                                      <TableCell>{quarterInfo?.label || fee.quarter}</TableCell>
+                                      <TableCell className="text-right">{fee.amount.toFixed(2)}</TableCell>
+                                    </TableRow>
+                                  )
+                                })}
+                              </TableBody>
+                            </Table>
+                          </CardContent>
+                        </Card>
+                      )
+                    })}
+                     <div className="text-right font-bold text-lg pr-4">
+                        Total Day Collection: {dailyFeeData?.reduce((sum, fee) => sum + fee.amount, 0).toFixed(2)} INR
+                    </div>
+                  </div>
+                ) : (
+                    <div className="p-4 min-h-[150px] flex items-center justify-center text-muted-foreground">
+                        <p>No fees collected on {dailyReportDate ? format(dailyReportDate, 'PPP') : 'the selected date'}.</p>
+                    </div>
+                )}
             </CardContent>
           </TabsContent>
           <TabsContent value="id-cards">
