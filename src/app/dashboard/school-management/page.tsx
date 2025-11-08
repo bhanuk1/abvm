@@ -137,8 +137,8 @@ function SchoolManagementPageContent() {
     () => (firestore && currentUser ? doc(firestore, 'users', currentUser.uid) : null),
     [firestore, currentUser]
   );
-  const { data: currentUserData } = useDoc<any>(currentUserDocRef);
-  const userRole = currentUserData?.role;
+  const { data: currentUserData, isLoading: isCurrentUserLoading } = useDoc<any>(currentUserDocRef);
+  const userRole = React.useMemo(() => currentUserData?.role, [currentUserData]);
 
   const feesQuery = useMemoFirebase(
     () => firestore && feeStudent ? query(collection(firestore, 'fees'), where('studentId', '==', feeStudent)) : null,
@@ -346,7 +346,7 @@ function SchoolManagementPageContent() {
         const studentName = newUser.role === 'student' ? newUser.username : newUser.studentName;
 
         if (!parentName || !studentName) {
-            toast({ variant: 'destructive', title: 'Error', description: 'Please fill in both Parent and Student names.' });
+            toast({ variant: 'destructive', title: 'Error', description: 'Please fill in both Father\'s and Student\'s names.' });
             return;
         }
 
@@ -941,7 +941,7 @@ function SchoolManagementPageContent() {
     return students.filter(s => s.class === idCardClass);
   }, [idCardClass, students]);
 
-  if (isUserLoading) {
+  if (isUserLoading || isCurrentUserLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
         <p>Loading data...</p>
@@ -962,13 +962,13 @@ function SchoolManagementPageContent() {
                 <TabsTrigger value="student-promotion">Promotion</TabsTrigger>
                 <TabsTrigger value="notice-management">Notices</TabsTrigger>
                 <TabsTrigger value="result-management">Results</TabsTrigger>
-                {userRole && ['admin', 'teacher'].includes(userRole) && (
+                {userRole === 'admin' && (
                   <TabsTrigger value="fee-management">Fee Management</TabsTrigger>
                 )}
-                {userRole && ['admin', 'teacher'].includes(userRole) && (
+                {userRole === 'admin' && (
                   <TabsTrigger value="daily-fee-report">Daily Fee Report</TabsTrigger>
                 )}
-                 {userRole && ['admin'].includes(userRole) && (
+                 {userRole === 'admin' && (
                   <TabsTrigger value="salary-management">Salary</TabsTrigger>
                 )}
                 <TabsTrigger value="id-cards">ID Cards</TabsTrigger>
@@ -1484,7 +1484,7 @@ function SchoolManagementPageContent() {
               </div>
             </CardContent>
           </TabsContent>
-          {userRole && ['admin', 'teacher'].includes(userRole) && (
+          {userRole === 'admin' && (
           <TabsContent value="fee-management">
             <CardHeader>
               <CardTitle>Fee Management</CardTitle>
@@ -1571,7 +1571,7 @@ function SchoolManagementPageContent() {
             </CardContent>
           </TabsContent>
           )}
-          {userRole && ['admin', 'teacher'].includes(userRole) && (
+          {userRole === 'admin' && (
           <TabsContent value="daily-fee-report">
             <CardHeader>
                 <CardTitle>Daily Fee Collection Report</CardTitle>
@@ -1694,7 +1694,7 @@ function SchoolManagementPageContent() {
                 </Card>
             </CardContent>
           </TabsContent>
-          {userRole && ['admin'].includes(userRole) && (
+          {userRole === 'admin' && (
           <TabsContent value="salary-management">
              <CardHeader>
                 <CardTitle>Salary Management</CardTitle>
