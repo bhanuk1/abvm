@@ -45,6 +45,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { Textarea } from '@/components/ui/textarea';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { format, startOfDay, endOfDay } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { type Notice } from '@/lib/placeholder-data';
@@ -981,30 +982,32 @@ function SchoolManagementPageContent() {
       <Card>
         <Tabs defaultValue={initialTab}>
           <CardHeader className="p-2 md:p-4">
-            <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-11">
-              <TabsTrigger value="user-management">Users</TabsTrigger>
-              <TabsTrigger value="student-management">Students</TabsTrigger>
-              <TabsTrigger value="student-promotion">Promotion</TabsTrigger>
-              <TabsTrigger value="notice-management">Notices</TabsTrigger>
-              <TabsTrigger value="result-management">Results</TabsTrigger>
-              {userRole && ['admin', 'teacher'].includes(userRole) && (
-                <TabsTrigger value="fee-management">Fee Management</TabsTrigger>
-              )}
-              {userRole && ['admin', 'teacher'].includes(userRole) && (
-                <TabsTrigger value="daily-fee-report">Daily Fee Report</TabsTrigger>
-              )}
-               {userRole && ['admin'].includes(userRole) && (
-                <TabsTrigger value="salary-management">Salary</TabsTrigger>
-              )}
-              <TabsTrigger value="id-cards">ID Cards</TabsTrigger>
-              <TabsTrigger value="marksheets">Marksheets</TabsTrigger>
-              <TabsTrigger value="reports">Student Reports</TabsTrigger>
-              <TabsTrigger value="event-calendar">Calendar</TabsTrigger>
-              <TabsTrigger value="library-management">Library</TabsTrigger>
-              <TabsTrigger value="transport-management">Transport</TabsTrigger>
-              <TabsTrigger value="attendance-report">Attendance</TabsTrigger>
-              <TabsTrigger value="homework-report">Homework</TabsTrigger>
-            </TabsList>
+             <ScrollArea className="w-full whitespace-nowrap">
+              <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-11">
+                <TabsTrigger value="user-management">Users</TabsTrigger>
+                <TabsTrigger value="student-management">Students</TabsTrigger>
+                <TabsTrigger value="student-promotion">Promotion</TabsTrigger>
+                <TabsTrigger value="notice-management">Notices</TabsTrigger>
+                <TabsTrigger value="result-management">Results</TabsTrigger>
+                {userRole && ['admin', 'teacher'].includes(userRole) && (
+                  <TabsTrigger value="fee-management">Fee Management</TabsTrigger>
+                )}
+                {userRole && ['admin', 'teacher'].includes(userRole) && (
+                  <TabsTrigger value="daily-fee-report">Daily Fee Report</TabsTrigger>
+                )}
+                 {userRole && ['admin'].includes(userRole) && (
+                  <TabsTrigger value="salary-management">Salary</TabsTrigger>
+                )}
+                <TabsTrigger value="id-cards">ID Cards</TabsTrigger>
+                <TabsTrigger value="marksheets">Marksheets</TabsTrigger>
+                <TabsTrigger value="reports">Student Reports</TabsTrigger>
+                <TabsTrigger value="event-calendar">Calendar</TabsTrigger>
+                <TabsTrigger value="library-management">Library</TabsTrigger>
+                <TabsTrigger value="transport-management">Transport</TabsTrigger>
+                <TabsTrigger value="attendance-report">Attendance</TabsTrigger>
+                <TabsTrigger value="homework-report">Homework</TabsTrigger>
+              </TabsList>
+            </ScrollArea>
           </CardHeader>
           <TabsContent value="user-management">
             <CardHeader className="flex flex-row items-center justify-between">
@@ -1200,8 +1203,8 @@ function SchoolManagementPageContent() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {usersLoading && <TableRow><TableCell colSpan={7} className="text-center">Loading...</TableCell></TableRow>}
-                  {users && users.filter(u => u.role !== 'student' && u.role !== 'admin').map((user) => (
+                  {usersLoading && <TableRow><TableCell colSpan={7} className="h-24 text-center">Loading...</TableCell></TableRow>}
+                  {!usersLoading && users && users.filter(u => u.role !== 'student' && u.role !== 'admin').map((user) => (
                     <TableRow key={user.id}>
                       <TableCell className="font-medium">{user.username}</TableCell>
                       <TableCell>
@@ -1238,6 +1241,13 @@ function SchoolManagementPageContent() {
                       </TableCell>
                     </TableRow>
                   ))}
+                   {!usersLoading && (!users || users.filter(u => u.role !== 'student' && u.role !== 'admin').length === 0) && (
+                    <TableRow>
+                      <TableCell colSpan={7} className="h-24 text-center">
+                        No users found.
+                      </TableCell>
+                    </TableRow>
+                  )}
                 </TableBody>
               </Table>
             </CardContent>
@@ -1261,8 +1271,8 @@ function SchoolManagementPageContent() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {studentsLoading && <TableRow><TableCell colSpan={8} className="text-center">Loading...</TableCell></TableRow>}
-                  {students && students.map((student) => (
+                  {studentsLoading && <TableRow><TableCell colSpan={8} className="h-24 text-center">Loading...</TableCell></TableRow>}
+                  {!studentsLoading && students && students.map((student) => (
                     <TableRow key={student.id}>
                       <TableCell className="font-medium">{student.rollNo}</TableCell>
                       <TableCell>{student.username}</TableCell>
@@ -1287,6 +1297,13 @@ function SchoolManagementPageContent() {
                       </TableCell>
                     </TableRow>
                   ))}
+                   {!studentsLoading && (!students || students.length === 0) && (
+                    <TableRow>
+                      <TableCell colSpan={8} className="h-24 text-center">
+                        No students found.
+                      </TableCell>
+                    </TableRow>
+                  )}
                 </TableBody>
               </Table>
             </CardContent>
@@ -1345,8 +1362,8 @@ function SchoolManagementPageContent() {
               </Dialog>
             </CardHeader>
             <CardContent className="space-y-4">
-              {noticesLoading && <p>Loading notices...</p>}
-              {notices && notices.map(notice => (
+              {noticesLoading && <p className="text-center text-muted-foreground">Loading notices...</p>}
+              {!noticesLoading && notices && notices.map(notice => (
                 <div key={notice.id} className="rounded-lg border bg-card text-card-foreground shadow-sm p-4 relative border-l-4 border-amber-400">
                   <div className="flex justify-between items-start">
                     <div>
@@ -1361,6 +1378,11 @@ function SchoolManagementPageContent() {
                   </div>
                 </div>
               ))}
+               {!noticesLoading && (!notices || notices.length === 0) && (
+                <div className="p-4 min-h-[150px] flex items-center justify-center">
+                    <p className="text-muted-foreground">No notices found.</p>
+                </div>
+               )}
             </CardContent>
           </TabsContent>
            <TabsContent value="result-management">
@@ -1443,8 +1465,8 @@ function SchoolManagementPageContent() {
               <div>
                 <h3 className="text-lg font-medium mb-4 mt-6">All Results</h3>
                 <div className="border rounded-lg">
-                  {(resultsLoading) && <p>Loading results...</p>}
-                  {resultsData && resultsData.length > 0 ? (
+                  {resultsLoading && <p className="text-center p-4">Loading results...</p>}
+                  {!resultsLoading && resultsData && resultsData.length > 0 ? (
                     <Table>
                       <TableHeader>
                         <TableRow>
