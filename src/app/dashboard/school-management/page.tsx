@@ -23,7 +23,7 @@ import {
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Eye, EyeOff, UserPlus, Calendar as CalendarIcon, PlusCircle, FileDown, Printer, GraduationCap, Phone, Home, User as UserIcon, DollarSign } from 'lucide-react';
+import { Eye, EyeOff, UserPlus, Calendar as CalendarIcon, PlusCircle, FileDown, Printer, GraduationCap, Phone, Home, User as UserIcon, DollarSign, Barcode } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -881,7 +881,9 @@ export default function SchoolManagementPage() {
               {userRole && ['admin', 'teacher'].includes(userRole) && (
                 <TabsTrigger value="fee-management">Fee Management</TabsTrigger>
               )}
-              <TabsTrigger value="daily-fee-report">Daily Fee Report</TabsTrigger>
+              {userRole && ['admin', 'teacher'].includes(userRole) && (
+                <TabsTrigger value="daily-fee-report">Daily Fee Report</TabsTrigger>
+              )}
               <TabsTrigger value="id-cards">ID Cards</TabsTrigger>
               <TabsTrigger value="marksheets">Marksheets</TabsTrigger>
               <TabsTrigger value="reports">Student Reports</TabsTrigger>
@@ -1452,6 +1454,7 @@ export default function SchoolManagementPage() {
             </CardContent>
           </TabsContent>
           )}
+          {userRole && ['admin', 'teacher'].includes(userRole) && (
           <TabsContent value="daily-fee-report">
             <CardHeader>
                 <CardTitle>Daily Fee Collection Report</CardTitle>
@@ -1536,6 +1539,7 @@ export default function SchoolManagementPage() {
                 )}
             </CardContent>
           </TabsContent>
+          )}
           <TabsContent value="id-cards">
             <CardHeader>
               <CardTitle>ID Card Generator</CardTitle>
@@ -1560,41 +1564,47 @@ export default function SchoolManagementPage() {
               </div>
 
               {idCardClass && (
-                <div id="printable-id-cards" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div id="printable-id-cards" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                   {idCardFilteredStudents.map(student => (
                     <div key={student.id} className="id-card-print-wrapper">
-                      <Card className="overflow-hidden shadow-lg border-primary border-2">
-                        <CardHeader className="bg-primary text-primary-foreground p-2 text-center">
-                          <h2 className="text-sm font-bold">Adarsh Bal Vidya Mandir</h2>
-                          <p className="text-xs">Identity Card (Session 2024-25)</p>
-                        </CardHeader>
-                        <CardContent className="p-3">
-                          <div className="flex gap-3">
-                            <div className="w-20 h-24 bg-gray-200 rounded-md flex items-center justify-center">
-                                <Image src={`https://picsum.photos/seed/${student.id}/200/300`} alt="Student Photo" width={80} height={96} className="rounded-md object-cover w-full h-full" data-ai-hint="student portrait" />
-                            </div>
-                            <div className="space-y-1 text-xs">
-                              <p><strong>Name:</strong> {student.username}</p>
-                              <p><strong>Class:</strong> {student.class}</p>
-                              <p><strong>Roll No:</strong> {student.rollNo}</p>
-                              <p><strong>Father:</strong> {student.fatherName}</p>
-                            </div>
-                          </div>
-                          <div className="text-xs space-y-1 mt-2">
-                            <div className="flex items-start gap-2">
-                              <Home className="w-3 h-3 mt-0.5 shrink-0" />
-                              <p>{student.address}</p>
-                            </div>
-                             <div className="flex items-center gap-2">
-                              <Phone className="w-3 h-3 shrink-0" />
-                              <p>{student.mobile}</p>
-                            </div>
-                          </div>
-                        </CardContent>
-                        <div className="bg-primary text-primary-foreground text-center p-1 text-xs">
-                            <p><strong>Principal</strong></p>
+                      <div className="bg-[#0A2540] rounded-2xl shadow-2xl overflow-hidden w-full max-w-xs mx-auto text-white font-sans">
+                        <div className="bg-yellow-400 p-3 text-center">
+                          <h2 className="text-lg font-bold text-[#0A2540]">Adarsh Bal Vidya Mandir</h2>
+                          <p className="text-xs font-semibold text-[#0A2540]">IDENTITY CARD (2024-25)</p>
                         </div>
-                      </Card>
+                        <div className="p-4 flex flex-col items-center">
+                          <div className="w-28 h-28 rounded-full border-4 border-pink-500 overflow-hidden mb-3">
+                            <Image 
+                              src={`https://picsum.photos/seed/${student.id}/200/300`} 
+                              alt="Student Photo" 
+                              width={112} 
+                              height={112} 
+                              className="object-cover w-full h-full" 
+                              data-ai-hint="student portrait" 
+                            />
+                          </div>
+                          <h3 className="text-xl font-bold text-yellow-400">{student.username}</h3>
+                          <div className="text-center mt-2 space-y-1 text-sm">
+                            <p><span className="font-semibold">Class:</span> {student.class} | <span className="font-semibold">Roll:</span> {student.rollNo}</p>
+                            <p><span className="font-semibold">Father:</span> {student.fatherName}</p>
+                          </div>
+                        </div>
+                        <div className="px-4 pb-3 space-y-2 text-xs">
+                          <div className="flex items-center gap-2">
+                            <Home className="w-4 h-4 text-yellow-400 shrink-0" />
+                            <p>{student.address}</p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Phone className="w-4 h-4 text-yellow-400 shrink-0" />
+                            <p>{student.mobile}</p>
+                          </div>
+                        </div>
+                        <div className="p-4 flex flex-col items-center">
+                          <Barcode className="h-10 w-full text-white" />
+                          <p className="text-xs mt-1">www.abvmic.com</p>
+                        </div>
+                        <div className="bg-pink-500 h-2"></div>
+                      </div>
                     </div>
                   ))}
                 </div>
