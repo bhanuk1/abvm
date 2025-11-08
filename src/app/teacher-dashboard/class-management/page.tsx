@@ -43,7 +43,7 @@ import { type Attendance } from '@/lib/school-data';
 import { useToast } from '@/hooks/use-toast';
 import { Textarea } from '@/components/ui/textarea';
 import { useCollection, useFirestore, useUser, useDoc, useMemoFirebase, errorEmitter, FirestorePermissionError } from '@/firebase';
-import { addDoc, collection, query, where, doc } from 'firebase/firestore';
+import { addDoc, collection, query, where, doc, writeBatch, getDocs, setDoc } from 'firebase/firestore';
 
 type Student = {
     id: string;
@@ -53,6 +53,8 @@ type Student = {
 };
 
 const allClasses = ['Nursery', 'KG', ...Array.from({length: 12}, (_, i) => (i + 1).toString())];
+
+type AttendanceChanges = { [studentId: string]: 'Present' | 'Absent' };
 
 export default function TeacherClassManagementPage() {
   const firestore = useFirestore();
@@ -66,6 +68,8 @@ export default function TeacherClassManagementPage() {
 
   const [selectedClass, setSelectedClass] = React.useState('');
   const [selectedDate, setSelectedDate] = React.useState<Date | undefined>();
+  const [attendanceChanges, setAttendanceChanges] = React.useState<AttendanceChanges>({});
+
   
   useEffect(() => {
     setSelectedDate(new Date());
@@ -79,6 +83,11 @@ export default function TeacherClassManagementPage() {
         }
     }
   }, [teacherData, selectedClass]);
+  
+  useEffect(() => {
+    // Reset changes when class or date changes
+    setAttendanceChanges({});
+  }, [selectedClass, selectedDate]);
 
 
   const studentsQuery = useMemoFirebase(() => 
@@ -99,7 +108,7 @@ export default function TeacherClassManagementPage() {
         : null,
     [firestore, selectedClass, selectedDate]
   );
-  const { data: attendance, isLoading: attendanceLoading } = useCollection<Attendance>(attendanceQuery);
+  const { data: attendanceData, isLoading: attendanceLoading } = useCollection<Attendance>(attendanceQuery);
 
 
   const [isHomeworkDialogOpen, setIsHomeworkDialogOpen] = React.useState(false);
@@ -109,21 +118,66 @@ export default function TeacherClassManagementPage() {
   const { toast } = useToast();
 
   const handleAttendanceChange = (studentId: string, isPresent: boolean) => {
-    // This part would need a more robust state management for a real app,
-    // like updating a local attendance draft state before saving to Firestore.
-    // For now, we'll optimistically assume it works and save directly.
-    console.log(`Toggling attendance for ${studentId} to ${isPresent}`);
+    setAttendanceChanges(prev => ({
+      ...prev,
+      [studentId]: isPresent ? 'Present' : 'Absent',
+    }));
   };
   
-  const handleSaveAttendance = () => {
-    // In a real app, this is where you'd send the `attendance` state to your backend.
-    // For this mock app, the state is already updated, so we just show a confirmation.
-    toast({
-        title: "Success!",
-        description: "Attendance saved successfully.",
-        className: "bg-green-100 text-green-800",
-    });
-  }
+  const handleSaveAttendance = async () => {
+    if (!firestore || !selectedClass || !selectedDate || Object.keys(attendanceChanges).length === 0) {
+        toast({
+            title: "No Changes",
+            description: "No attendance changes to save.",
+        });
+        return;
+    }
+
+    const batch = writeBatch(firestore);
+    const dateStr = format(selectedDate, 'yyyy-MM-dd');
+    const attendanceCol = collection(firestore, 'attendance');
+
+    for (const studentId in attendanceChanges) {
+        const newStatus = attendanceChanges[studentId];
+        
+        // Check if a record already exists for this student and date
+        const existingRecord = attendanceData?.find(att => att.studentId === studentId);
+
+        if (existingRecord) {
+            // Update existing record
+            const docRef = doc(firestore, 'attendance', existingRecord.id);
+            batch.update(docRef, { status: newStatus });
+        } else {
+            // Create new record - using a specific doc ID to prevent duplicates on multiple saves
+            const docId = `${studentId}_${dateStr}`;
+            const docRef = doc(attendanceCol, docId);
+            const newAttendanceRecord: Attendance = {
+                studentId,
+                date: dateStr,
+                status: newStatus,
+                class: selectedClass,
+            };
+            batch.set(docRef, newAttendanceRecord);
+        }
+    }
+
+    try {
+        await batch.commit();
+        toast({
+            title: "Success!",
+            description: "Attendance saved successfully.",
+            className: "bg-green-100 text-green-800",
+        });
+        setAttendanceChanges({}); // Reset changes after saving
+    } catch (error) {
+        console.error("Error saving attendance: ", error);
+        toast({
+            variant: 'destructive',
+            title: "Error",
+            description: "Failed to save attendance.",
+        });
+    }
+  };
 
   const handleSendHomework = () => {
     if (!homeworkContent || !homeworkSubject || !firestore || !currentUser || !selectedClass) {
@@ -165,7 +219,12 @@ export default function TeacherClassManagementPage() {
   }
 
   const getStudentStatus = (studentId: string) => {
-    const attendanceRecord = attendance?.find(
+    // 1. Check for pending changes first
+    if (studentId in attendanceChanges) {
+      return attendanceChanges[studentId];
+    }
+    // 2. Fall back to saved data from Firestore
+    const attendanceRecord = attendanceData?.find(
       att => att.studentId === studentId
     );
     return attendanceRecord?.status || 'Absent'; // Default to absent
@@ -254,24 +313,25 @@ export default function TeacherClassManagementPage() {
               {!(studentsLoading || attendanceLoading) && students && students.length > 0 ? (
                 students.map((student) => {
                   const status = getStudentStatus(student.id);
+                  const isPresent = status === 'Present';
                   return (
                     <TableRow key={student.id}>
                       <TableCell>{student.rollNo}</TableCell>
                       <TableCell>{student.username}</TableCell>
                       <TableCell className="flex justify-end items-center gap-4">
                          <Badge 
-                           variant={status === 'Present' ? 'default' : 'destructive'}
+                           variant={isPresent ? 'default' : 'destructive'}
                            className={cn(
-                             status === 'Present' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800',
+                             isPresent ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800',
                              'w-20 justify-center'
                            )}
                           >
                            {status}
                          </Badge>
                          <Switch
-                            checked={status === 'Present'}
+                            checked={isPresent}
                             onCheckedChange={(isChecked) => handleAttendanceChange(student.id, isChecked)}
-                            aria-label={`Mark ${student.username} as ${status === 'Present' ? 'absent' : 'present'}`}
+                            aria-label={`Mark ${student.username} as ${isPresent ? 'absent' : 'present'}`}
                          />
                       </TableCell>
                     </TableRow>
