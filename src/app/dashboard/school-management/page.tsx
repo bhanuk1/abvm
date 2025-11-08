@@ -311,7 +311,7 @@ function SchoolManagementPageContent() {
   };
 
   const handleCreateUser = async () => {
-    if (!newUser.role || !newUser.username || !firestore) {
+    if (!newUser.role || !firestore) {
       toast({ variant: 'destructive', title: 'Error', description: 'Please fill all required fields.' });
       return;
     }
@@ -341,9 +341,12 @@ function SchoolManagementPageContent() {
         toast({ variant: 'destructive', title: 'Teacher Creation Error', description: error.message });
         return;
       }
-    } else if (newUser.role === 'parent') {
-        if (!newUser.studentName) {
-            toast({ variant: 'destructive', title: 'Error', description: 'Please fill in student name for parent.' });
+    } else if (newUser.role === 'parent' || newUser.role === 'student') {
+        const parentName = newUser.role === 'parent' ? newUser.username : newUser.parentName;
+        const studentName = newUser.role === 'student' ? newUser.username : newUser.studentName;
+
+        if (!parentName || !studentName) {
+            toast({ variant: 'destructive', title: 'Error', description: 'Please fill in both Parent and Student names.' });
             return;
         }
 
@@ -369,9 +372,9 @@ function SchoolManagementPageContent() {
                 id: parentUser.uid,
                 userId: parentUserId,
                 password: parentPassword,
-                username: newUser.username,
+                username: parentName,
                 role: 'parent',
-                fatherName: newUser.username,
+                fatherName: parentName,
                 motherName: newUser.motherName,
                 address: newUser.address,
                 mobile: newUser.studentMobile,
@@ -384,11 +387,11 @@ function SchoolManagementPageContent() {
                 id: studentUser.uid,
                 userId: studentUserId,
                 password: studentPassword,
-                username: newUser.studentName,
+                username: studentName,
                 role: 'student',
                 class: newUser.studentClass,
                 subjects: newUser.studentSubjects,
-                fatherName: newUser.username,
+                fatherName: parentName,
                 motherName: newUser.motherName,
                 address: newUser.address,
                 dob: newUser.dob ? format(newUser.dob, 'yyyy-MM-dd') : null,
@@ -406,36 +409,6 @@ function SchoolManagementPageContent() {
             return;
         }
 
-    } else if (newUser.role === 'student') {
-      const studentPassword = generatePassword();
-      const studentUserId = `abvm${Date.now()}`;
-      const studentEmail = `${studentUserId}@vidyalaya.com`;
-      try {
-        const userCredential = await createUserWithEmailAndPassword(auth, studentEmail, studentPassword);
-        const user = userCredential.user;
-        const studentData = {
-          id: user.uid,
-          userId: studentUserId,
-          password: studentPassword,
-          username: newUser.username,
-          role: 'student',
-          class: newUser.studentClass,
-          subjects: newUser.studentSubjects,
-          fatherName: newUser.parentName,
-          motherName: newUser.motherName,
-          address: newUser.address,
-          dob: newUser.dob ? format(newUser.dob, 'yyyy-MM-dd') : null,
-          admissionDate: newUser.admissionDate ? format(newUser.admissionDate, 'yyyy-MM-dd') : null,
-          aadhaar: newUser.aadhaar,
-          pen: newUser.pen,
-          mobile: newUser.studentMobile,
-          rollNo: newUser.rollNo,
-        };
-        await setDoc(doc(firestore, 'users', user.uid), studentData);
-      } catch (error: any) {
-        toast({ variant: 'destructive', title: 'Student Creation Error', description: error.message });
-        return;
-      }
     }
 
     toast({ title: 'Success!', description: 'New user(s) created successfully.' });
@@ -1037,11 +1010,16 @@ function SchoolManagementPageContent() {
                         </SelectContent>
                       </Select>
                     </div>
+                    
+                    {newUser.role && (
+                      <div className="space-y-2">
+                        <Label htmlFor="username">
+                          {newUser.role === 'teacher' ? 'Teacher Name' : newUser.role === 'parent' ? "Father's Name" : 'Student Name'}
+                        </Label>
+                        <Input id="username" value={newUser.username || ''} onChange={(e) => handleInputChange(e.target.id, e.target.value)} />
+                      </div>
+                    )}
 
-                    <div className="space-y-2">
-                      <Label htmlFor="username">Name</Label>
-                      <Input id="username" value={newUser.username || ''} onChange={(e) => handleInputChange(e.target.id, e.target.value)} />
-                    </div>
 
                     {newUser.role === 'teacher' && (
                       <div className="space-y-4 rounded-md border p-4">
@@ -1066,7 +1044,7 @@ function SchoolManagementPageContent() {
                     {(newUser.role === 'parent' || newUser.role === 'student') && (
                       <>
                         <div className="space-y-4 rounded-md border p-4">
-                          <h3 className="font-semibold">{newUser.role === 'parent' ? 'Parent & Student Details' : 'Student Details'}</h3>
+                          <h3 className="font-semibold">Parent & Student Details</h3>
                           
                           {newUser.role === 'student' && (
                             <div className="space-y-2">
