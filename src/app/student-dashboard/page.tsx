@@ -24,6 +24,7 @@ import { collection, query, where, doc } from 'firebase/firestore';
 import type { Notice } from '@/lib/placeholder-data';
 import { type Fee } from '@/lib/school-data';
 import { Calendar } from '@/components/ui/calendar';
+import { GraduationCap } from 'lucide-react';
 
 function DetailRow({ label, value }: { label: string; value?: string | null }) {
     return (
@@ -144,16 +145,22 @@ export default function StudentDashboardPage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <h1 className="text-3xl font-bold">My Dashboard</h1>
+       <Card className="bg-gradient-to-br from-primary to-accent text-primary-foreground">
+        <CardHeader className="flex flex-row items-center gap-4">
+          <div className="bg-primary-foreground/20 p-4 rounded-full">
+            <GraduationCap className="h-10 w-10" />
+          </div>
+          <div>
+            <h1 className="text-3xl font-bold">Welcome, {loggedInStudent.username}!</h1>
+            <CardDescription className="text-primary-foreground/80 text-lg">
+              Class: {loggedInStudent.class} | Roll No: {loggedInStudent.rollNo}
+            </CardDescription>
+          </div>
+        </CardHeader>
+      </Card>
 
       <Card>
-        <CardHeader>
-          <CardTitle>{loggedInStudent.username}</CardTitle>
-          <CardDescription>
-            Class: {loggedInStudent.class} | Roll No: {loggedInStudent.rollNo}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
+        <CardContent className="pt-6">
           <Tabs defaultValue="profile">
             <TabsList className="grid w-full grid-cols-7">
               <TabsTrigger value="profile">Profile</TabsTrigger>
