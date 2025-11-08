@@ -975,7 +975,7 @@ function DashboardPageContent() {
       {
         title: 'Total Students',
         value: users?.filter(u => u.role === 'student').length ?? '0',
-        icon: User,
+        icon: UserIcon,
         color: 'bg-blue-100 text-blue-600',
       },
       {
