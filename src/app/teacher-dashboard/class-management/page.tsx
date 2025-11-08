@@ -33,7 +33,7 @@ import {
 } from '@/components/ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { Calendar as CalendarIcon, BookPlus } from 'lucide-react';
+import { Calendar as CalendarIcon, BookPlus, Send } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
@@ -43,13 +43,14 @@ import { type Attendance } from '@/lib/school-data';
 import { useToast } from '@/hooks/use-toast';
 import { Textarea } from '@/components/ui/textarea';
 import { useCollection, useFirestore, useUser, useDoc, useMemoFirebase, errorEmitter, FirestorePermissionError } from '@/firebase';
-import { addDoc, collection, query, where, doc, writeBatch, getDocs, setDoc } from 'firebase/firestore';
+import { addDoc, collection, query, where, doc, writeBatch, getDocs, setDoc, getDoc } from 'firebase/firestore';
 
 type Student = {
     id: string;
     rollNo: string;
     username: string;
     class: string;
+    parentId?: string;
 };
 
 const allClasses = ['Nursery', 'KG', ...Array.from({length: 12}, (_, i) => (i + 1).toString())];
@@ -134,7 +135,7 @@ export default function TeacherClassManagementPage() {
     }
 
     const batch = writeBatch(firestore);
-    const dateStr = format(selectedDate, 'yyyy-MM-dd');
+    const dateStr = format(selectedDate, 'yyyy-M-dd');
     const attendanceCol = collection(firestore, 'attendance');
 
     for (const studentId in attendanceChanges) {
@@ -179,8 +180,8 @@ export default function TeacherClassManagementPage() {
     }
   };
 
-  const handleSendHomework = () => {
-    if (!homeworkContent || !homeworkSubject || !firestore || !currentUser || !selectedClass) {
+  const handleSendHomework = async () => {
+    if (!homeworkContent || !homeworkSubject || !firestore || !currentUser || !selectedClass || !students) {
         toast({
             variant: 'destructive',
             title: 'Error',
@@ -189,6 +190,7 @@ export default function TeacherClassManagementPage() {
         return;
     }
     
+    // 1. Save homework to Firestore
     const homeworkCol = collection(firestore, 'homeworks');
     const homeworkData = {
         class: selectedClass,
@@ -199,18 +201,41 @@ export default function TeacherClassManagementPage() {
         teacherName: teacherData?.username || 'Teacher'
     };
     
-    addDoc(homeworkCol, homeworkData).catch(error => {
+    try {
+        await addDoc(homeworkCol, homeworkData);
+    } catch(error) {
       const contextualError = new FirestorePermissionError({
         operation: 'create',
         path: homeworkCol.path,
         requestResourceData: homeworkData,
       });
       errorEmitter.emit('permission-error', contextualError);
-    });
+      toast({ variant: 'destructive', title: 'Error', description: 'Could not save homework.'});
+      return;
+    }
+
+    // 2. Notify parents (simulation)
+    console.log(`--- Initiating Parent Notifications for Class ${selectedClass} ---`);
+    for (const student of students) {
+        if (student.parentId) {
+            const parentDocRef = doc(firestore, 'users', student.parentId);
+            const parentDoc = await getDoc(parentDocRef);
+            if (parentDoc.exists()) {
+                const parentData = parentDoc.data();
+                if (parentData.mobile) {
+                    const message = `Adarsh Bal Vidya Mandir: Homework for ${student.username} (Class ${selectedClass}, ${homeworkSubject}): ${homeworkContent}`;
+                    console.log(`Simulating SMS to ${parentData.mobile}: ${message}`);
+                } else {
+                    console.log(`Parent of ${student.username} has no mobile number.`);
+                }
+            }
+        }
+    }
+    console.log(`--- Parent Notifications Finished ---`);
 
     toast({
         title: "Success!",
-        description: `Homework for class ${selectedClass} has been sent.`,
+        description: `Homework sent and parent notifications initiated.`,
         className: "bg-green-100 text-green-800",
     });
     setHomeworkContent('');
@@ -384,7 +409,10 @@ export default function TeacherClassManagementPage() {
                 </div>
                 <DialogFooter>
                     <Button variant="outline" onClick={() => setIsHomeworkDialogOpen(false)}>Cancel</Button>
-                    <Button onClick={handleSendHomework}>Send Homework</Button>
+                    <Button onClick={handleSendHomework}>
+                      <Send className="mr-2 h-4 w-4" />
+                      Send Homework & Notify Parents
+                    </Button>
                 </DialogFooter>
               </DialogContent>
             </Dialog>
