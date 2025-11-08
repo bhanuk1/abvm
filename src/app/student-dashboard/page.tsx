@@ -23,6 +23,7 @@ import { useCollection, useFirestore, useUser, useDoc, useMemoFirebase } from '@
 import { collection, query, where, doc } from 'firebase/firestore';
 import type { Notice } from '@/lib/placeholder-data';
 import { type Fee } from '@/lib/school-data';
+import { Calendar } from '@/components/ui/calendar';
 
 function DetailRow({ label, value }: { label: string; value?: string | null }) {
     return (
@@ -154,13 +155,14 @@ export default function StudentDashboardPage() {
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="profile">
-            <TabsList className="grid w-full grid-cols-6">
+            <TabsList className="grid w-full grid-cols-7">
               <TabsTrigger value="profile">Profile</TabsTrigger>
               <TabsTrigger value="fees">Fees</TabsTrigger>
               <TabsTrigger value="homework">Homework</TabsTrigger>
               <TabsTrigger value="attendance">Attendance</TabsTrigger>
               <TabsTrigger value="results">Results</TabsTrigger>
               <TabsTrigger value="notices">Notices</TabsTrigger>
+              <TabsTrigger value="calendar">Calendar</TabsTrigger>
             </TabsList>
             <TabsContent value="profile">
                <Card>
@@ -357,9 +359,28 @@ export default function StudentDashboardPage() {
                             <p className="text-xs text-muted-foreground mt-2">{notice.createdAt ? format(notice.createdAt.toDate(), 'dd/MM/yyyy') : ''} - {notice.author}</p>
                         </div>
                     ))}
+                     {!studentNotices || studentNotices.length === 0 && (
+                        <div className="p-4 min-h-[150px] flex items-center justify-center">
+                            <p className="text-muted-foreground">No notices available.</p>
+                        </div>
+                     )}
                 </CardContent>
               </Card>
             </TabsContent>
+            <TabsContent value="calendar">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>School Event Calendar</CardTitle>
+                        <CardDescription>View upcoming school events, holidays, and examination dates.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="flex justify-center">
+                        <Calendar
+                            mode="month"
+                            className="rounded-md border"
+                        />
+                    </CardContent>
+                </Card>
+           </TabsContent>
           </Tabs>
         </CardContent>
       </Card>
