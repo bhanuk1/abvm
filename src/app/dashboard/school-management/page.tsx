@@ -60,15 +60,14 @@ import {
   type Attendance,
   type Fee,
 } from '@/lib/school-data';
-import { useCollection, useDoc, useFirestore, useUser, useMemoFirebase, useAuth, errorEmitter, FirestorePermissionError } from '@/firebase';
+import { useCollection, useDoc, useFirestore, useUser, useMemoFirebase, errorEmitter, FirestorePermissionError } from '@/firebase';
 import { addDoc, collection, serverTimestamp, setDoc, doc, query, where, deleteDoc, getDocs, updateDoc, Timestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
 
 
 function SchoolManagementPageContent() {
   const firestore = useFirestore();
-  const auth = useAuth();
   const { user: currentUser, isUserLoading } = useUser();
   const { toast } = useToast();
   const searchParams = useSearchParams();
@@ -294,10 +293,11 @@ function SchoolManagementPageContent() {
   };
 
   const handleCreateUser = async () => {
-    if (!newUser.role || !newUser.username || !auth || !firestore) {
+    if (!newUser.role || !newUser.username || !firestore) {
       toast({ variant: 'destructive', title: 'Error', description: 'Please fill all required fields.' });
       return;
     }
+    const auth = getAuth();
   
     const generatePassword = () => Math.random().toString(36).slice(-8);
     const mainUserPassword = generatePassword();
@@ -2083,3 +2083,5 @@ export default function SchoolManagementPage() {
         </React.Suspense>
     );
 }
+
+    

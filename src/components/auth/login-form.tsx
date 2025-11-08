@@ -4,12 +4,11 @@ import { useState, useEffect } from 'react';
 import { useFormStatus } from 'react-dom';
 import { LogIn } from 'lucide-react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useAuth } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
 
 function LoginButton() {
@@ -23,7 +22,6 @@ function LoginButton() {
 }
 
 function LoginFormContent() {
-  const auth = useAuth();
   const router = useRouter();
   const { toast } = useToast();
   const searchParams = useSearchParams();
@@ -66,10 +64,7 @@ function LoginFormContent() {
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError(null);
-    if (!auth) {
-        setError('Authentication service is not available.');
-        return;
-    }
+    const auth = getAuth();
     if (!userId || !password) {
       setError('User ID and password are required.');
       return;
@@ -152,3 +147,5 @@ export function LoginForm() {
 
   return <LoginFormContent />;
 }
+
+    
