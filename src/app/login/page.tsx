@@ -3,12 +3,12 @@
 import { useEffect } from 'react';
 import { LoginForm } from '@/components/auth/login-form';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { BookOpenCheck } from 'lucide-react';
 import Link from 'next/link';
 import { useFirestore } from '@/firebase';
 import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
 import { collection, doc, getDocs, query, setDoc, where } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
+import { SchoolLogo } from '@/components/ui/school-logo';
 
 export default function LoginPage() {
   const firestore = useFirestore();
@@ -65,7 +65,7 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
       <div className="w-full max-w-md">
         <Link href="/" className="flex items-center gap-3 justify-center mb-6">
-          <BookOpenCheck className="h-12 w-12 text-primary" />
+          <SchoolLogo />
           <div>
             <h1 className="text-2xl font-bold text-primary">
               Adarsh Bal Vidya Mandir

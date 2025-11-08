@@ -2,13 +2,14 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { BookOpenCheck, LayoutGrid, Users } from 'lucide-react';
+import { LayoutGrid, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useUser, useDoc, useFirestore, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
 
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { SchoolLogo } from '../ui/school-logo';
 
 export function ParentAppHeader() {
   const pathname = usePathname();
@@ -35,7 +36,7 @@ export function ParentAppHeader() {
       <div className="container mx-auto px-4">
         <div className="flex h-20 items-center justify-between">
           <div className="flex items-center gap-4">
-            <BookOpenCheck className="h-10 w-10 text-primary" />
+            <SchoolLogo />
             <div>
               <h1 className="text-xl font-bold">Adarsh Bal Vidya Mandir</h1>
               <p className="text-sm text-muted-foreground">

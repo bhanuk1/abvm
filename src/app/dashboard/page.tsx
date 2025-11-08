@@ -64,6 +64,7 @@ import { useCollection, useDoc, useFirestore, useUser, useMemoFirebase, errorEmi
 import { addDoc, collection, serverTimestamp, setDoc, doc, query, where, deleteDoc, getDocs, updateDoc, Timestamp, writeBatch, getDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
+import { SchoolLogo } from '@/components/ui/school-logo';
 
 const managementOptions = [
     { value: "user-management", label: "User Management", icon: Users, color: "bg-blue-500 hover:bg-blue-600" },
@@ -1023,7 +1024,7 @@ function DashboardPageContent() {
     doc.save(`Daily_Fee_Report_${format(dailyReportDate, 'yyyy-MM-dd')}.pdf`);
   };
 
-  const handleGenerateTC = () => {
+  const handleGenerateTC = async () => {
     if (!tcStudent || !students) {
       toast({ variant: 'destructive', title: 'Error', description: 'Please select a student.' });
       return;
@@ -1039,28 +1040,31 @@ function DashboardPageContent() {
   
     // Add border
     doc.rect(5, 5, doc.internal.pageSize.width - 10, doc.internal.pageSize.height - 10);
-  
+    
+    // Add logo - a bit tricky with jsPDF and SVG component, converting to base64 or using an image is easier
+    // For now, let's skip the logo in PDF to avoid complexity, but we can add text header
+    
     // Header
     doc.setFontSize(22);
     doc.setFont('times', 'bold');
-    doc.text('Adarsh Bal Vidya Mandir Inter College', doc.internal.pageSize.getWidth() / 2, 20, { align: 'center' });
+    doc.text('Adarsh Bal Vidya Mandir Inter College', doc.internal.pageSize.getWidth() / 2, 25, { align: 'center' });
     doc.setFontSize(12);
     doc.setFont('times', 'normal');
-    doc.text('Affiliated to U.P. Board, Prayagraj', doc.internal.pageSize.getWidth() / 2, 28, { align: 'center' });
-    doc.text('Pipari, Sonbhadra, Uttar Pradesh - 231222', doc.internal.pageSize.getWidth() / 2, 34, { align: 'center' });
+    doc.text('Affiliated to U.P. Board, Prayagraj', doc.internal.pageSize.getWidth() / 2, 33, { align: 'center' });
+    doc.text('Pipari, Sonbhadra, Uttar Pradesh - 231222', doc.internal.pageSize.getWidth() / 2, 39, { align: 'center' });
   
     // Title
     doc.setFontSize(18);
     doc.setFont('helvetica', 'bold');
-    doc.text('TRANSFER CERTIFICATE', doc.internal.pageSize.getWidth() / 2, 50, { align: 'center' });
+    doc.text('TRANSFER CERTIFICATE', doc.internal.pageSize.getWidth() / 2, 55, { align: 'center' });
   
     // TC Details
     doc.setFontSize(12);
     doc.setFont('times', 'normal');
     const tcNo = `TC/${new Date().getFullYear()}/${Math.floor(1000 + Math.random() * 9000)}`;
     const issueDate = format(new Date(), 'dd/MM/yyyy');
-    doc.text(`Certificate No: ${tcNo}`, 14, 65);
-    doc.text(`Date of Issue: ${issueDate}`, doc.internal.pageSize.width - 14, 65, { align: 'right' });
+    doc.text(`Certificate No: ${tcNo}`, 14, 70);
+    doc.text(`Date of Issue: ${issueDate}`, doc.internal.pageSize.width - 14, 70, { align: 'right' });
   
     // Student Information
     const studentInfo = [
@@ -1074,7 +1078,7 @@ function DashboardPageContent() {
     ];
   
     (doc as any).autoTable({
-      startY: 75,
+      startY: 80,
       body: studentInfo,
       theme: 'plain',
       styles: {

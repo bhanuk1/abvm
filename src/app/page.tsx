@@ -2,7 +2,6 @@
 
 import Link from 'next/link';
 import {
-  BookOpenCheck,
   Building,
   Contact,
   Mail,
@@ -23,6 +22,7 @@ import { format } from 'date-fns';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, limit, query, where } from 'firebase/firestore';
 import type { Notice } from '@/lib/placeholder-data';
+import { SchoolLogo } from '@/components/ui/school-logo';
 
 function HomeHeader() {
   return (
@@ -30,7 +30,7 @@ function HomeHeader() {
       <div className="container mx-auto px-4 py-3">
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-3">
-            <BookOpenCheck className="h-10 w-10 text-primary" />
+            <SchoolLogo />
             <div>
               <h1 className="text-xl font-bold text-primary">
                 आदर्श बाल विद्या मन्दिर
