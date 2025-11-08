@@ -23,11 +23,6 @@ export function AppHeader() {
 
   const navLinks = [
     { href: '/dashboard', label: 'Dashboard', icon: LayoutGrid },
-    {
-      href: '/dashboard/school-management',
-      label: 'School Management',
-      icon: FolderKanban,
-    },
   ];
 
   return (
@@ -59,7 +54,7 @@ export function AppHeader() {
               href={link.href}
               className={cn(
                 'whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium',
-                pathname === link.href
+                pathname.startsWith(link.href)
                   ? 'border-primary text-primary'
                   : 'border-transparent text-muted-foreground hover:border-gray-300 hover:text-gray-700'
               )}
