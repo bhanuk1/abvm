@@ -130,6 +130,9 @@ export default function SchoolManagementPage() {
   
   const [dailyReportDate, setDailyReportDate] = React.useState<Date | undefined>(new Date());
   
+  const { data: currentUserData } = useDoc<any>(currentUser ? doc(firestore, 'users', currentUser.uid) : null);
+  const userRole = currentUserData?.role;
+
   const feesQuery = useMemoFirebase(
     () => firestore && feeStudent ? query(collection(firestore, 'fees'), where('studentId', '==', feeStudent)) : null,
     [firestore, feeStudent]
@@ -137,7 +140,7 @@ export default function SchoolManagementPage() {
   const { data: studentFees } = useCollection<Fee>(feesQuery);
 
   const dailyFeesQuery = useMemoFirebase(() => {
-    if (!firestore || !dailyReportDate) return null;
+    if (!firestore || !dailyReportDate || !userRole || !['admin', 'teacher'].includes(userRole)) return null;
     const start = startOfDay(dailyReportDate);
     const end = endOfDay(dailyReportDate);
     return query(
@@ -145,7 +148,7 @@ export default function SchoolManagementPage() {
         where('paymentDate', '>=', Timestamp.fromDate(start)),
         where('paymentDate', '<=', Timestamp.fromDate(end))
     );
-  }, [firestore, dailyReportDate]);
+  }, [firestore, dailyReportDate, userRole]);
   const { data: dailyFeeData, isLoading: dailyFeeLoading } = useCollection<Fee>(dailyFeesQuery);
 
   const dailyFeeReportData = React.useMemo(() => {
