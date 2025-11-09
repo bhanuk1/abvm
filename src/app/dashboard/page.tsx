@@ -623,9 +623,6 @@ function DashboardPageContent() {
   
   const handleGeneratePdf = async (doc: jsPDF, student: any, results: Result[]) => {
     try {
-        doc.addFont('/fonts/TiroDevanagariHindi-Regular.ttf', 'Tiro Devanagari Hindi', 'normal');
-        doc.setFont('Tiro Devanagari Hindi');
-        
         doc.setFontSize(20);
         doc.text('आदर्श बाल विद्या मन्दिर इण्टर कॉलेज', doc.internal.pageSize.getWidth() / 2, 15, { align: 'center' });
         doc.setFontSize(14);
@@ -645,8 +642,6 @@ function DashboardPageContent() {
           head: [['विवरण', 'जानकारी']],
           body: studentDetails,
           theme: 'grid',
-          headStyles: { font: 'Tiro Devanagari Hindi', fontStyle: 'bold' },
-          bodyStyles: { font: 'Tiro Devanagari Hindi' },
         });
 
         results.forEach(result => {
@@ -673,8 +668,6 @@ function DashboardPageContent() {
                 head: tableHead,
                 body: tableBody,
                 theme: 'grid',
-                headStyles: { font: 'Tiro Devanagari Hindi', fontStyle: 'bold' },
-                bodyStyles: { font: 'Tiro Devanagari Hindi' },
             });
         });
         
@@ -683,9 +676,8 @@ function DashboardPageContent() {
         toast({
             variant: "destructive",
             title: "PDF Generation Error",
-            description: "Could not generate the PDF. Hindi font may not be available. Using default font."
+            description: "Could not generate the PDF. Using default font."
         });
-        // Fallback to default font if custom font fails
         doc.setFont('helvetica');
         doc.text('Student Progress Report', doc.internal.pageSize.getWidth() / 2, 22, { align: 'center' });
     }
@@ -995,9 +987,6 @@ function DashboardPageContent() {
     
     const doc = new jsPDF();
     try {
-        doc.addFont('/fonts/TiroDevanagariHindi-Regular.ttf', 'Tiro Devanagari Hindi', 'normal');
-        doc.setFont('Tiro Devanagari Hindi');
-
         doc.setFontSize(18);
         doc.text('आदर्श बाल विद्या मन्दिर इण्टर कॉलेज', doc.internal.pageSize.getWidth() / 2, 20, { align: 'center' });
         doc.setFontSize(14);
@@ -1022,8 +1011,6 @@ function DashboardPageContent() {
           body: details,
           theme: 'grid',
           styles: { cellPadding: 3 },
-          headStyles: { font: 'Tiro Devanagari Hindi' },
-          bodyStyles: { font: 'Tiro Devanagari Hindi' }
         });
 
         const finalY = (doc as any).lastAutoTable.finalY;
@@ -1034,7 +1021,7 @@ function DashboardPageContent() {
         doc.save(`Fee_Receipt_${student.username}_${feeData.quarter}.pdf`);
     } catch (e) {
         console.error(e);
-        toast({variant: 'destructive', title: 'Error', description: 'Failed to generate receipt. The Hindi font may not be available.'});
+        toast({variant: 'destructive', title: 'Error', description: 'Failed to generate receipt.'});
     }
   };
 
@@ -1045,8 +1032,6 @@ function DashboardPageContent() {
     }
     
     const doc = new jsPDF();
-    doc.addFont('/fonts/TiroDevanagariHindi-Regular.ttf', 'Tiro Devanagari Hindi', 'normal');
-    doc.setFont('Tiro Devanagari Hindi');
     doc.setFontSize(18);
     doc.text('आदर्श बाल विद्या मन्दिर इण्टर कॉलेज', doc.internal.pageSize.getWidth() / 2, 20, { align: 'center' });
     doc.setFontSize(14);
@@ -1076,8 +1061,6 @@ function DashboardPageContent() {
             head: [['Student Name', 'Quarter', 'Amount (INR)']],
             body: tableBody,
             theme: 'grid',
-            headStyles: { font: 'Tiro Devanagari Hindi' },
-            bodyStyles: { font: 'Tiro Devanagari Hindi' },
             didDrawPage: (data: any) => {
                 startY = data.cursor.y;
             }
@@ -1112,11 +1095,6 @@ function DashboardPageContent() {
   
     // Add border
     doc.rect(5, 5, doc.internal.pageSize.width - 10, doc.internal.pageSize.height - 10);
-    
-    // Add logo - a bit tricky with jsPDF and SVG component, converting to base64 or using an image is easier
-    // For now, let's skip the logo in PDF to avoid complexity, but we can add text header
-    doc.addFont('/fonts/TiroDevanagariHindi-Regular.ttf', 'Tiro Devanagari Hindi', 'normal');
-    doc.setFont('Tiro Devanagari Hindi');
     
     // Header
     doc.setFontSize(22);
