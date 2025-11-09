@@ -141,6 +141,15 @@ service cloud.firestore {
       allow update: if isSignedIn() && getUserData(request.auth.uid).role in ['admin', 'teacher'];
       allow list: if isSignedIn();
     }
+
+     /**
+     * @description Controls access to student health records.
+     * - Only admins and teachers can read and write health records.
+     * - This data is confidential and not accessible by parents or students.
+     */
+    match /health-records/{studentId} {
+      allow read, write: if isSignedIn() && getUserData(request.auth.uid).role in ['admin', 'teacher'];
+    }
   }
 }
 

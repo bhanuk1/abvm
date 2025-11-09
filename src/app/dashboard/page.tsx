@@ -24,7 +24,7 @@ import {
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Eye, EyeOff, UserPlus, Calendar as CalendarIcon, PlusCircle, FileDown, Printer, GraduationCap, Phone, Home, User as UserIcon, DollarSign, Barcode, BookOpen, Bus, Users, ChevronsRight, FolderKanban, Newspaper, BarChart2, Banknote, CreditCard, UserSquare, BookCopy, FileText, BusFront, Library, FileSignature, CalendarCheck, CalendarClock, Video, Upload, Trash2, Film, ImageIcon, MessageCircle, ImagePlus } from 'lucide-react';
+import { Eye, EyeOff, UserPlus, Calendar as CalendarIcon, PlusCircle, FileDown, Printer, GraduationCap, Phone, Home, User as UserIcon, DollarSign, Barcode, BookOpen, Bus, Users, ChevronsRight, FolderKanban, Newspaper, BarChart2, Banknote, CreditCard, UserSquare, BookCopy, FileText, BusFront, Library, FileSignature, CalendarCheck, CalendarClock, Video, Upload, Trash2, Film, ImageIcon, MessageCircle, ImagePlus, Stethoscope } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -61,7 +61,8 @@ import {
   type LeaveApplication,
   type LiveClass,
   type Video as VideoType,
-  type Photo as PhotoType
+  type Photo as PhotoType,
+  type HealthRecord,
 } from '@/lib/school-data';
 import { useCollection, useDoc, useFirestore, useUser, useMemoFirebase, errorEmitter, FirestorePermissionError } from '@/firebase';
 import { addDoc, collection, serverTimestamp, setDoc, doc, query, where, deleteDoc, getDocs, updateDoc, Timestamp, writeBatch, getDoc } from 'firebase/firestore';
@@ -80,6 +81,7 @@ const managementOptions = [
     { value: "result-management", label: "Result Management", icon: BarChart2, color: "bg-orange-500 hover:bg-orange-600" },
     { value: "fee-management", label: "Fee Management", icon: Banknote, color: "bg-green-500 hover:bg-green-600" },
     { value: "daily-fee-report", label: "Fee Reports", icon: FileText, color: "bg-emerald-500 hover:bg-emerald-600" },
+    { value: "health-records", label: "Health Records", icon: Stethoscope, color: "bg-red-500 hover:bg-red-600" },
     { value: "salary-management", label: "Salary Management", icon: DollarSign, color: "bg-lime-500 hover:bg-lime-600" },
     { value: "id-cards", label: "ID Cards", icon: CreditCard, color: "bg-rose-500 hover:bg-rose-600" },
     { value: "marksheets", label: "Marksheets", icon: BookCopy, color: "bg-rose-500 hover:bg-rose-600" },
@@ -191,6 +193,10 @@ function DashboardPageContent() {
   const [editingStudent, setEditingStudent] = React.useState<any>(null);
   const [studentPhotoUrl, setStudentPhotoUrl] = React.useState('');
 
+  const [healthRecordClass, setHealthRecordClass] = React.useState('');
+  const [healthRecordStudent, setHealthRecordStudent] = React.useState('');
+  const [currentHealthRecord, setCurrentHealthRecord] = React.useState<Partial<HealthRecord>>({});
+
   const currentUserDocRef = useMemoFirebase(
     () => (currentUser && firestore ? doc(firestore, 'users', currentUser.uid) : null),
     [firestore, currentUser]
@@ -228,6 +234,22 @@ function DashboardPageContent() {
   );
   const { data: attendance, isLoading: attendanceLoading } = useCollection<Attendance>(attendanceQuery);
 
+  const healthRecordDocRef = useMemoFirebase(() => 
+    firestore && healthRecordStudent
+      ? doc(firestore, 'health-records', healthRecordStudent)
+      : null, 
+    [firestore, healthRecordStudent]
+  );
+  const { data: healthRecordData, isLoading: healthRecordLoading } = useDoc<HealthRecord>(healthRecordDocRef);
+  
+  React.useEffect(() => {
+    if (healthRecordData) {
+      setCurrentHealthRecord(healthRecordData);
+    } else {
+      setCurrentHealthRecord({});
+    }
+  }, [healthRecordData]);
+
   const homeworkQuery = useMemoFirebase(() =>
     firestore && homeworkReportClass && homeworkReportSubject && homeworkReportDate
       ? query(
@@ -239,7 +261,7 @@ function DashboardPageContent() {
       : null,
     [firestore, homeworkReportClass, homeworkReportSubject, homeworkReportDate]
   );
-  const { data: homeworks, isLoading: homeworksLoading } = useCollection<Homework>(homeworksQuery);
+  const { data: homeworks, isLoading: homeworksLoading } = useCollection<Homework>(homeworkQuery);
   const filteredHomework = homeworks?.[0];
 
   const dailyFeeReportData = React.useMemo(() => {
@@ -1314,6 +1336,36 @@ function DashboardPageContent() {
         });
   };
 
+  const handleHealthRecordChange = (field: keyof HealthRecord, value: string) => {
+    setCurrentHealthRecord(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleSaveHealthRecord = () => {
+    if (!healthRecordStudent || !firestore) {
+      toast({ variant: 'destructive', title: 'Error', description: 'Please select a student first.' });
+      return;
+    }
+    const recordDocRef = doc(firestore, 'health-records', healthRecordStudent);
+    const dataToSave = {
+      ...currentHealthRecord,
+      studentId: healthRecordStudent,
+    };
+    
+    setDoc(recordDocRef, dataToSave, { merge: true })
+      .then(() => {
+        toast({ title: 'Success!', description: 'Health record saved successfully.' });
+      })
+      .catch(error => {
+        const contextualError = new FirestorePermissionError({
+          path: recordDocRef.path,
+          operation: 'write',
+          requestResourceData: dataToSave,
+        });
+        errorEmitter.emit('permission-error', contextualError);
+        toast({ variant: 'destructive', title: 'Error', description: 'Could not save health record.' });
+      });
+  };
+
   const classes = ['Nursery', 'KG', ...Array.from({length: 12}, (_, i) => (i + 1).toString())];
   const examTypes = [
     { value: 'monthly', label: 'Monthly Test' },
@@ -2224,6 +2276,75 @@ function DashboardPageContent() {
             </CardContent>
           </TabsContent>
           )}
+          <TabsContent value="health-records">
+            <CardHeader>
+              <CardTitle>Student Health Records</CardTitle>
+              <CardDescription>Manage important health information for students.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end p-4 border rounded-lg">
+                <div className="space-y-2">
+                  <Label htmlFor="health-class">Class</Label>
+                  <Select value={healthRecordClass} onValueChange={(value) => { setHealthRecordClass(value); setHealthRecordStudent(''); setCurrentHealthRecord({}); }}>
+                    <SelectTrigger id="health-class">
+                      <SelectValue placeholder="Select Class" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {classes.map(c => <SelectItem key={c} value={c}>Class {c}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="health-student">Student</Label>
+                  <Select value={healthRecordStudent} onValueChange={setHealthRecordStudent} disabled={!healthRecordClass}>
+                    <SelectTrigger id="health-student">
+                      <SelectValue placeholder="Select Student" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {students && students.filter(s => s.class === healthRecordClass).map(s => <SelectItem key={s.id} value={s.id}>{s.username} (Roll No. {s.rollNo})</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              
+              {healthRecordStudent && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Health Record for {students?.find(s => s.id === healthRecordStudent)?.username}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {healthRecordLoading ? <p>Loading health record...</p> : (
+                      <>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="blood-group">Blood Group</Label>
+                            <Input id="blood-group" value={currentHealthRecord.bloodGroup || ''} onChange={(e) => handleHealthRecordChange('bloodGroup', e.target.value)} placeholder="e.g., A+, O-"/>
+                          </div>
+                           <div className="space-y-2">
+                            <Label htmlFor="allergies">Allergies</Label>
+                            <Input id="allergies" value={currentHealthRecord.allergies || ''} onChange={(e) => handleHealthRecordChange('allergies', e.target.value)} placeholder="e.g., Peanuts, Dust"/>
+                          </div>
+                           <div className="space-y-2 md:col-span-2">
+                            <Label htmlFor="medical-conditions">Medical Conditions</Label>
+                            <Textarea id="medical-conditions" value={currentHealthRecord.medicalConditions || ''} onChange={(e) => handleHealthRecordChange('medicalConditions', e.target.value)} placeholder="e.g., Asthma, Diabetes"/>
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="emergency-contact-name">Emergency Contact Name</Label>
+                            <Input id="emergency-contact-name" value={currentHealthRecord.emergencyContactName || ''} onChange={(e) => handleHealthRecordChange('emergencyContactName', e.target.value)} />
+                          </div>
+                           <div className="space-y-2">
+                            <Label htmlFor="emergency-contact-phone">Emergency Contact Phone</Label>
+                            <Input id="emergency-contact-phone" value={currentHealthRecord.emergencyContactPhone || ''} onChange={(e) => handleHealthRecordChange('emergencyContactPhone', e.target.value)} />
+                          </div>
+                        </div>
+                        <Button onClick={handleSaveHealthRecord}>Save Health Record</Button>
+                      </>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+            </CardContent>
+          </TabsContent>
           <TabsContent value="student-promotion">
             <CardHeader>
                 <CardTitle>Student Promotion</CardTitle>

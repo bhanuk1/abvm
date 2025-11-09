@@ -187,6 +187,16 @@ export type Message = {
     status: 'Pending' | 'Answered';
     createdAt: Timestamp;
     repliedAt?: Timestamp;
-}
+};
+
+export type HealthRecord = {
+    id: string;
+    studentId: string;
+    bloodGroup?: string;
+    allergies?: string;
+    medicalConditions?: string;
+    emergencyContactName?: string;
+    emergencyContactPhone?: string;
+};
 
     

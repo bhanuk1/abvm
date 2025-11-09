@@ -202,6 +202,21 @@
         "repliedAt": { "type": "string", "format": "date-time", "description": "Timestamp when the reply was given." }
       },
       "required": ["studentId", "parentId", "subject", "query", "status", "createdAt"]
+    },
+    "HealthRecord": {
+      "title": "Health Record",
+      "type": "object",
+      "description": "Stores a student's health information.",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier for the health record, typically the student's ID." },
+        "studentId": { "type": "string", "description": "The ID of the student." },
+        "bloodGroup": { "type": "string", "description": "The student's blood group (e.g., A+, O-)." },
+        "allergies": { "type": "string", "description": "A list of known allergies." },
+        "medicalConditions": { "type": "string", "description": "Any ongoing or significant medical conditions." },
+        "emergencyContactName": { "type": "string", "description": "Name of the person to contact in an emergency." },
+        "emergencyContactPhone": { "type": "string", "description": "Phone number of the emergency contact." }
+      },
+      "required": ["studentId"]
     }
   },
   "auth": {
@@ -302,8 +317,17 @@
           "description": "Stores parent-teacher communication threads.",
           "params": [{ "name": "messageId", "description": "The unique identifier for the message thread." }]
         }
+      },
+      {
+        "path": "/health-records/{studentId}",
+        "definition": {
+          "entityName": "HealthRecord",
+          "schema": { "$ref": "#/backend/entities/HealthRecord" },
+          "description": "Stores student health records, using the student's ID as the document ID.",
+          "params": [{ "name": "studentId", "description": "The unique identifier of the student." }]
+        }
       }
     ],
-    "reasoning": "The Firestore structure is designed to securely manage users and notices for the Vidyalaya Connect application, prioritizing authorization independence and clear security rules. User data is stored in a dedicated collection (`/users/{userId}`) with path-based ownership, ensuring only the user can access their own data. Notices are stored in a top-level `notices` collection for easy querying across the app. Security rules will filter notices based on the logged-in user's role and the `role` property on the notice document itself, ensuring users only see relevant announcements. A new 'fees' collection is added to manage student fee payments. A 'live-classes' collection is added to manage live video class sessions. A 'videos' collection is added to store video gallery content. A 'photos' collection is added to store photo gallery content. A 'messages' collection is added to handle parent-teacher queries."
+    "reasoning": "The Firestore structure is designed to securely manage users and notices for the Vidyalaya Connect application, prioritizing authorization independence and clear security rules. User data is stored in a dedicated collection (`/users/{userId}`) with path-based ownership, ensuring only the user can access their own data. Notices are stored in a top-level `notices` collection for easy querying across the app. Security rules will filter notices based on the logged-in user's role and the `role` property on the notice document itself, ensuring users only see relevant announcements. A new 'fees' collection is added to manage student fee payments. A 'live-classes' collection is added to manage live video class sessions. A 'videos' collection is added to store video gallery content. A 'photos' collection is added to store photo gallery content. A 'messages' collection is added to handle parent-teacher queries. A 'health-records' collection is added to store confidential student health information, accessible only by admin and teachers."
   }
 }
