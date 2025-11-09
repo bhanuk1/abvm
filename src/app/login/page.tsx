@@ -70,7 +70,7 @@ export default function LoginPage() {
             <h1 className="text-2xl font-bold text-primary">
               Adarsh Bal Vidya Mandir
             </h1>
-            <p className="text-sm text-green-600 font-semibold">
+            <p className="text-sm text-red-800 font-semibold">
               Our goal is complete development
             </p>
           </div>

@@ -35,7 +35,7 @@ function HomeHeader() {
               <h1 className="text-xl font-bold text-primary">
                 आदर्श बाल विद्या मन्दिर
               </h1>
-              <p className="text-sm text-green-600 font-semibold">
+              <p className="text-sm text-red-800 font-semibold">
                 हमारा ध्येय संपूर्ण विकास
               </p>
             </div>
