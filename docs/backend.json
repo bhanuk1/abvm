@@ -107,6 +107,48 @@
         }
       },
       "required": ["id", "studentId", "class", "quarter", "amount", "status"]
+    },
+    "LiveClass": {
+      "title": "Live Class",
+      "type": "object",
+      "description": "Represents an ongoing live class session.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the live class session."
+        },
+        "teacherId": {
+          "type": "string",
+          "description": "The ID of the teacher conducting the class."
+        },
+        "teacherName": {
+          "type": "string",
+          "description": "The name of the teacher."
+        },
+        "class": {
+          "type": "string",
+          "description": "The class for which the session is intended."
+        },
+        "subject": {
+          "type": "string",
+          "description": "The subject being taught."
+        },
+        "meetingLink": {
+          "type": "string",
+          "description": "The URL for the video conference (e.g., Google Meet, Zoom)."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["live", "ended"],
+          "description": "The current status of the class."
+        },
+        "startedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The timestamp when the class started."
+        }
+      },
+      "required": ["teacherId", "teacherName", "class", "subject", "meetingLink", "status", "startedAt"]
     }
   },
   "auth": {
@@ -164,10 +206,24 @@
             }
           ]
         }
+      },
+      {
+        "path": "/live-classes/{classId}",
+        "definition": {
+          "entityName": "LiveClass",
+          "schema": {
+            "$ref": "#/backend/entities/LiveClass"
+          },
+          "description": "Stores information about ongoing live classes.",
+          "params": [
+            {
+              "name": "classId",
+              "description": "The unique identifier of the live class session."
+            }
+          ]
+        }
       }
     ],
-    "reasoning": "The Firestore structure is designed to securely manage users and notices for the Vidyalaya Connect application, prioritizing authorization independence and clear security rules. User data is stored in a dedicated collection (`/users/{userId}`) with path-based ownership, ensuring only the user can access their own data. Notices are stored in a top-level `notices` collection for easy querying across the app. Security rules will filter notices based on the logged-in user's role and the `role` property on the notice document itself, ensuring users only see relevant announcements. A new 'fees' collection is added to manage student fee payments."
+    "reasoning": "The Firestore structure is designed to securely manage users and notices for the Vidyalaya Connect application, prioritizing authorization independence and clear security rules. User data is stored in a dedicated collection (`/users/{userId}`) with path-based ownership, ensuring only the user can access their own data. Notices are stored in a top-level `notices` collection for easy querying across the app. Security rules will filter notices based on the logged-in user's role and the `role` property on the notice document itself, ensuring users only see relevant announcements. A new 'fees' collection is added to manage student fee payments. A 'live-classes' collection is added to manage live video class sessions."
   }
 }
-
-    

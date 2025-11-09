@@ -1,5 +1,14 @@
-import type { Notice } from './placeholder-data';
 import type { Timestamp } from 'firebase/firestore';
+
+export type Notice = {
+  id: string;
+  title: string;
+  content: string;
+  authorId: string;
+  author: string;
+  role: 'All' | 'Teachers' | 'Students' | 'Parents';
+  createdAt: Timestamp;
+};
 
 export const initialStudents = [];
 
@@ -134,4 +143,15 @@ export type LeaveApplication = {
     reason: string;
     status: 'Pending' | 'Approved' | 'Rejected';
     submittedAt: Date;
+};
+
+export type LiveClass = {
+    id: string;
+    teacherId: string;
+    teacherName: string;
+    class: string;
+    subject: string;
+    meetingLink: string;
+    status: 'live' | 'ended';
+    startedAt: Timestamp;
 };

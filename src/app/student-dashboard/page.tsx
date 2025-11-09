@@ -22,9 +22,9 @@ import { cn } from '@/lib/utils';
 import { useCollection, useFirestore, useUser, useDoc, useMemoFirebase, errorEmitter, FirestorePermissionError } from '@/firebase';
 import { collection, query, where, doc, addDoc } from 'firebase/firestore';
 import type { Notice } from '@/lib/placeholder-data';
-import { type Fee } from '@/lib/school-data';
+import { type Fee, type LiveClass } from '@/lib/school-data';
 import { Calendar } from '@/components/ui/calendar';
-import { GraduationCap, UserCircle, DollarSign, BookMarked, CheckCircle, Award, Bell, CalendarDays, Send } from 'lucide-react';
+import { GraduationCap, UserCircle, DollarSign, BookMarked, CheckCircle, Award, Bell, CalendarDays, Send, Video } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -106,6 +106,20 @@ export default function StudentDashboardPage() {
     [firestore, currentUser]
   );
   const { data: studentFees } = useCollection<Fee>(feesQuery);
+  
+  const liveClassQuery = useMemoFirebase(() =>
+    firestore && loggedInStudent?.class
+      ? query(
+          collection(firestore, 'live-classes'),
+          where('class', '==', loggedInStudent.class),
+          where('status', '==', 'live')
+        )
+      : null,
+    [firestore, loggedInStudent]
+  );
+  const { data: liveClassData, isLoading: liveClassLoading } = useCollection<LiveClass>(liveClassQuery);
+  const activeLiveClass = liveClassData && liveClassData.length > 0 ? liveClassData[0] : null;
+
 
   const [leaveDate, setLeaveDate] = React.useState<DateRange | undefined>();
   const [leaveReason, setLeaveReason] = React.useState('');
@@ -209,8 +223,9 @@ export default function StudentDashboardPage() {
       <Card>
         <CardContent className="pt-6">
           <Tabs defaultValue="profile">
-            <TabsList className="grid w-full grid-cols-8">
+            <TabsList className="grid w-full grid-cols-9">
               <TabsTrigger value="profile"><UserCircle className="mr-2 h-5 w-5" />Profile</TabsTrigger>
+              <TabsTrigger value="live-class"><Video className="mr-2 h-5 w-5" />Live Class</TabsTrigger>
               <TabsTrigger value="fees"><DollarSign className="mr-2 h-5 w-5" />Fees</TabsTrigger>
               <TabsTrigger value="homework"><BookMarked className="mr-2 h-5 w-5" />Homework</TabsTrigger>
               <TabsTrigger value="attendance"><CheckCircle className="mr-2 h-5 w-5" />Attendance</TabsTrigger>
@@ -241,6 +256,38 @@ export default function StudentDashboardPage() {
                   </dl>
                 </CardContent>
               </Card>
+            </TabsContent>
+            <TabsContent value="live-class">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Live Class</CardTitle>
+                        <CardDescription>Join any ongoing classes for your grade.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        {liveClassLoading && <p>Checking for live classes...</p>}
+                        {!liveClassLoading && activeLiveClass ? (
+                            <div className="p-6 border rounded-lg bg-green-50 border-green-200">
+                                <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                                    <div>
+                                        <h3 className="text-xl font-bold text-green-800">{activeLiveClass.subject} Class is Live!</h3>
+                                        <p className="text-muted-foreground">Teacher: {activeLiveClass.teacherName}</p>
+                                    </div>
+                                    <Button asChild size="lg" className="bg-green-600 hover:bg-green-700 animate-pulse">
+                                        <a href={activeLiveClass.meetingLink} target="_blank" rel="noopener noreferrer">
+                                            <Video className="mr-2" />
+                                            Join Now
+                                        </a>
+                                    </Button>
+                                </div>
+                            </div>
+                        ) : !liveClassLoading ? (
+                             <div className="p-6 text-center border rounded-lg bg-gray-50">
+                                <h3 className="text-lg font-medium text-muted-foreground">No live classes at the moment.</h3>
+                                <p className="text-sm text-muted-foreground">Please check back later.</p>
+                            </div>
+                        ) : null}
+                    </CardContent>
+                </Card>
             </TabsContent>
             <TabsContent value="fees">
               <Card>

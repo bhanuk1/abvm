@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutGrid, BookMarked, BarChart2, CalendarClock } from 'lucide-react';
+import { LayoutGrid, BookMarked, BarChart2, CalendarClock, Video } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useUser, useDoc, useFirestore, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
@@ -28,6 +28,11 @@ export function TeacherAppHeader() {
       href: '/teacher-dashboard/class-management',
       label: 'Class Management',
       icon: BookMarked,
+    },
+    {
+      href: '/teacher-dashboard/live-class',
+      label: 'Live Class',
+      icon: Video,
     },
     {
       href: '/teacher-dashboard/result-management',

@@ -24,7 +24,7 @@ import {
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Eye, EyeOff, UserPlus, Calendar as CalendarIcon, PlusCircle, FileDown, Printer, GraduationCap, Phone, Home, User as UserIcon, DollarSign, Barcode, BookOpen, Bus, Users, ChevronsRight, FolderKanban, Newspaper, BarChart2, Banknote, CreditCard, UserSquare, BookCopy, FileText, BusFront, Library, FileSignature, CalendarCheck, CalendarClock } from 'lucide-react';
+import { Eye, EyeOff, UserPlus, Calendar as CalendarIcon, PlusCircle, FileDown, Printer, GraduationCap, Phone, Home, User as UserIcon, DollarSign, Barcode, BookOpen, Bus, Users, ChevronsRight, FolderKanban, Newspaper, BarChart2, Banknote, CreditCard, UserSquare, BookCopy, FileText, BusFront, Library, FileSignature, CalendarCheck, CalendarClock, Video } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -59,6 +59,7 @@ import {
   type Attendance,
   type Fee,
   type LeaveApplication,
+  type LiveClass,
 } from '@/lib/school-data';
 import { useCollection, useDoc, useFirestore, useUser, useMemoFirebase, errorEmitter, FirestorePermissionError } from '@/firebase';
 import { addDoc, collection, serverTimestamp, setDoc, doc, query, where, deleteDoc, getDocs, updateDoc, Timestamp, writeBatch, getDoc } from 'firebase/firestore';
@@ -70,6 +71,7 @@ const managementOptions = [
     { value: "user-management", label: "User Management", icon: Users, color: "bg-blue-500 hover:bg-blue-600" },
     { value: "student-management", label: "Student Management", icon: UserSquare, color: "bg-cyan-500 hover:bg-cyan-600" },
     { value: "student-promotion", label: "Student Promotion", icon: GraduationCap, color: "bg-teal-500 hover:bg-teal-600" },
+    { value: "live-classes", label: "Live Classes", icon: Video, color: "bg-red-500 hover:bg-red-600" },
     { value: "notice-management", label: "Notice Board", icon: Newspaper, color: "bg-amber-500 hover:bg-amber-600" },
     { value: "result-management", label: "Result Management", icon: BarChart2, color: "bg-orange-500 hover:bg-orange-600" },
     { value: "fee-management", label: "Fee Management", icon: Banknote, color: "bg-green-500 hover:bg-green-600" },
@@ -110,6 +112,9 @@ function DashboardPageContent() {
 
   const leaveQuery = useMemoFirebase(() => firestore ? collection(firestore, 'leave-applications') : null, [firestore]);
   const { data: leaveApplications, isLoading: leaveApplicationsLoading } = useCollection<LeaveApplication>(leaveQuery);
+  
+  const liveClassesQuery = useMemoFirebase(() => firestore ? query(collection(firestore, 'live-classes'), where('status', '==', 'live')) : null, [firestore]);
+  const { data: liveClasses, isLoading: liveClassesLoading } = useCollection<LiveClass>(liveClassesQuery);
 
 
   const [results, setResults] = React.useState<Result[]>(initialResults);
@@ -158,6 +163,9 @@ function DashboardPageContent() {
 
   const [tcClass, setTcClass] = React.useState('');
   const [tcStudent, setTcStudent] = React.useState('');
+  
+  const [promotionFromClass, setPromotionFromClass] = React.useState('');
+  const [promotionToClass, setPromotionToClass] = React.useState('');
   
   const currentUserDocRef = useMemoFirebase(
     () => (currentUser && firestore ? doc(firestore, 'users', currentUser.uid) : null),
@@ -1162,6 +1170,44 @@ function DashboardPageContent() {
     if (!idCardClass || !students) return [];
     return students.filter(s => s.class === idCardClass);
   }, [idCardClass, students]);
+  
+  const handlePromoteStudents = async () => {
+    if (!promotionFromClass || !promotionToClass || !firestore) {
+      toast({ variant: 'destructive', title: 'Error', description: 'Please select both "From" and "To" classes.' });
+      return;
+    }
+    
+    const studentsToPromoteQuery = query(collection(firestore, 'users'), where('role', '==', 'student'), where('class', '==', promotionFromClass));
+    
+    try {
+      const querySnapshot = await getDocs(studentsToPromoteQuery);
+      if (querySnapshot.empty) {
+        toast({ title: 'No Students Found', description: `There are no students in Class ${promotionFromClass} to promote.` });
+        return;
+      }
+      
+      const batch = writeBatch(firestore);
+      querySnapshot.forEach(studentDoc => {
+        batch.update(studentDoc.ref, { class: promotionToClass });
+      });
+      
+      await batch.commit();
+      
+      toast({
+        title: 'Success!',
+        description: `Successfully promoted ${querySnapshot.size} student(s) from Class ${promotionFromClass} to Class ${promotionToClass}.`,
+        className: "bg-green-100 text-green-800",
+      });
+
+      setPromotionFromClass('');
+      setPromotionToClass('');
+
+    } catch (error) {
+      console.error("Error promoting students: ", error);
+      toast({ variant: 'destructive', title: 'Error', description: 'An error occurred while promoting students.' });
+    }
+  };
+
 
   if (isUserLoading || isCurrentUserLoading) {
     return (
@@ -1965,7 +2011,7 @@ function DashboardPageContent() {
                         <div className="flex items-center gap-4">
                             <div className="flex-1 space-y-2">
                                 <Label>From Class</Label>
-                                <Select>
+                                <Select value={promotionFromClass} onValueChange={setPromotionFromClass}>
                                     <SelectTrigger><SelectValue placeholder="Select current class" /></SelectTrigger>
                                     <SelectContent>{classes.map(c => <SelectItem key={c} value={c}>Class {c}</SelectItem>)}</SelectContent>
                                 </Select>
@@ -1973,19 +2019,63 @@ function DashboardPageContent() {
                             <ChevronsRight className="mt-7 h-8 w-8 text-muted-foreground shrink-0"/>
                             <div className="flex-1 space-y-2">
                                 <Label>To Class</Label>
-                                <Select>
+                                <Select value={promotionToClass} onValueChange={setPromotionToClass}>
                                     <SelectTrigger><SelectValue placeholder="Select new class" /></SelectTrigger>
                                     <SelectContent>{classes.map(c => <SelectItem key={c} value={c}>Class {c}</SelectItem>)}</SelectContent>
                                 </Select>
                             </div>
                         </div>
-                        <Button className="w-full bg-blue-500 hover:bg-blue-600" size="lg">
+                        <Button className="w-full bg-blue-500 hover:bg-blue-600" size="lg" onClick={handlePromoteStudents} disabled={!promotionFromClass || !promotionToClass}>
                             <GraduationCap className="mr-2"/>
                             Promote All Students
                         </Button>
                         <p className="text-xs text-center text-muted-foreground">This action will promote all students from the selected class to the new class. This cannot be undone.</p>
                     </CardContent>
                 </Card>
+            </CardContent>
+          </TabsContent>
+          <TabsContent value="live-classes">
+             <CardHeader>
+                <CardTitle>Live Class Monitoring</CardTitle>
+                <CardDescription>View all ongoing live classes in the school.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                 <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Class</TableHead>
+                        <TableHead>Subject</TableHead>
+                        <TableHead>Teacher</TableHead>
+                        <TableHead>Started At</TableHead>
+                        <TableHead className="text-right">Action</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {liveClassesLoading && <TableRow><TableCell colSpan={5} className="h-24 text-center">Loading live classes...</TableCell></TableRow>}
+                      {!liveClassesLoading && liveClasses && liveClasses.length > 0 ? (
+                        liveClasses.map(liveClass => (
+                            <TableRow key={liveClass.id}>
+                                <TableCell>{liveClass.class}</TableCell>
+                                <TableCell>{liveClass.subject}</TableCell>
+                                <TableCell>{liveClass.teacherName}</TableCell>
+                                <TableCell>{liveClass.startedAt ? format(liveClass.startedAt.toDate(), 'p') : 'N/A'}</TableCell>
+                                <TableCell className="text-right">
+                                    <Button asChild variant="secondary" size="sm">
+                                        <a href={liveClass.meetingLink} target="_blank" rel="noopener noreferrer">
+                                            <Eye className="mr-2"/>
+                                            View Class
+                                        </a>
+                                    </Button>
+                                </TableCell>
+                            </TableRow>
+                        ))
+                      ) : !liveClassesLoading ? (
+                        <TableRow>
+                          <TableCell colSpan={5} className="h-24 text-center">No classes are live at the moment.</TableCell>
+                        </TableRow>
+                      ) : null}
+                    </TableBody>
+                </Table>
             </CardContent>
           </TabsContent>
           {userRole === 'admin' && (

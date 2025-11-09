@@ -95,5 +95,17 @@ service cloud.firestore {
       allow read, list, update: if isSignedIn() && getUserData(request.auth.uid).role == 'admin';
       allow create: if isSignedIn() && (isOwner(request.resource.data.studentId));
     }
+    
+    /**
+     * @description Controls access to live class sessions.
+     * - All signed-in users can read/list live classes.
+     * - Only admins and teachers can create or update live classes.
+     * - Teachers can only update classes they started.
+     */
+    match /live-classes/{classId} {
+      allow read, list: if isSignedIn();
+      allow create: if isSignedIn() && getUserData(request.auth.uid).role in ['admin', 'teacher'];
+      allow update: if isSignedIn() && (getUserData(request.auth.uid).role == 'admin' || (getUserData(request.auth.uid).role == 'teacher' && resource.data.teacherId == request.auth.uid));
+    }
   }
 }
