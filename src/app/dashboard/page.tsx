@@ -24,7 +24,7 @@ import {
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Eye, EyeOff, UserPlus, Calendar as CalendarIcon, PlusCircle, FileDown, Printer, GraduationCap, Phone, Home, User as UserIcon, DollarSign, Barcode, BookOpen, Bus, Users, ChevronsRight, FolderKanban, Newspaper, BarChart2, Banknote, CreditCard, UserSquare, BookCopy, FileText, BusFront, Library, FileSignature, CalendarCheck, CalendarClock, Video, Upload, Trash2, Film, Image as ImageIcon, MessageCircle } from 'lucide-react';
+import { Eye, EyeOff, UserPlus, Calendar as CalendarIcon, PlusCircle, FileDown, Printer, GraduationCap, Phone, Home, User as UserIcon, DollarSign, Barcode, BookOpen, Bus, Users, ChevronsRight, FolderKanban, Newspaper, BarChart2, Banknote, CreditCard, UserSquare, BookCopy, FileText, BusFront, Library, FileSignature, CalendarCheck, CalendarClock, Video, Upload, Trash2, Film, ImageIcon, MessageCircle } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -235,7 +235,7 @@ function DashboardPageContent() {
       : null,
     [firestore, homeworkReportClass, homeworkReportSubject, homeworkReportDate]
   );
-  const { data: homeworks, isLoading: homeworksLoading } = useCollection<Homework>(homeworkQuery);
+  const { data: homeworks, isLoading: homeworksLoading } = useCollection<Homework>(homeworksQuery);
   const filteredHomework = homeworks?.[0];
 
   const dailyFeeReportData = React.useMemo(() => {
@@ -597,12 +597,12 @@ function DashboardPageContent() {
   
   const handleGeneratePdf = async (doc: jsPDF, student: any, results: Result[]) => {
     try {
-        // The custom font logic has been removed to prevent fetch errors.
-        // The PDF will now use one of jsPDF's built-in fonts.
-        // Note: Hindi characters may not render correctly with default fonts.
-        doc.setFontSize(16);
-        doc.text('Adarsh Bal Vidya Mandir Inter College', doc.internal.pageSize.getWidth() / 2, 15, { align: 'center' });
-        doc.setFontSize(12);
+        doc.addFont('/fonts/TiroDevanagariHindi-Regular.ttf', 'Tiro Devanagari Hindi', 'normal');
+        doc.setFont('Tiro Devanagari Hindi');
+        
+        doc.setFontSize(20);
+        doc.text('आदर्श बाल विद्या मन्दिर इण्टर कॉलेज', doc.internal.pageSize.getWidth() / 2, 15, { align: 'center' });
+        doc.setFontSize(14);
         doc.text('Student Progress Report', doc.internal.pageSize.getWidth() / 2, 22, { align: 'center' });
         
         const studentDetails = [
@@ -610,15 +610,17 @@ function DashboardPageContent() {
             ['Class', student.class],
             ['Roll No.', student.rollNo],
             ["Father's Name", student.fatherName],
-            ['Date of Birth', student.dob],
+            ['Date of Birth', student.dob ? format(new Date(student.dob), 'dd/MM/yyyy') : 'N/A'],
             ['Address', student.address],
         ];
 
         (doc as any).autoTable({
           startY: 30,
-          head: [['Detail', 'Information']],
+          head: [['विवरण', 'जानकारी']],
           body: studentDetails,
           theme: 'grid',
+          headStyles: { font: 'Tiro Devanagari Hindi', fontStyle: 'bold' },
+          bodyStyles: { font: 'Tiro Devanagari Hindi' },
         });
 
         results.forEach(result => {
@@ -630,7 +632,7 @@ function DashboardPageContent() {
             let tableHead;
 
             if (Array.isArray(result.marks)) {
-                tableHead = [['Subject', 'Marks Obtained', 'Total Marks']];
+                tableHead = [['विषय', 'प्राप्तांक', 'पूर्णांक']];
                 tableBody = result.marks.map(m => [m.subject, m.obtained, m.total]);
             } else {
                 tableHead = [['Description', 'Marks']];
@@ -645,12 +647,21 @@ function DashboardPageContent() {
                 head: tableHead,
                 body: tableBody,
                 theme: 'grid',
+                headStyles: { font: 'Tiro Devanagari Hindi', fontStyle: 'bold' },
+                bodyStyles: { font: 'Tiro Devanagari Hindi' },
             });
         });
         
     } catch (error) {
         console.error("Error generating PDF:", error);
-        alert('Error generating PDF. Please check the console.');
+        toast({
+            variant: "destructive",
+            title: "PDF Generation Error",
+            description: "Could not generate the PDF. Hindi font may not be available. Using default font."
+        });
+        // Fallback to default font if custom font fails
+        doc.setFont('helvetica');
+        doc.text('Student Progress Report', doc.internal.pageSize.getWidth() / 2, 22, { align: 'center' });
     }
   };
 
@@ -958,10 +969,11 @@ function DashboardPageContent() {
     
     const doc = new jsPDF();
     try {
-        // The custom font logic has been removed to prevent fetch errors.
-        // The PDF will now use one of jsPDF's built-in fonts.
+        doc.addFont('/fonts/TiroDevanagariHindi-Regular.ttf', 'Tiro Devanagari Hindi', 'normal');
+        doc.setFont('Tiro Devanagari Hindi');
+
         doc.setFontSize(18);
-        doc.text('Adarsh Bal Vidya Mandir Inter College', doc.internal.pageSize.getWidth() / 2, 20, { align: 'center' });
+        doc.text('आदर्श बाल विद्या मन्दिर इण्टर कॉलेज', doc.internal.pageSize.getWidth() / 2, 20, { align: 'center' });
         doc.setFontSize(14);
         doc.text('Fee Receipt', doc.internal.pageSize.getWidth() / 2, 30, { align: 'center' });
 
@@ -984,6 +996,8 @@ function DashboardPageContent() {
           body: details,
           theme: 'grid',
           styles: { cellPadding: 3 },
+          headStyles: { font: 'Tiro Devanagari Hindi' },
+          bodyStyles: { font: 'Tiro Devanagari Hindi' }
         });
 
         const finalY = (doc as any).lastAutoTable.finalY;
@@ -994,7 +1008,7 @@ function DashboardPageContent() {
         doc.save(`Fee_Receipt_${student.username}_${feeData.quarter}.pdf`);
     } catch (e) {
         console.error(e);
-        toast({variant: 'destructive', title: 'Error', description: 'Failed to generate receipt.'});
+        toast({variant: 'destructive', title: 'Error', description: 'Failed to generate receipt. The Hindi font may not be available.'});
     }
   };
 
@@ -1005,8 +1019,10 @@ function DashboardPageContent() {
     }
     
     const doc = new jsPDF();
+    doc.addFont('/fonts/TiroDevanagariHindi-Regular.ttf', 'Tiro Devanagari Hindi', 'normal');
+    doc.setFont('Tiro Devanagari Hindi');
     doc.setFontSize(18);
-    doc.text('Adarsh Bal Vidya Mandir Inter College', doc.internal.pageSize.getWidth() / 2, 20, { align: 'center' });
+    doc.text('आदर्श बाल विद्या मन्दिर इण्टर कॉलेज', doc.internal.pageSize.getWidth() / 2, 20, { align: 'center' });
     doc.setFontSize(14);
     doc.text(`Daily Fee Collection Report - ${format(dailyReportDate, 'PPP')}`, doc.internal.pageSize.getWidth() / 2, 30, { align: 'center' });
 
@@ -1034,6 +1050,8 @@ function DashboardPageContent() {
             head: [['Student Name', 'Quarter', 'Amount (INR)']],
             body: tableBody,
             theme: 'grid',
+            headStyles: { font: 'Tiro Devanagari Hindi' },
+            bodyStyles: { font: 'Tiro Devanagari Hindi' },
             didDrawPage: (data: any) => {
                 startY = data.cursor.y;
             }
@@ -1071,11 +1089,13 @@ function DashboardPageContent() {
     
     // Add logo - a bit tricky with jsPDF and SVG component, converting to base64 or using an image is easier
     // For now, let's skip the logo in PDF to avoid complexity, but we can add text header
+    doc.addFont('/fonts/TiroDevanagariHindi-Regular.ttf', 'Tiro Devanagari Hindi', 'normal');
+    doc.setFont('Tiro Devanagari Hindi');
     
     // Header
     doc.setFontSize(22);
     doc.setFont('times', 'bold');
-    doc.text('Adarsh Bal Vidya Mandir Inter College', doc.internal.pageSize.getWidth() / 2, 25, { align: 'center' });
+    doc.text('आदर्श बाल विद्या मन्दिर इण्टर कॉलेज', doc.internal.pageSize.getWidth() / 2, 25, { align: 'center' });
     doc.setFontSize(12);
     doc.setFont('times', 'normal');
     doc.text('Affiliated to U.P. Board, Prayagraj', doc.internal.pageSize.getWidth() / 2, 33, { align: 'center' });
@@ -2566,6 +2586,7 @@ function DashboardPageContent() {
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-base">Student Progress Report</CardTitle>
+                    <CardDescription>Generate a consolidated marksheet for a single student for the entire session.</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                      <div className="space-y-2">
@@ -2590,7 +2611,7 @@ function DashboardPageContent() {
                         </SelectContent>
                       </Select>
                     </div>
-                    <Button className="w-full bg-pink-600 hover:bg-pink-700 text-white" onClick={handleDownloadClick}>
+                    <Button className="w-full bg-pink-600 hover:bg-pink-700 text-white" onClick={handleDownloadClick} disabled={!selectedReportStudent}>
                       <FileDown className="mr-2"/>
                       Generate PDF Report
                     </Button>
@@ -2598,7 +2619,8 @@ function DashboardPageContent() {
                 </Card>
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-base">Class-wise Report</CardTitle>
+                    <CardTitle className="text-base">Class-wise Report (Gazette)</CardTitle>
+                     <CardDescription>Generate a multi-page PDF with one student's result per page for a specific exam.</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                      <div className="space-y-2">
@@ -2614,7 +2636,7 @@ function DashboardPageContent() {
                     </div>
                      <div className="space-y-2">
                       <Label htmlFor="class-report-exam">Select Exam</Label>
-                      <Select value={selectedClassReportExam} onValueChange={setSelectedClassReportExam}>
+                      <Select value={selectedClassReportExam} onValueChange={setSelectedClassReportExam} disabled={!selectedClassReportClass}>
                         <SelectTrigger id="class-report-exam">
                           <SelectValue placeholder="Select Exam" />
                         </SelectTrigger>
@@ -2624,9 +2646,9 @@ function DashboardPageContent() {
                         </SelectContent>
                       </Select>
                     </div>
-                    <Button className="w-full bg-green-600 hover:bg-green-700 text-white" onClick={handleClassReportDownloadClick}>
+                    <Button className="w-full bg-green-600 hover:bg-green-700 text-white" onClick={handleClassReportDownloadClick} disabled={!selectedClassReportExam}>
                       <FileDown className="mr-2"/>
-                      Generate PDF Report
+                      Generate PDF Gazette
                     </Button>
                   </CardContent>
                 </Card>
