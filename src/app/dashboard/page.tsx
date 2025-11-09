@@ -704,7 +704,7 @@ function DashboardPageContent() {
     const examLabel = examTypes.find(e => e.value === marksheetExam)?.label || '';
   
     const studentsQueryRef = query(collection(firestore, 'users'), where('role', '==', 'student'), where('class', '==', marksheetClass));
-    const resultsQueryRef = query(collection(firestore, 'results'), where('class', '==', marksheetClass), where('examType', '==', examLabel));
+    const resultsQueryRef = query(collection(firestore, 'results'), where('class', '==', 'marksheetClass'), where('examType', '==', examLabel));
   
     const [studentsSnapshot, resultsSnapshot] = await Promise.all([getDocs(studentsQueryRef), getDocs(resultsQueryRef)]);
   
@@ -880,7 +880,7 @@ function DashboardPageContent() {
 
     // Get all existing fee documents for the class and quarter to avoid duplicates
     const feesRef = collection(firestore, 'fees');
-    const q = query(feesRef, where('class', '==', feeClass), where('quarter', '==', feeQuarter));
+    const q = query(feesRef, where('class', '==', 'feeClass'), where('quarter', '==', 'feeQuarter'));
     const querySnapshot = await getDocs(q);
     const existingFeesMap = new Map(querySnapshot.docs.map(doc => [doc.data().studentId, {id: doc.id, ...doc.data()}]));
 
@@ -1051,7 +1051,7 @@ function DashboardPageContent() {
     doc.setFontSize(12);
     doc.setFont('times', 'normal');
     doc.text('Affiliated to U.P. Board, Prayagraj', doc.internal.pageSize.getWidth() / 2, 33, { align: 'center' });
-    doc.text('Bilgram, Hardoi, Uttar Pradesh', doc.internal.pageSize.getWidth() / 2, 39, { align: 'center' });
+    doc.text('bilgram - hardoi', doc.internal.pageSize.getWidth() / 2, 39, { align: 'center' });
   
     // Title
     doc.setFontSize(18);
