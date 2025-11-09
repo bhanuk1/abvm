@@ -2056,10 +2056,10 @@ function DashboardPageContent() {
                 <div id="printable-id-cards" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                   {idCardFilteredStudents.map(student => (
                     <div key={student.id} className="id-card-print-wrapper">
-                      <div className="bg-[#0A2540] rounded-2xl shadow-2xl overflow-hidden w-full max-w-xs mx-auto text-white font-sans">
-                        <div className="bg-yellow-400 p-3 text-center">
-                          <h2 className="text-lg font-bold text-[#0A2540]">Adarsh Bal Vidya Mandir</h2>
-                          <p className="text-xs font-semibold text-[#0A2540]">IDENTITY CARD (2024-25)</p>
+                      <div className="bg-primary rounded-2xl shadow-2xl overflow-hidden w-full max-w-xs mx-auto text-primary-foreground font-sans">
+                        <div className="bg-accent p-3 text-center">
+                          <h2 className="text-lg font-bold text-accent-foreground">Adarsh Bal Vidya Mandir</h2>
+                          <p className="text-xs font-semibold text-accent-foreground">IDENTITY CARD (2024-25)</p>
                         </div>
                         <div className="p-4 flex flex-col items-center">
                           <div className="w-28 h-28 rounded-full border-4 border-pink-500 overflow-hidden mb-3">
@@ -2072,7 +2072,7 @@ function DashboardPageContent() {
                               data-ai-hint="student portrait" 
                             />
                           </div>
-                          <h3 className="text-xl font-bold text-yellow-400">{student.username}</h3>
+                          <h3 className="text-xl font-bold text-accent">{student.username}</h3>
                           <div className="text-center mt-2 space-y-1 text-sm">
                             <p><span className="font-semibold">Class:</span> {student.class} | <span className="font-semibold">Roll:</span> {student.rollNo}</p>
                             <p><span className="font-semibold">Father:</span> {student.fatherName}</p>
@@ -2080,11 +2080,11 @@ function DashboardPageContent() {
                         </div>
                         <div className="px-4 pb-3 space-y-2 text-xs">
                           <div className="flex items-center gap-2">
-                            <Home className="w-4 h-4 text-yellow-400 shrink-0" />
+                            <Home className="w-4 h-4 text-accent shrink-0" />
                             <p>{student.address}</p>
                           </div>
                           <div className="flex items-center gap-2">
-                            <Phone className="w-4 h-4 text-yellow-400 shrink-0" />
+                            <Phone className="w-4 h-4 text-accent shrink-0" />
                             <p>{student.mobile}</p>
                           </div>
                         </div>
