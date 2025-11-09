@@ -32,8 +32,8 @@ function HomeHeader() {
           <div className="flex items-center gap-3">
             <SchoolLogo />
             <div>
-              <h1 className="text-xl font-bold text-primary">
-                आदर्श बाल विद्या मन्दिर
+              <h1 className="text-2xl font-bold text-primary">
+                आदर्श बाल विद्या मन्दिर इण्टर कॉलेज
               </h1>
               <p className="text-sm text-red-800 font-semibold">
                 हमारा ध्येय संपूर्ण विकास

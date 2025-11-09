@@ -68,7 +68,7 @@ export default function LoginPage() {
           <SchoolLogo />
           <div>
             <h1 className="text-2xl font-bold text-primary">
-              Adarsh Bal Vidya Mandir
+              Adarsh Bal Vidya Mandir Inter College
             </h1>
             <p className="text-sm text-red-800 font-semibold">
               Our goal is complete development
