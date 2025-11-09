@@ -77,5 +77,3 @@ export function ParentAppHeader() {
     </header>
   );
 }
-
-    
