@@ -127,5 +127,21 @@ service cloud.firestore {
       allow read, list: if isSignedIn();
       allow write: if isSignedIn() && getUserData(request.auth.uid).role == 'admin';
     }
+
+    /**
+     * @description Controls access to parent-teacher queries.
+     * - Parents can create queries for their own children.
+     * - Parents can read queries they created.
+     * - Teachers and Admins can read all queries.
+     * - Teachers and Admins can update (reply to) queries.
+     */
+    match /messages/{messageId} {
+      allow create: if isSignedIn() && getUserData(request.auth.uid).role == 'parent' && isOwner(request.resource.data.parentId);
+      allow read: if isSignedIn() && (getUserData(request.auth.uid).role in ['admin', 'teacher'] || isOwner(resource.data.parentId));
+      allow update: if isSignedIn() && getUserData(request.auth.uid).role in ['admin', 'teacher'];
+      allow list: if isSignedIn();
+    }
   }
 }
+
+    

@@ -178,6 +178,25 @@
         "createdBy": { "type": "string", "description": "Name of the user who added the photo." }
       },
       "required": ["id", "title", "imageUrl", "createdAt", "createdBy"]
+    },
+    "Message": {
+      "title": "Message",
+      "type": "object",
+      "description": "Represents a query from a parent to a teacher/admin and the subsequent conversation.",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier for the message thread." },
+        "studentId": { "type": "string", "description": "The ID of the student the query is about." },
+        "studentName": { "type": "string", "description": "The name of the student." },
+        "parentId": { "type": "string", "description": "The ID of the parent who initiated the query." },
+        "parentName": { "type": "string", "description": "The name of the parent." },
+        "subject": { "type": "string", "description": "The subject/title of the query." },
+        "query": { "type": "string", "description": "The initial question from the parent." },
+        "reply": { "type": "string", "description": "The response from the teacher or admin." },
+        "status": { "type": "string", "enum": ["Pending", "Answered"], "description": "The current status of the query." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Timestamp when the query was created." },
+        "repliedAt": { "type": "string", "format": "date-time", "description": "Timestamp when the reply was given." }
+      },
+      "required": ["studentId", "parentId", "subject", "query", "status", "createdAt"]
     }
   },
   "auth": {
@@ -269,8 +288,19 @@
           "description": "Stores photo gallery items.",
           "params": [{ "name": "photoId", "description": "The unique identifier of the photo." }]
         }
+      },
+      {
+        "path": "/messages/{messageId}",
+        "definition": {
+          "entityName": "Message",
+          "schema": { "$ref": "#/backend/entities/Message" },
+          "description": "Stores parent-teacher communication threads.",
+          "params": [{ "name": "messageId", "description": "The unique identifier for the message thread." }]
+        }
       }
     ],
-    "reasoning": "The Firestore structure is designed to securely manage users and notices for the Vidyalaya Connect application, prioritizing authorization independence and clear security rules. User data is stored in a dedicated collection (`/users/{userId}`) with path-based ownership, ensuring only the user can access their own data. Notices are stored in a top-level `notices` collection for easy querying across the app. Security rules will filter notices based on the logged-in user's role and the `role` property on the notice document itself, ensuring users only see relevant announcements. A new 'fees' collection is added to manage student fee payments. A 'live-classes' collection is added to manage live video class sessions. A 'videos' collection is added to store video gallery content. A 'photos' collection is added to store photo gallery content."
+    "reasoning": "The Firestore structure is designed to securely manage users and notices for the Vidyalaya Connect application, prioritizing authorization independence and clear security rules. User data is stored in a dedicated collection (`/users/{userId}`) with path-based ownership, ensuring only the user can access their own data. Notices are stored in a top-level `notices` collection for easy querying across the app. Security rules will filter notices based on the logged-in user's role and the `role` property on the notice document itself, ensuring users only see relevant announcements. A new 'fees' collection is added to manage student fee payments. A 'live-classes' collection is added to manage live video class sessions. A 'videos' collection is added to store video gallery content. A 'photos' collection is added to store photo gallery content. A 'messages' collection is added to handle parent-teacher queries."
   }
 }
+
+    

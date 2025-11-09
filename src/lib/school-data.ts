@@ -174,3 +174,19 @@ export type Photo = {
     createdAt: Timestamp;
     createdBy: string;
 };
+
+export type Message = {
+    id: string;
+    studentId: string;
+    studentName: string;
+    parentId: string;
+    parentName: string;
+    subject: string;
+    query: string;
+    reply?: string;
+    status: 'Pending' | 'Answered';
+    createdAt: Timestamp;
+    repliedAt?: Timestamp;
+}
+
+    

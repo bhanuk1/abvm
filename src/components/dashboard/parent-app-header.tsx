@@ -56,7 +56,7 @@ export function ParentAppHeader() {
             </Button>
           </div>
         </div>
-        <nav className="-mb-px flex space-x-8" aria-label="Tabs">
+        <nav className="-mb-px flex space-x-8 overflow-x-auto" aria-label="Tabs">
           {navLinks.map((link) => (
             <Link
               key={link.label}
@@ -77,3 +77,5 @@ export function ParentAppHeader() {
     </header>
   );
 }
+
+    
