@@ -24,7 +24,7 @@ import {
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Eye, EyeOff, UserPlus, Calendar as CalendarIcon, PlusCircle, FileDown, Printer, GraduationCap, Phone, Home, User as UserIcon, DollarSign, Barcode, BookOpen, Bus, Users, ChevronsRight, FolderKanban, Newspaper, BarChart2, Banknote, CreditCard, UserSquare, BookCopy, FileText, BusFront, Library, FileSignature, CalendarCheck, CalendarClock, Video, Upload, Trash2, Film, ImageIcon, MessageCircle } from 'lucide-react';
+import { Eye, EyeOff, UserPlus, Calendar as CalendarIcon, PlusCircle, FileDown, Printer, GraduationCap, Phone, Home, User as UserIcon, DollarSign, Barcode, BookOpen, Bus, Users, ChevronsRight, FolderKanban, Newspaper, BarChart2, Banknote, CreditCard, UserSquare, BookCopy, FileText, BusFront, Library, FileSignature, CalendarCheck, CalendarClock, Video, Upload, Trash2, Film, ImageIcon, MessageCircle, ImagePlus } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -187,6 +187,10 @@ function DashboardPageContent() {
   const [newPhotoDescription, setNewPhotoDescription] = React.useState('');
   const [newPhotoUrl, setNewPhotoUrl] = React.useState('');
   
+  const [isStudentPhotoDialogOpen, setIsStudentPhotoDialogOpen] = React.useState(false);
+  const [editingStudent, setEditingStudent] = React.useState<any>(null);
+  const [studentPhotoUrl, setStudentPhotoUrl] = React.useState('');
+
   const currentUserDocRef = useMemoFirebase(
     () => (currentUser && firestore ? doc(firestore, 'users', currentUser.uid) : null),
     [firestore, currentUser]
@@ -1280,6 +1284,35 @@ function DashboardPageContent() {
         });
   };
 
+  const handleStudentPhotoDialog = (student: any) => {
+    setEditingStudent(student);
+    setStudentPhotoUrl(student.photoUrl || '');
+    setIsStudentPhotoDialogOpen(true);
+  };
+  
+  const handleSaveStudentPhoto = () => {
+    if (!editingStudent || !firestore) return;
+    
+    const studentDocRef = doc(firestore, 'users', editingStudent.id);
+    const updatedData = { photoUrl: studentPhotoUrl };
+    
+    updateDoc(studentDocRef, updatedData)
+        .then(() => {
+            toast({ title: 'Success!', description: "Student's photo has been updated." });
+            setIsStudentPhotoDialogOpen(false);
+            setEditingStudent(null);
+            setStudentPhotoUrl('');
+        })
+        .catch(error => {
+            const contextualError = new FirestorePermissionError({
+                path: studentDocRef.path,
+                operation: 'update',
+                requestResourceData: updatedData,
+            });
+            errorEmitter.emit('permission-error', contextualError);
+            toast({ variant: 'destructive', title: 'Error', description: 'Could not update photo.' });
+        });
+  };
 
   const classes = ['Nursery', 'KG', ...Array.from({length: 12}, (_, i) => (i + 1).toString())];
   const examTypes = [
@@ -1699,6 +1732,7 @@ function DashboardPageContent() {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead>Photo</TableHead>
                     <TableHead>Roll No.</TableHead>
                     <TableHead>Name</TableHead>
                     <TableHead>Class</TableHead>
@@ -1710,9 +1744,20 @@ function DashboardPageContent() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {studentsLoading && <TableRow><TableCell colSpan={8} className="h-24 text-center">Loading...</TableCell></TableRow>}
+                  {studentsLoading && <TableRow><TableCell colSpan={9} className="h-24 text-center">Loading...</TableCell></TableRow>}
                   {!studentsLoading && students && students.map((student) => (
                     <TableRow key={student.id}>
+                      <TableCell>
+                        <div className="w-12 h-12 rounded-full overflow-hidden bg-muted flex items-center justify-center">
+                           <Image 
+                            src={student.photoUrl || `https://picsum.photos/seed/${student.id}/100`} 
+                            alt="Student Photo"
+                            width={48}
+                            height={48}
+                            className="object-cover w-full h-full"
+                           />
+                        </div>
+                      </TableCell>
                       <TableCell className="font-medium">{student.rollNo}</TableCell>
                       <TableCell>{student.username}</TableCell>
                       <TableCell>{student.class}</TableCell>
@@ -1725,7 +1770,16 @@ function DashboardPageContent() {
                         </Button>
                       </TableCell>
                       <TableCell>{student.mobile}</TableCell>
-                       <TableCell>
+                       <TableCell className="space-x-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleStudentPhotoDialog(student)}
+                          className="text-blue-600 border-blue-600"
+                        >
+                            <ImagePlus className="mr-2 h-4 w-4" />
+                            Photo
+                        </Button>
                         <Button
                           variant="link"
                           className="p-0 h-auto text-destructive"
@@ -1738,7 +1792,7 @@ function DashboardPageContent() {
                   ))}
                    {!studentsLoading && (!students || students.length === 0) && (
                     <TableRow>
-                      <TableCell colSpan={8} className="h-24 text-center">
+                      <TableCell colSpan={9} className="h-24 text-center">
                         No students found.
                       </TableCell>
                     </TableRow>
@@ -2463,9 +2517,9 @@ function DashboardPageContent() {
                           <p className="text-xs font-semibold text-accent-foreground">IDENTITY CARD (2024-25)</p>
                         </div>
                         <div className="p-4 flex flex-col items-center">
-                          <div className="w-28 h-28 rounded-full border-4 border-pink-500 overflow-hidden mb-3">
+                          <div className="w-28 h-28 rounded-full border-4 border-pink-500 overflow-hidden mb-3 bg-muted">
                             <Image 
-                              src={`https://picsum.photos/seed/${student.id}/200/300`} 
+                              src={student.photoUrl || `https://picsum.photos/seed/${student.id}/200/300`} 
                               alt="Student Photo" 
                               width={112} 
                               height={112} 
@@ -2983,6 +3037,40 @@ function DashboardPageContent() {
           </TabsContent>
         </Tabs>
       </Card>
+      
+      <Dialog open={isStudentPhotoDialogOpen} onOpenChange={setIsStudentPhotoDialogOpen}>
+        <DialogContent>
+            <DialogHeader>
+                <DialogTitle>Upload Photo for {editingStudent?.username}</DialogTitle>
+            </DialogHeader>
+            <div className="py-4 space-y-4">
+                <div className="space-y-2">
+                    <Label htmlFor="student-photo-url">Image URL</Label>
+                    <Input 
+                        id="student-photo-url"
+                        value={studentPhotoUrl}
+                        onChange={(e) => setStudentPhotoUrl(e.target.value)}
+                        placeholder="https://example.com/photo.jpg"
+                    />
+                </div>
+                {studentPhotoUrl && (
+                    <div className="flex justify-center">
+                        <Image 
+                            src={studentPhotoUrl} 
+                            alt="Preview" 
+                            width={150} 
+                            height={150} 
+                            className="rounded-lg object-cover"
+                        />
+                    </div>
+                )}
+            </div>
+            <DialogFooter>
+                <Button variant="outline" onClick={() => setIsStudentPhotoDialogOpen(false)}>Cancel</Button>
+                <Button onClick={handleSaveStudentPhoto}>Save Photo</Button>
+            </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

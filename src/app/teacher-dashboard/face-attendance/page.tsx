@@ -37,6 +37,7 @@ type Student = {
   id: string;
   username: string;
   class: string;
+  photoUrl?: string;
 };
 
 export default function FaceAttendancePage() {
@@ -118,7 +119,8 @@ export default function FaceAttendancePage() {
       const studentProfiles = students.map((s) => ({
         id: s.id,
         name: s.username,
-        photoUrl: `https://picsum.photos/seed/${s.id}/200/300`,
+        // Use real photoUrl if available, otherwise fallback to placeholder
+        photoUrl: s.photoUrl || `https://picsum.photos/seed/${s.id}/200/300`,
       }));
 
       const result = await recognizeStudent({
