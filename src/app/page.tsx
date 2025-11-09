@@ -68,7 +68,7 @@ function LoginOptions() {
         <Button
           asChild
           size="lg"
-          className="justify-start text-lg py-6 bg-yellow-500 hover:bg-yellow-600 text-black"
+          className="justify-start text-lg py-6 bg-accent hover:bg-accent/90 text-accent-foreground"
         >
           <Link href="/login?role=teacher">
             <User className="mr-4" /> शिक्षक लॉगिन
@@ -134,7 +134,7 @@ function NoticeBoard() {
       <CardContent>
         {isLoading && <p>सूचना लोड हो रही है...</p>}
         {!isLoading && firstNotice ? (
-          <div className="border-l-4 border-amber-400 pl-4 bg-amber-50 p-4 rounded-r-lg">
+          <div className="border-l-4 border-accent pl-4 bg-accent/10 p-4 rounded-r-lg">
             <h3 className="font-bold">{firstNotice.title}</h3>
             <p className="text-sm text-gray-600 mt-1 line-clamp-3">
               {firstNotice.content}
