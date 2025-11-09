@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutGrid, BookMarked, BarChart2, CalendarClock, Video, Film, ImageIcon, Camera } from 'lucide-react';
+import { LayoutGrid, BookMarked, BarChart2, CalendarClock, Video, Film, ImageIcon, Camera, MessageSquare } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useUser, useDoc, useFirestore, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
@@ -48,6 +48,11 @@ export function TeacherAppHeader() {
         href: '/teacher-dashboard/timetable',
         label: 'My Timetable',
         icon: CalendarClock
+    },
+    {
+        href: '/teacher-dashboard/queries',
+        label: 'Parent Queries',
+        icon: MessageSquare
     },
     { href: '/gallery', label: 'Video Gallery', icon: Film },
     { href: '/photo-gallery', label: 'Photo Gallery', icon: ImageIcon },

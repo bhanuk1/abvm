@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutGrid, Users, Film, ImageIcon } from 'lucide-react';
+import { LayoutGrid, Users, Film, ImageIcon, MessageSquare } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useUser, useDoc, useFirestore, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
@@ -29,6 +29,7 @@ export function ParentAppHeader() {
       label: 'Children Information',
       icon: Users,
     },
+    { href: '/parent-dashboard/queries', label: 'Queries', icon: MessageSquare },
     { href: '/gallery', label: 'Video Gallery', icon: Film },
     { href: '/photo-gallery', label: 'Photo Gallery', icon: ImageIcon },
   ];
