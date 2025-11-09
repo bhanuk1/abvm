@@ -165,3 +165,12 @@ export type Video = {
     createdAt: Timestamp;
     createdBy: string;
 };
+
+export type Photo = {
+    id: string;
+    title: string;
+    description: string;
+    imageUrl: string;
+    createdAt: Timestamp;
+    createdBy: string;
+};

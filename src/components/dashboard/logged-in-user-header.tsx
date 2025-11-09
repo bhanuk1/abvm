@@ -52,6 +52,7 @@ export function LoggedInUserHeader() {
     default:
       // Fallback or public header
       // This case might happen if the user is logged out or role is not set
-      return <AppHeader />; // Or a more generic header
+      // For now, let's render a generic header that has links to both galleries
+      return <AppHeader />;
   }
 }

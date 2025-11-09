@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutGrid, Film } from 'lucide-react';
+import { LayoutGrid, Film, ImageIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useUser, useDoc, useFirestore, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
@@ -24,7 +24,8 @@ export function StudentAppHeader() {
 
   const navLinks = [
     { href: '/student-dashboard', label: 'Dashboard', icon: LayoutGrid },
-    { href: '/gallery', label: 'Gallery', icon: Film },
+    { href: '/gallery', label: 'Video Gallery', icon: Film },
+    { href: '/photo-gallery', label: 'Photo Gallery', icon: ImageIcon },
   ];
 
   return (

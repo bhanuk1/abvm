@@ -24,7 +24,7 @@ import {
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Eye, EyeOff, UserPlus, Calendar as CalendarIcon, PlusCircle, FileDown, Printer, GraduationCap, Phone, Home, User as UserIcon, DollarSign, Barcode, BookOpen, Bus, Users, ChevronsRight, FolderKanban, Newspaper, BarChart2, Banknote, CreditCard, UserSquare, BookCopy, FileText, BusFront, Library, FileSignature, CalendarCheck, CalendarClock, Video, Upload, Trash2, Film } from 'lucide-react';
+import { Eye, EyeOff, UserPlus, Calendar as CalendarIcon, PlusCircle, FileDown, Printer, GraduationCap, Phone, Home, User as UserIcon, DollarSign, Barcode, BookOpen, Bus, Users, ChevronsRight, FolderKanban, Newspaper, BarChart2, Banknote, CreditCard, UserSquare, BookCopy, FileText, BusFront, Library, FileSignature, CalendarCheck, CalendarClock, Video, Upload, Trash2, Film, Image as ImageIcon } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -60,7 +60,8 @@ import {
   type Fee,
   type LeaveApplication,
   type LiveClass,
-  type Video as VideoType
+  type Video as VideoType,
+  type Photo as PhotoType
 } from '@/lib/school-data';
 import { useCollection, useDoc, useFirestore, useUser, useMemoFirebase, errorEmitter, FirestorePermissionError } from '@/firebase';
 import { addDoc, collection, serverTimestamp, setDoc, doc, query, where, deleteDoc, getDocs, updateDoc, Timestamp, writeBatch, getDoc } from 'firebase/firestore';
@@ -74,12 +75,13 @@ const managementOptions = [
     { value: "student-promotion", label: "Student Promotion", icon: GraduationCap, color: "bg-teal-500 hover:bg-teal-600" },
     { value: "live-classes", label: "Live Classes", icon: Video, color: "bg-red-500 hover:bg-red-600" },
     { value: "video-management", label: "Video Management", icon: Film, color: "bg-purple-500 hover:bg-purple-600" },
+    { value: "photo-management", label: "Photo Management", icon: ImageIcon, color: "bg-pink-500 hover:bg-pink-600" },
     { value: "notice-management", label: "Notice Board", icon: Newspaper, color: "bg-amber-500 hover:bg-amber-600" },
     { value: "result-management", label: "Result Management", icon: BarChart2, color: "bg-orange-500 hover:bg-orange-600" },
     { value: "fee-management", label: "Fee Management", icon: Banknote, color: "bg-green-500 hover:bg-green-600" },
     { value: "daily-fee-report", label: "Fee Reports", icon: FileText, color: "bg-emerald-500 hover:bg-emerald-600" },
     { value: "salary-management", label: "Salary Management", icon: DollarSign, color: "bg-lime-500 hover:bg-lime-600" },
-    { value: "id-cards", label: "ID Cards", icon: CreditCard, color: "bg-pink-500 hover:bg-pink-600" },
+    { value: "id-cards", label: "ID Cards", icon: CreditCard, color: "bg-rose-500 hover:bg-rose-600" },
     { value: "marksheets", label: "Marksheets", icon: BookCopy, color: "bg-rose-500 hover:bg-rose-600" },
     { value: "reports", label: "Student Reports", icon: FolderKanban, color: "bg-purple-500 hover:bg-purple-600" },
     { value: "library-management", label: "Library", icon: Library, color: "bg-violet-500 hover:bg-violet-600" },
@@ -120,6 +122,9 @@ function DashboardPageContent() {
 
   const videosQuery = useMemoFirebase(() => firestore ? collection(firestore, 'videos') : null, [firestore]);
   const { data: videos, isLoading: videosLoading } = useCollection<VideoType>(videosQuery);
+
+  const photosQuery = useMemoFirebase(() => firestore ? collection(firestore, 'photos') : null, [firestore]);
+  const { data: photos, isLoading: photosLoading } = useCollection<PhotoType>(photosQuery);
 
 
   const [results, setResults] = React.useState<Result[]>(initialResults);
@@ -176,6 +181,11 @@ function DashboardPageContent() {
   const [newVideoTitle, setNewVideoTitle] = React.useState('');
   const [newVideoDescription, setNewVideoDescription] = React.useState('');
   const [newVideoUrl, setNewVideoUrl] = React.useState('');
+
+  const [isPhotoUploadOpen, setIsPhotoUploadOpen] = React.useState(false);
+  const [newPhotoTitle, setNewPhotoTitle] = React.useState('');
+  const [newPhotoDescription, setNewPhotoDescription] = React.useState('');
+  const [newPhotoUrl, setNewPhotoUrl] = React.useState('');
   
   const currentUserDocRef = useMemoFirebase(
     () => (currentUser && firestore ? doc(firestore, 'users', currentUser.uid) : null),
@@ -1201,6 +1211,56 @@ function DashboardPageContent() {
         });
   };
 
+  const handleUploadPhoto = () => {
+    if (!newPhotoTitle || !newPhotoUrl || !firestore || !currentUser) {
+        toast({ variant: 'destructive', title: 'Error', description: 'Please provide a title and an image URL.' });
+        return;
+    }
+    const photosCol = collection(firestore, 'photos');
+    const newPhotoData = {
+        title: newPhotoTitle,
+        description: newPhotoDescription,
+        imageUrl: newPhotoUrl,
+        createdAt: serverTimestamp(),
+        createdBy: currentUserData?.username || 'Principal',
+    };
+    addDoc(photosCol, newPhotoData)
+        .then(() => {
+            toast({ title: 'Success!', description: 'Photo has been added to the gallery.' });
+            setIsPhotoUploadOpen(false);
+            setNewPhotoTitle('');
+            setNewPhotoDescription('');
+            setNewPhotoUrl('');
+        })
+        .catch(error => {
+            const contextualError = new FirestorePermissionError({
+                path: photosCol.path,
+                operation: 'create',
+                requestResourceData: newPhotoData,
+            });
+            errorEmitter.emit('permission-error', contextualError);
+            toast({ variant: 'destructive', title: 'Upload Error', description: 'Could not upload the photo.' });
+        });
+  };
+
+  const handleDeletePhoto = (photoId: string) => {
+    if (!firestore) return;
+    const photoDoc = doc(firestore, 'photos', photoId);
+    deleteDoc(photoDoc)
+        .then(() => {
+            toast({ title: 'Deleted', description: 'Photo has been removed from the gallery.' });
+        })
+        .catch(error => {
+            const contextualError = new FirestorePermissionError({
+                path: photoDoc.path,
+                operation: 'delete',
+            });
+            errorEmitter.emit('permission-error', contextualError);
+            toast({ variant: 'destructive', title: 'Error', description: 'Could not delete the photo.' });
+        });
+  };
+
+
   const classes = ['Nursery', 'KG', ...Array.from({length: 12}, (_, i) => (i + 1).toString())];
   const examTypes = [
     { value: 'monthly', label: 'Monthly Test' },
@@ -2200,6 +2260,75 @@ function DashboardPageContent() {
                          {!videosLoading && (!videos || videos.length === 0) && (
                             <TableRow>
                                 <TableCell colSpan={4} className="h-24 text-center">No videos uploaded yet.</TableCell>
+                            </TableRow>
+                        )}
+                    </TableBody>
+                </Table>
+            </CardContent>
+          </TabsContent>
+          )}
+           {userRole === 'admin' && (
+          <TabsContent value="photo-management">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle>Photo Management</CardTitle>
+              <Dialog open={isPhotoUploadOpen} onOpenChange={setIsPhotoUploadOpen}>
+                <DialogTrigger asChild>
+                  <Button className="bg-pink-600 hover:bg-pink-700">
+                    <Upload className="mr-2" /> Upload New Photo
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Upload a New Photo</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4 py-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="photo-title">Photo Title</Label>
+                        <Input id="photo-title" value={newPhotoTitle} onChange={(e) => setNewPhotoTitle(e.target.value)} placeholder="e.g., Sports Day Winners" />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="photo-url">Image URL</Label>
+                        <Input id="photo-url" value={newPhotoUrl} onChange={(e) => setNewPhotoUrl(e.target.value)} placeholder="Enter a public image URL" />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="photo-description">Description</Label>
+                        <Textarea id="photo-description" value={newPhotoDescription} onChange={(e) => setNewPhotoDescription(e.target.value)} placeholder="A short description of the photo." />
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setIsPhotoUploadOpen(false)}>Cancel</Button>
+                    <Button onClick={handleUploadPhoto}>Save Photo</Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            </CardHeader>
+            <CardContent>
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Title</TableHead>
+                            <TableHead>URL</TableHead>
+                            <TableHead>Uploaded At</TableHead>
+                            <TableHead className="text-right">Actions</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {photosLoading && <TableRow><TableCell colSpan={4} className="h-24 text-center">Loading photos...</TableCell></TableRow>}
+                        {!photosLoading && photos && photos.map(photo => (
+                            <TableRow key={photo.id}>
+                                <TableCell className="font-medium">{photo.title}</TableCell>
+                                <TableCell><a href={photo.imageUrl} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">View Image</a></TableCell>
+                                <TableCell>{photo.createdAt ? format(photo.createdAt.toDate(), 'PPP') : 'N/A'}</TableCell>
+                                <TableCell className="text-right">
+                                    <Button variant="ghost" size="icon" className="text-destructive" onClick={() => handleDeletePhoto(photo.id)}>
+                                        <Trash2 className="h-4 w-4"/>
+                                    </Button>
+                                </TableCell>
+                            </TableRow>
+                        ))}
+                         {!photosLoading && (!photos || photos.length === 0) && (
+                            <TableRow>
+                                <TableCell colSpan={4} className="h-24 text-center">No photos uploaded yet.</TableCell>
                             </TableRow>
                         )}
                     </TableBody>

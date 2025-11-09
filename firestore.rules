@@ -117,5 +117,15 @@ service cloud.firestore {
       allow read, list: if isSignedIn();
       allow write: if isSignedIn() && getUserData(request.auth.uid).role == 'admin';
     }
+
+     /**
+     * @description Controls access to the photo gallery.
+     * - All signed-in users can view the photo list and individual photos.
+     * - Only admins can create, update, or delete photos.
+     */
+    match /photos/{photoId} {
+      allow read, list: if isSignedIn();
+      allow write: if isSignedIn() && getUserData(request.auth.uid).role == 'admin';
+    }
   }
 }

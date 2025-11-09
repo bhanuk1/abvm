@@ -164,6 +164,20 @@
         "createdBy": { "type": "string", "description": "Name of the user who added the video." }
       },
       "required": ["id", "title", "videoUrl", "thumbnailUrl", "createdAt", "createdBy"]
+    },
+    "Photo": {
+      "title": "Photo",
+      "type": "object",
+      "description": "Represents an uploaded photo in the gallery.",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier for the photo." },
+        "title": { "type": "string", "description": "The title of the photo." },
+        "description": { "type": "string", "description": "A short description of the photo." },
+        "imageUrl": { "type": "string", "description": "The URL of the image file." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Timestamp of when the photo was added." },
+        "createdBy": { "type": "string", "description": "Name of the user who added the photo." }
+      },
+      "required": ["id", "title", "imageUrl", "createdAt", "createdBy"]
     }
   },
   "auth": {
@@ -246,8 +260,17 @@
           "description": "Stores video gallery items.",
           "params": [{ "name": "videoId", "description": "The unique identifier of the video." }]
         }
+      },
+       {
+        "path": "/photos/{photoId}",
+        "definition": {
+          "entityName": "Photo",
+          "schema": { "$ref": "#/backend/entities/Photo" },
+          "description": "Stores photo gallery items.",
+          "params": [{ "name": "photoId", "description": "The unique identifier of the photo." }]
+        }
       }
     ],
-    "reasoning": "The Firestore structure is designed to securely manage users and notices for the Vidyalaya Connect application, prioritizing authorization independence and clear security rules. User data is stored in a dedicated collection (`/users/{userId}`) with path-based ownership, ensuring only the user can access their own data. Notices are stored in a top-level `notices` collection for easy querying across the app. Security rules will filter notices based on the logged-in user's role and the `role` property on the notice document itself, ensuring users only see relevant announcements. A new 'fees' collection is added to manage student fee payments. A 'live-classes' collection is added to manage live video class sessions. A 'videos' collection is added to store video gallery content."
+    "reasoning": "The Firestore structure is designed to securely manage users and notices for the Vidyalaya Connect application, prioritizing authorization independence and clear security rules. User data is stored in a dedicated collection (`/users/{userId}`) with path-based ownership, ensuring only the user can access their own data. Notices are stored in a top-level `notices` collection for easy querying across the app. Security rules will filter notices based on the logged-in user's role and the `role` property on the notice document itself, ensuring users only see relevant announcements. A new 'fees' collection is added to manage student fee payments. A 'live-classes' collection is added to manage live video class sessions. A 'videos' collection is added to store video gallery content. A 'photos' collection is added to store photo gallery content."
   }
 }
