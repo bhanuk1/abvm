@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutGrid, BookMarked, BarChart2, CalendarClock, Video } from 'lucide-react';
+import { LayoutGrid, BookMarked, BarChart2, CalendarClock, Video, Film } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useUser, useDoc, useFirestore, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
@@ -43,7 +43,8 @@ export function TeacherAppHeader() {
         href: '/teacher-dashboard/timetable',
         label: 'My Timetable',
         icon: CalendarClock
-    }
+    },
+    { href: '/gallery', label: 'Gallery', icon: Film },
   ];
 
   return (
@@ -53,7 +54,7 @@ export function TeacherAppHeader() {
           <div className="flex items-center gap-4">
             <SchoolLogo />
             <div>
-              <h1 className="text-xl font-bold">Adarsh Bal Vidya Mandir</h1>
+              <h1 className="text-xl font-bold">Adarsh Bal Vidya Mandir Inter College</h1>
               <p className="text-sm text-muted-foreground">
                 Welcome, {userData?.username || 'Teacher'}
               </p>

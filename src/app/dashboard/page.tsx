@@ -24,7 +24,7 @@ import {
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Eye, EyeOff, UserPlus, Calendar as CalendarIcon, PlusCircle, FileDown, Printer, GraduationCap, Phone, Home, User as UserIcon, DollarSign, Barcode, BookOpen, Bus, Users, ChevronsRight, FolderKanban, Newspaper, BarChart2, Banknote, CreditCard, UserSquare, BookCopy, FileText, BusFront, Library, FileSignature, CalendarCheck, CalendarClock, Video } from 'lucide-react';
+import { Eye, EyeOff, UserPlus, Calendar as CalendarIcon, PlusCircle, FileDown, Printer, GraduationCap, Phone, Home, User as UserIcon, DollarSign, Barcode, BookOpen, Bus, Users, ChevronsRight, FolderKanban, Newspaper, BarChart2, Banknote, CreditCard, UserSquare, BookCopy, FileText, BusFront, Library, FileSignature, CalendarCheck, CalendarClock, Video, Upload, Trash2, Film } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -60,6 +60,7 @@ import {
   type Fee,
   type LeaveApplication,
   type LiveClass,
+  type Video as VideoType
 } from '@/lib/school-data';
 import { useCollection, useDoc, useFirestore, useUser, useMemoFirebase, errorEmitter, FirestorePermissionError } from '@/firebase';
 import { addDoc, collection, serverTimestamp, setDoc, doc, query, where, deleteDoc, getDocs, updateDoc, Timestamp, writeBatch, getDoc } from 'firebase/firestore';
@@ -72,6 +73,7 @@ const managementOptions = [
     { value: "student-management", label: "Student Management", icon: UserSquare, color: "bg-cyan-500 hover:bg-cyan-600" },
     { value: "student-promotion", label: "Student Promotion", icon: GraduationCap, color: "bg-teal-500 hover:bg-teal-600" },
     { value: "live-classes", label: "Live Classes", icon: Video, color: "bg-red-500 hover:bg-red-600" },
+    { value: "video-management", label: "Video Management", icon: Film, color: "bg-purple-500 hover:bg-purple-600" },
     { value: "notice-management", label: "Notice Board", icon: Newspaper, color: "bg-amber-500 hover:bg-amber-600" },
     { value: "result-management", label: "Result Management", icon: BarChart2, color: "bg-orange-500 hover:bg-orange-600" },
     { value: "fee-management", label: "Fee Management", icon: Banknote, color: "bg-green-500 hover:bg-green-600" },
@@ -115,6 +117,9 @@ function DashboardPageContent() {
   
   const liveClassesQuery = useMemoFirebase(() => firestore ? query(collection(firestore, 'live-classes'), where('status', '==', 'live')) : null, [firestore]);
   const { data: liveClasses, isLoading: liveClassesLoading } = useCollection<LiveClass>(liveClassesQuery);
+
+  const videosQuery = useMemoFirebase(() => firestore ? collection(firestore, 'videos') : null, [firestore]);
+  const { data: videos, isLoading: videosLoading } = useCollection<VideoType>(videosQuery);
 
 
   const [results, setResults] = React.useState<Result[]>(initialResults);
@@ -166,6 +171,11 @@ function DashboardPageContent() {
   
   const [promotionFromClass, setPromotionFromClass] = React.useState('');
   const [promotionToClass, setPromotionToClass] = React.useState('');
+
+  const [isVideoUploadOpen, setIsVideoUploadOpen] = React.useState(false);
+  const [newVideoTitle, setNewVideoTitle] = React.useState('');
+  const [newVideoDescription, setNewVideoDescription] = React.useState('');
+  const [newVideoUrl, setNewVideoUrl] = React.useState('');
   
   const currentUserDocRef = useMemoFirebase(
     () => (currentUser && firestore ? doc(firestore, 'users', currentUser.uid) : null),
@@ -581,7 +591,7 @@ function DashboardPageContent() {
         // The PDF will now use one of jsPDF's built-in fonts.
         // Note: Hindi characters may not render correctly with default fonts.
         doc.setFontSize(16);
-        doc.text('Adarsh Bal Vidya Mandir', doc.internal.pageSize.getWidth() / 2, 15, { align: 'center' });
+        doc.text('Adarsh Bal Vidya Mandir Inter College', doc.internal.pageSize.getWidth() / 2, 15, { align: 'center' });
         doc.setFontSize(12);
         doc.text('Student Progress Report', doc.internal.pageSize.getWidth() / 2, 22, { align: 'center' });
         
@@ -941,7 +951,7 @@ function DashboardPageContent() {
         // The custom font logic has been removed to prevent fetch errors.
         // The PDF will now use one of jsPDF's built-in fonts.
         doc.setFontSize(18);
-        doc.text('Adarsh Bal Vidya Mandir', doc.internal.pageSize.getWidth() / 2, 20, { align: 'center' });
+        doc.text('Adarsh Bal Vidya Mandir Inter College', doc.internal.pageSize.getWidth() / 2, 20, { align: 'center' });
         doc.setFontSize(14);
         doc.text('Fee Receipt', doc.internal.pageSize.getWidth() / 2, 30, { align: 'center' });
 
@@ -986,7 +996,7 @@ function DashboardPageContent() {
     
     const doc = new jsPDF();
     doc.setFontSize(18);
-    doc.text('Adarsh Bal Vidya Mandir', doc.internal.pageSize.getWidth() / 2, 20, { align: 'center' });
+    doc.text('Adarsh Bal Vidya Mandir Inter College', doc.internal.pageSize.getWidth() / 2, 20, { align: 'center' });
     doc.setFontSize(14);
     doc.text(`Daily Fee Collection Report - ${format(dailyReportDate, 'PPP')}`, doc.internal.pageSize.getWidth() / 2, 30, { align: 'center' });
 
@@ -1141,6 +1151,56 @@ function DashboardPageContent() {
       });
   };
 
+  const handleUploadVideo = () => {
+    if (!newVideoTitle || !newVideoUrl || !firestore || !currentUser) {
+        toast({ variant: 'destructive', title: 'Error', description: 'Please provide a title and a video URL.' });
+        return;
+    }
+    const videosCol = collection(firestore, 'videos');
+    const newVideoData = {
+        title: newVideoTitle,
+        description: newVideoDescription,
+        videoUrl: newVideoUrl,
+        thumbnailUrl: `https://picsum.photos/seed/${Date.now()}/400/225`,
+        createdAt: serverTimestamp(),
+        createdBy: currentUserData?.username || 'Principal',
+    };
+    addDoc(videosCol, newVideoData)
+        .then(() => {
+            toast({ title: 'Success!', description: 'Video has been added to the gallery.' });
+            setIsVideoUploadOpen(false);
+            setNewVideoTitle('');
+            setNewVideoDescription('');
+            setNewVideoUrl('');
+        })
+        .catch(error => {
+            const contextualError = new FirestorePermissionError({
+                path: videosCol.path,
+                operation: 'create',
+                requestResourceData: newVideoData,
+            });
+            errorEmitter.emit('permission-error', contextualError);
+            toast({ variant: 'destructive', title: 'Upload Error', description: 'Could not upload the video.' });
+        });
+  };
+
+  const handleDeleteVideo = (videoId: string) => {
+    if (!firestore) return;
+    const videoDoc = doc(firestore, 'videos', videoId);
+    deleteDoc(videoDoc)
+        .then(() => {
+            toast({ title: 'Deleted', description: 'Video has been removed from the gallery.' });
+        })
+        .catch(error => {
+            const contextualError = new FirestorePermissionError({
+                path: videoDoc.path,
+                operation: 'delete',
+            });
+            errorEmitter.emit('permission-error', contextualError);
+            toast({ variant: 'destructive', title: 'Error', description: 'Could not delete the video.' });
+        });
+  };
+
   const classes = ['Nursery', 'KG', ...Array.from({length: 12}, (_, i) => (i + 1).toString())];
   const examTypes = [
     { value: 'monthly', label: 'Monthly Test' },
@@ -1270,7 +1330,7 @@ function DashboardPageContent() {
             <CardTitle>School Management</CardTitle>
             <CardDescription>Select a module to manage school operations.</CardDescription>
             <ScrollArea className="w-full whitespace-nowrap">
-             <TabsList className="grid h-auto grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-9 gap-2 p-2 bg-transparent border-none">
+             <TabsList className="grid h-auto grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-10 gap-2 p-2 bg-transparent border-none">
                 {managementOptions.map(option => (
                     <TabsTrigger key={option.value} value={option.value} asChild>
                          <div className={cn(
@@ -2078,6 +2138,75 @@ function DashboardPageContent() {
                 </Table>
             </CardContent>
           </TabsContent>
+          {userRole === 'admin' && (
+          <TabsContent value="video-management">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle>Video Management</CardTitle>
+              <Dialog open={isVideoUploadOpen} onOpenChange={setIsVideoUploadOpen}>
+                <DialogTrigger asChild>
+                  <Button className="bg-purple-600 hover:bg-purple-700">
+                    <Upload className="mr-2" /> Upload New Video
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Upload a New Video</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4 py-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="video-title">Video Title</Label>
+                        <Input id="video-title" value={newVideoTitle} onChange={(e) => setNewVideoTitle(e.target.value)} placeholder="e.g., Annual Function 2024" />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="video-url">Video URL</Label>
+                        <Input id="video-url" value={newVideoUrl} onChange={(e) => setNewVideoUrl(e.target.value)} placeholder="Enter a YouTube or other video embed URL" />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="video-description">Description</Label>
+                        <Textarea id="video-description" value={newVideoDescription} onChange={(e) => setNewVideoDescription(e.target.value)} placeholder="A short description of the video." />
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setIsVideoUploadOpen(false)}>Cancel</Button>
+                    <Button onClick={handleUploadVideo}>Save Video</Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            </CardHeader>
+            <CardContent>
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Title</TableHead>
+                            <TableHead>URL</TableHead>
+                            <TableHead>Uploaded At</TableHead>
+                            <TableHead className="text-right">Actions</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {videosLoading && <TableRow><TableCell colSpan={4} className="h-24 text-center">Loading videos...</TableCell></TableRow>}
+                        {!videosLoading && videos && videos.map(video => (
+                            <TableRow key={video.id}>
+                                <TableCell className="font-medium">{video.title}</TableCell>
+                                <TableCell><a href={video.videoUrl} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">{video.videoUrl}</a></TableCell>
+                                <TableCell>{video.createdAt ? format(video.createdAt.toDate(), 'PPP') : 'N/A'}</TableCell>
+                                <TableCell className="text-right">
+                                    <Button variant="ghost" size="icon" className="text-destructive" onClick={() => handleDeleteVideo(video.id)}>
+                                        <Trash2 className="h-4 w-4"/>
+                                    </Button>
+                                </TableCell>
+                            </TableRow>
+                        ))}
+                         {!videosLoading && (!videos || videos.length === 0) && (
+                            <TableRow>
+                                <TableCell colSpan={4} className="h-24 text-center">No videos uploaded yet.</TableCell>
+                            </TableRow>
+                        )}
+                    </TableBody>
+                </Table>
+            </CardContent>
+          </TabsContent>
+          )}
           {userRole === 'admin' && (
           <TabsContent value="salary-management">
              <CardHeader>

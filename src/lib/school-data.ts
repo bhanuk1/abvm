@@ -155,3 +155,13 @@ export type LiveClass = {
     status: 'live' | 'ended';
     startedAt: Timestamp;
 };
+
+export type Video = {
+    id: string;
+    title: string;
+    description: string;
+    videoUrl: string;
+    thumbnailUrl: string;
+    createdAt: Timestamp;
+    createdBy: string;
+};

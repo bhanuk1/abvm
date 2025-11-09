@@ -107,5 +107,15 @@ service cloud.firestore {
       allow create: if isSignedIn() && getUserData(request.auth.uid).role in ['admin', 'teacher'];
       allow update: if isSignedIn() && (getUserData(request.auth.uid).role == 'admin' || (getUserData(request.auth.uid).role == 'teacher' && resource.data.teacherId == request.auth.uid));
     }
+
+    /**
+     * @description Controls access to the video gallery.
+     * - All signed-in users can view the video list and individual videos.
+     * - Only admins can create, update, or delete videos.
+     */
+    match /videos/{videoId} {
+      allow read, list: if isSignedIn();
+      allow write: if isSignedIn() && getUserData(request.auth.uid).role == 'admin';
+    }
   }
 }
