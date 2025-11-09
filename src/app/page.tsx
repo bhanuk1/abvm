@@ -31,7 +31,7 @@ function HomeHeader() {
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-3">
             <SchoolLogo />
-            <div>
+            <div className="text-center">
               <h1 className="text-2xl font-bold text-primary">
                 आदर्श बाल विद्या मन्दिर इण्टर कॉलेज
               </h1>

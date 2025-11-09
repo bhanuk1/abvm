@@ -66,7 +66,7 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         <Link href="/" className="flex items-center gap-3 justify-center mb-6">
           <SchoolLogo />
-          <div>
+          <div className="text-center">
             <h1 className="text-2xl font-bold text-primary">
               Adarsh Bal Vidya Mandir Inter College
             </h1>
