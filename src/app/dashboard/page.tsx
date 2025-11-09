@@ -678,28 +678,26 @@ function DashboardPageContent() {
         toast({
             variant: "destructive",
             title: "PDF Generation Error",
-            description: "Could not generate the PDF. Using default font."
+            description: "Could not generate the PDF."
         });
-        doc.setFont('helvetica');
-        doc.text('Student Progress Report', doc.internal.pageSize.getWidth() / 2, 22, { align: 'center' });
     }
   };
 
   const handleDownloadClick = async () => {
     if (!selectedReportClass || !selectedReportStudent || !students || !resultsData) {
-      alert('Please select class and student to generate the report.');
+      toast({ variant: 'destructive', title: 'Error', description: 'Please select class and student to generate the report.' });
       return;
     }
 
     const student = students.find(s => s.id === selectedReportStudent);
     if (!student) {
-        alert('Student not found.');
+        toast({ variant: 'destructive', title: 'Error', description: 'Student not found.' });
         return;
     }
 
     const studentResults = resultsData.filter(r => r.studentId === student.id);
     if (studentResults.length === 0) {
-        alert('No results found for this student.');
+        toast({ variant: 'destructive', title: 'Error', description: 'No results found for this student.' });
         return;
     }
     
@@ -709,19 +707,19 @@ function DashboardPageContent() {
         doc.save(`${student.username}_${student.class}_report.pdf`);
     } catch (e) {
         console.error(e);
-        alert('Error generating PDF.');
+        toast({ variant: 'destructive', title: 'Error', description: 'Error generating PDF.' });
     }
   };
 
   const handleClassReportDownloadClick = async () => {
     if (!selectedClassReportClass || !selectedClassReportExam || !students || !resultsData) {
-      alert('Please select class and exam type.');
+      toast({ variant: 'destructive', title: 'Error', description: 'Please select class and exam type.' });
       return;
     }
 
     const studentsInClass = students.filter(s => s.class === selectedClassReportClass);
     if (studentsInClass.length === 0) {
-      alert('There are no students in this class.');
+      toast({ variant: 'destructive', title: 'Error', description: 'There are no students in this class.' });
       return;
     }
 
@@ -729,7 +727,7 @@ function DashboardPageContent() {
     const resultsForExam = resultsData.filter(r => r.class === selectedClassReportClass && r.examType === examLabel);
 
     if (resultsForExam.length === 0) {
-      alert(`No results found for '${examLabel}' in this class.`);
+      toast({ variant: 'destructive', title: 'Error', description: `No results found for '${examLabel}' in this class.` });
       return;
     }
 
@@ -748,7 +746,7 @@ function DashboardPageContent() {
     }
 
     if (isFirstPage) {
-        alert(`No student results found for this class and exam.`);
+        toast({ variant: 'destructive', title: 'Error', description: `No student results found for this class and exam.` });
         return;
     }
 
@@ -757,19 +755,19 @@ function DashboardPageContent() {
 
   const handleGenerateFinalMarksheet = async () => {
     if (!selectedReportClass || !selectedFinalReportStudent || !students || !resultsData) {
-      alert('Please select class and student to generate the final marksheet.');
+      toast({ variant: 'destructive', title: 'Error', description: 'Please select class and student to generate the final marksheet.' });
       return;
     }
   
     const student = students.find(s => s.id === selectedFinalReportStudent);
     if (!student) {
-      alert('Student not found.');
+      toast({ variant: 'destructive', title: 'Error', description: 'Student not found.' });
       return;
     }
   
     const studentResults = resultsData.filter(r => r.studentId === student.id);
     if (studentResults.length === 0) {
-      alert('No results found for this student.');
+      toast({ variant: 'destructive', title: 'Error', description: 'No results found for this student.' });
       return;
     }
 
@@ -852,7 +850,7 @@ function DashboardPageContent() {
     });
 
     const finalY = (doc as any).lastAutoTable.finalY;
-    const percentage = (grandTotalObtained / grandTotalMarks) * 100;
+    const percentage = grandTotalMarks > 0 ? (grandTotalObtained / grandTotalMarks) * 100 : 0;
     const result = percentage >= 33 && subjectsPassed === studentSubjects.size ? 'Pass' : 'Fail';
 
     const finalDetails = [
