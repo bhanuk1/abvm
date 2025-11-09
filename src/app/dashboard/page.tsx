@@ -624,7 +624,7 @@ function DashboardPageContent() {
   const handleGeneratePdf = async (doc: jsPDF, student: any, results: Result[]) => {
     try {
         doc.setFontSize(20);
-        doc.text('आदर्श बाल विद्या मन्दिर इण्टर कॉलेज', doc.internal.pageSize.getWidth() / 2, 15, { align: 'center' });
+        doc.text('Adarsh Bal Vidya Mandir Inter College', doc.internal.pageSize.getWidth() / 2, 15, { align: 'center' });
         doc.setFontSize(14);
         doc.text('Student Progress Report', doc.internal.pageSize.getWidth() / 2, 22, { align: 'center' });
         
@@ -639,7 +639,7 @@ function DashboardPageContent() {
 
         (doc as any).autoTable({
           startY: 30,
-          head: [['विवरण', 'जानकारी']],
+          head: [['Detail', 'Information']],
           body: studentDetails,
           theme: 'grid',
         });
@@ -653,7 +653,7 @@ function DashboardPageContent() {
             let tableHead;
 
             if (Array.isArray(result.marks)) {
-                tableHead = [['विषय', 'प्राप्तांक', 'पूर्णांक']];
+                tableHead = [['Subject', 'Obtained', 'Total']];
                 tableBody = result.marks.map(m => [m.subject, m.obtained, m.total]);
             } else {
                 tableHead = [['Description', 'Marks']];
@@ -988,7 +988,7 @@ function DashboardPageContent() {
     const doc = new jsPDF();
     try {
         doc.setFontSize(18);
-        doc.text('आदर्श बाल विद्या मन्दिर इण्टर कॉलेज', doc.internal.pageSize.getWidth() / 2, 20, { align: 'center' });
+        doc.text('Adarsh Bal Vidya Mandir Inter College', doc.internal.pageSize.getWidth() / 2, 20, { align: 'center' });
         doc.setFontSize(14);
         doc.text('Fee Receipt', doc.internal.pageSize.getWidth() / 2, 30, { align: 'center' });
 
@@ -1033,7 +1033,7 @@ function DashboardPageContent() {
     
     const doc = new jsPDF();
     doc.setFontSize(18);
-    doc.text('आदर्श बाल विद्या मन्दिर इण्टर कॉलेज', doc.internal.pageSize.getWidth() / 2, 20, { align: 'center' });
+    doc.text('Adarsh Bal Vidya Mandir Inter College', doc.internal.pageSize.getWidth() / 2, 20, { align: 'center' });
     doc.setFontSize(14);
     doc.text(`Daily Fee Collection Report - ${format(dailyReportDate, 'PPP')}`, doc.internal.pageSize.getWidth() / 2, 30, { align: 'center' });
 
@@ -1099,7 +1099,7 @@ function DashboardPageContent() {
     // Header
     doc.setFontSize(22);
     doc.setFont('times', 'bold');
-    doc.text('आदर्श बाल विद्या मन्दिर इण्टर कॉलेज', doc.internal.pageSize.getWidth() / 2, 25, { align: 'center' });
+    doc.text('Adarsh Bal Vidya Mandir Inter College', doc.internal.pageSize.getWidth() / 2, 25, { align: 'center' });
     doc.setFontSize(12);
     doc.setFont('times', 'normal');
     doc.text('Affiliated to U.P. Board, Prayagraj', doc.internal.pageSize.getWidth() / 2, 33, { align: 'center' });
@@ -1420,9 +1420,9 @@ function DashboardPageContent() {
     let message = '';
     if (type === 'fee') {
       const quarterInfo = academicYearQuarters.find(q => q.id === data.quarter);
-      message = `प्रिय अभिभावक, कृपया अपने बच्चे ${student.username} की तिमाही (${quarterInfo?.label}) फीस का भुगतान करें। - आदर्श बाल विद्या मन्दिर`;
+      message = `Dear Parent, please pay the quarterly (${quarterInfo?.label}) fee for your child ${student.username}. - Adarsh Bal Vidya Mandir`;
     } else if (type === 'attendance') {
-      message = `प्रिय अभिभावक, आपको सूचित किया जाता है कि आपका बच्चा ${student.username} आज दिनांक ${format(attendanceReportDate!, 'dd/MM/yyyy')} को स्कूल में अनुपस्थित है। - आदर्श बाल विद्या मन्दिर`;
+      message = `Dear Parent, this is to inform you that your child ${student.username} is absent from school today, ${format(attendanceReportDate!, 'dd/MM/yyyy')}. - Adarsh Bal Vidya Mandir`;
     }
 
     const whatsappUrl = `https://wa.me/91${student.mobile}?text=${encodeURIComponent(message)}`;
