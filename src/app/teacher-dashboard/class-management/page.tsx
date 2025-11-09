@@ -35,7 +35,7 @@ import {
 } from '@/components/ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { Calendar as CalendarIcon, BookPlus, Send, Eye } from 'lucide-react';
+import { Calendar as CalendarIcon, BookPlus, Send, Eye, MessageCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
@@ -264,6 +264,18 @@ export default function TeacherClassManagementPage() {
     setHomeworkSubject('');
     setIsHomeworkDialogOpen(false);
   }
+  
+  const handleWhatsAppReminder = (student: Student) => {
+    if (!student || !student.mobile) {
+      toast({ variant: 'destructive', title: 'Error', description: "Parent's mobile number not found." });
+      return;
+    }
+    
+    const message = `प्रिय अभिभावक, आपको सूचित किया जाता है कि आपका बच्चा ${student.username} आज दिनांक ${format(selectedDate!, 'dd/MM/yyyy')} को स्कूल में अनुपस्थित है। - आदर्श बाल विद्या मन्दिर`;
+    
+    const whatsappUrl = `https://wa.me/91${student.mobile}?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
+  };
 
   const getStudentStatus = (studentId: string) => {
     // 1. Check for pending changes first
@@ -386,6 +398,16 @@ export default function TeacherClassManagementPage() {
                             onCheckedChange={(isChecked) => handleAttendanceChange(student.id, isChecked)}
                             aria-label={`Mark ${student.username} as ${isPresent ? 'absent' : 'present'}`}
                          />
+                         {!isPresent && (
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleWhatsAppReminder(student)}
+                                className="bg-green-500 hover:bg-green-600 text-white"
+                            >
+                                <MessageCircle className="mr-2 h-4 w-4" /> Notify Parent
+                            </Button>
+                         )}
                       </TableCell>
                        <TableCell className="text-right">
                           <Button variant="outline" size="sm" onClick={() => handleViewProfile(student)}>

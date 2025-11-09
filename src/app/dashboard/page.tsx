@@ -24,7 +24,7 @@ import {
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Eye, EyeOff, UserPlus, Calendar as CalendarIcon, PlusCircle, FileDown, Printer, GraduationCap, Phone, Home, User as UserIcon, DollarSign, Barcode, BookOpen, Bus, Users, ChevronsRight, FolderKanban, Newspaper, BarChart2, Banknote, CreditCard, UserSquare, BookCopy, FileText, BusFront, Library, FileSignature, CalendarCheck, CalendarClock, Video, Upload, Trash2, Film, Image as ImageIcon } from 'lucide-react';
+import { Eye, EyeOff, UserPlus, Calendar as CalendarIcon, PlusCircle, FileDown, Printer, GraduationCap, Phone, Home, User as UserIcon, DollarSign, Barcode, BookOpen, Bus, Users, ChevronsRight, FolderKanban, Newspaper, BarChart2, Banknote, CreditCard, UserSquare, BookCopy, FileText, BusFront, Library, FileSignature, CalendarCheck, CalendarClock, Video, Upload, Trash2, Film, Image as ImageIcon, MessageCircle } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -1327,6 +1327,24 @@ function DashboardPageContent() {
       toast({ variant: 'destructive', title: 'Error', description: 'An error occurred while promoting students.' });
     }
   };
+  
+  const handleWhatsAppReminder = (student: any, type: 'fee' | 'attendance', data?: any) => {
+    if (!student || !student.mobile) {
+      toast({ variant: 'destructive', title: 'Error', description: "Parent's mobile number not found." });
+      return;
+    }
+
+    let message = '';
+    if (type === 'fee') {
+      const quarterInfo = academicYearQuarters.find(q => q.id === data.quarter);
+      message = `प्रिय अभिभावक, कृपया अपने बच्चे ${student.username} की तिमाही (${quarterInfo?.label}) फीस का भुगतान करें। - आदर्श बाल विद्या मन्दिर`;
+    } else if (type === 'attendance') {
+      message = `प्रिय अभिभावक, आपको सूचित किया जाता है कि आपका बच्चा ${student.username} आज दिनांक ${format(attendanceReportDate!, 'dd/MM/yyyy')} को स्कूल में अनुपस्थित है। - आदर्श बाल विद्या मन्दिर`;
+    }
+
+    const whatsappUrl = `https://wa.me/91${student.mobile}?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
+  };
 
 
   if (isUserLoading || isCurrentUserLoading) {
@@ -1997,6 +2015,8 @@ function DashboardPageContent() {
                           const isPaid = feeInfo.status === 'Paid';
                           const feeAmount = getQuarterlyFee(feeClass);
                           const feeData = studentFees?.find(f => f.quarter === q.id);
+                          const studentData = students?.find(s => s.id === feeStudent);
+
 
                           return (
                             <TableRow key={q.id}>
@@ -2009,10 +2029,23 @@ function DashboardPageContent() {
                               </TableCell>
                               <TableCell>{feeInfo.paymentDate ? format(feeInfo.paymentDate.toDate(), 'dd/MM/yyyy') : '-'}</TableCell>
                               <TableCell className="text-right space-x-2">
-                                <Button size="sm" disabled={isPaid} onClick={() => handlePayFee(q.id, feeAmount)} className="bg-blue-600 hover:bg-blue-700">
-                                  <DollarSign className="mr-2 h-4 w-4" />
-                                  Pay Fee
-                                </Button>
+                                {!isPaid && (
+                                  <>
+                                    <Button size="sm" onClick={() => handlePayFee(q.id, feeAmount)} className="bg-blue-600 hover:bg-blue-700">
+                                      <DollarSign className="mr-2 h-4 w-4" />
+                                      Pay Fee
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => handleWhatsAppReminder(studentData, 'fee', { quarter: q.id })}
+                                      className="bg-green-500 hover:bg-green-600 text-white"
+                                    >
+                                      <MessageCircle className="mr-2 h-4 w-4" />
+                                      Reminder
+                                    </Button>
+                                  </>
+                                )}
                                 {isPaid && feeData && (
                                   <Button size="sm" variant="outline" onClick={() => handlePrintFeeReceipt({...feeData, amount: feeAmount, id: feeInfo.id })}>
                                       <Printer className="mr-2 h-4 w-4" />
@@ -2782,15 +2815,27 @@ function DashboardPageContent() {
                           <TableCell>{student.rollNo}</TableCell>
                           <TableCell>{student.username}</TableCell>
                           <TableCell className="text-right">
-                             <Badge 
-                               variant={student.status === 'Present' ? 'default' : 'destructive'}
-                               className={cn(
-                                 student.status === 'Present' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800',
-                                 'w-20 justify-center'
-                               )}
-                              >
-                               {student.status}
-                             </Badge>
+                            <div className="flex items-center justify-end gap-2">
+                                <Badge 
+                                variant={student.status === 'Present' ? 'default' : 'destructive'}
+                                className={cn(
+                                    student.status === 'Present' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800',
+                                    'w-20 justify-center'
+                                )}
+                                >
+                                {student.status}
+                                </Badge>
+                                {student.status === 'Absent' && (
+                                    <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => handleWhatsAppReminder(student, 'attendance')}
+                                    className="bg-green-500 hover:bg-green-600 text-white"
+                                    >
+                                    <MessageCircle className="mr-2 h-4 w-4" /> Notify
+                                    </Button>
+                                )}
+                             </div>
                           </TableCell>
                         </TableRow>
                       ))
