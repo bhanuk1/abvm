@@ -17,7 +17,7 @@ const StudentProfileSchema = z.object({
   photoUrl: z.string().describe('A public URL to the student\'s profile photo.'),
 });
 
-export const RecognizeStudentInputSchema = z.object({
+const RecognizeStudentInputSchema = z.object({
   photoDataUri: z
     .string()
     .describe(
@@ -27,12 +27,12 @@ export const RecognizeStudentInputSchema = z.object({
     .array(StudentProfileSchema)
     .describe('A list of all students in the class with their profile photos.'),
 });
-export type RecognizeStudentInput = z.infer<typeof RecognizeStudentInputSchema>;
+type RecognizeStudentInput = z.infer<typeof RecognizeStudentInputSchema>;
 
-export const RecognizeStudentOutputSchema = z.object({
+const RecognizeStudentOutputSchema = z.object({
   studentId: z.string().nullable().describe('The ID of the recognized student, or null if no match is found.'),
 });
-export type RecognizeStudentOutput = z.infer<typeof RecognizeStudentOutputSchema>;
+type RecognizeStudentOutput = z.infer<typeof RecognizeStudentOutputSchema>;
 
 export async function recognizeStudent(input: RecognizeStudentInput): Promise<RecognizeStudentOutput> {
   return recognizeStudentFlow(input);
