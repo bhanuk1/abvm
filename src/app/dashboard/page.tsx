@@ -151,6 +151,8 @@ function DashboardPageContent() {
 
   const [selectedReportClass, setSelectedReportClass] = React.useState('');
   const [selectedReportStudent, setSelectedReportStudent] = React.useState('');
+  const [selectedFinalReportStudent, setSelectedFinalReportStudent] = React.useState('');
+
 
   const [selectedClassReportClass, setSelectedClassReportClass] = React.useState('');
   const [selectedClassReportExam, setSelectedClassReportExam] = React.useState('');
@@ -752,6 +754,122 @@ function DashboardPageContent() {
 
     doc.save(`Class-${selectedClassReportClass}_${examLabel}_Report.pdf`);
   };
+
+  const handleGenerateFinalMarksheet = async () => {
+    if (!selectedReportClass || !selectedFinalReportStudent || !students || !resultsData) {
+      alert('Please select class and student to generate the final marksheet.');
+      return;
+    }
+  
+    const student = students.find(s => s.id === selectedFinalReportStudent);
+    if (!student) {
+      alert('Student not found.');
+      return;
+    }
+  
+    const studentResults = resultsData.filter(r => r.studentId === student.id);
+    if (studentResults.length === 0) {
+      alert('No results found for this student.');
+      return;
+    }
+
+    // Process results
+    const processedResults: { [key: string]: { [key: string]: { obtained: number, total: number } } } = {};
+    const studentSubjects = new Set<string>();
+
+    studentResults.forEach(res => {
+        if (Array.isArray(res.marks)) {
+            res.marks.forEach(mark => {
+                if (!processedResults[mark.subject]) {
+                    processedResults[mark.subject] = {};
+                }
+                processedResults[mark.subject][res.examType] = { obtained: Number(mark.obtained) || 0, total: Number(mark.total) || 100 };
+                studentSubjects.add(mark.subject);
+            });
+        }
+    });
+
+    const doc = new jsPDF();
+    doc.setFontSize(20);
+    doc.text('Adarsh Bal Vidya Mandir Inter College', doc.internal.pageSize.getWidth() / 2, 15, { align: 'center' });
+    doc.setFontSize(14);
+    doc.text('Annual Consolidated Marksheet', doc.internal.pageSize.getWidth() / 2, 22, { align: 'center' });
+    
+    const studentDetails = [
+        ['Name', student.username],
+        ['Class', student.class],
+        ['Roll No.', student.rollNo],
+        ["Father's Name", student.fatherName],
+    ];
+
+    (doc as any).autoTable({
+      startY: 30,
+      head: [['Detail', 'Information']],
+      body: studentDetails,
+      theme: 'grid',
+    });
+    
+    const examOrder = ['Quarterly Exam', 'Half-Yearly Exam', 'Final Exam'];
+    const tableHead = ['Subject', ...examOrder, 'Grand Total'];
+    const tableBody = [];
+    let grandTotalObtained = 0;
+    let grandTotalMarks = 0;
+    let subjectsPassed = 0;
+
+    for (const subject of Array.from(studentSubjects)) {
+        const row: (string | number)[] = [subject];
+        let subjectTotalObtained = 0;
+        let subjectTotalMarks = 0;
+
+        examOrder.forEach(exam => {
+            const mark = processedResults[subject]?.[exam];
+            if (mark) {
+                row.push(`${mark.obtained} / ${mark.total}`);
+                subjectTotalObtained += mark.obtained;
+                subjectTotalMarks += mark.total;
+            } else {
+                row.push('- / -');
+            }
+        });
+        
+        row.push(`${subjectTotalObtained} / ${subjectTotalMarks}`);
+        tableBody.push(row);
+        
+        grandTotalObtained += subjectTotalObtained;
+        grandTotalMarks += subjectTotalMarks;
+        
+        // Assuming 33% is passing for each subject's grand total
+        if ((subjectTotalObtained / subjectTotalMarks) * 100 >= 33) {
+            subjectsPassed++;
+        }
+    }
+    
+    (doc as any).autoTable({
+        startY: (doc as any).lastAutoTable.finalY + 10,
+        head: [tableHead],
+        body: tableBody,
+        theme: 'grid',
+    });
+
+    const finalY = (doc as any).lastAutoTable.finalY;
+    const percentage = (grandTotalObtained / grandTotalMarks) * 100;
+    const result = percentage >= 33 && subjectsPassed === studentSubjects.size ? 'Pass' : 'Fail';
+
+    const finalDetails = [
+      ['Total Marks', `${grandTotalObtained} / ${grandTotalMarks}`],
+      ['Percentage', `${percentage.toFixed(2)}%`],
+      ['Result', result]
+    ];
+    
+    (doc as any).autoTable({
+        startY: finalY + 10,
+        body: finalDetails,
+        theme: 'grid',
+        styles: { fontStyle: 'bold' }
+    });
+
+    doc.save(`Final_Marksheet_${student.username}.pdf`);
+};
 
   const handleShowMarksheets = async () => {
     if (!marksheetClass || !marksheetExam || !firestore) {
@@ -2735,7 +2853,7 @@ function DashboardPageContent() {
               <CardTitle>Reports</CardTitle>
             </CardHeader>
             <CardContent>
-               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-base">Student Progress Report</CardTitle>
@@ -2802,6 +2920,40 @@ function DashboardPageContent() {
                     <Button className="w-full bg-green-600 hover:bg-green-700 text-white" onClick={handleClassReportDownloadClick} disabled={!selectedClassReportExam}>
                       <FileDown className="mr-2"/>
                       Generate PDF Gazette
+                    </Button>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base">Annual Consolidated Marksheet</CardTitle>
+                     <CardDescription>Generate a final marksheet with all terms and a grand total for a single student.</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                     <div className="space-y-2">
+                      <Label htmlFor="final-report-class">Select Class</Label>
+                      <Select value={selectedReportClass} onValueChange={(value) => { setSelectedReportClass(value); setSelectedFinalReportStudent(''); }}>
+                        <SelectTrigger id="final-report-class">
+                          <SelectValue placeholder="Select Class" />
+                        </SelectTrigger>
+                        <SelectContent>
+                           {classes.map(c => <SelectItem key={c} value={c}>Class {c}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                     <div className="space-y-2">
+                      <Label htmlFor="final-report-student">Select Student</Label>
+                      <Select value={selectedFinalReportStudent} onValueChange={setSelectedFinalReportStudent} disabled={!selectedReportClass}>
+                        <SelectTrigger id="final-report-student">
+                          <SelectValue placeholder="Select Student" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {students && students.filter(s => s.class === selectedReportClass).map(s => <SelectItem key={s.id} value={s.id}>{s.username} (Roll No. {s.rollNo})</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white" onClick={handleGenerateFinalMarksheet} disabled={!selectedFinalReportStudent}>
+                      <FileDown className="mr-2"/>
+                      Generate Final Marksheet
                     </Button>
                   </CardContent>
                 </Card>
@@ -3181,3 +3333,5 @@ export default function DashboardPage() {
         </React.Suspense>
     );
 }
+
+    
